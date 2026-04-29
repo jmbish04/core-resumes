@@ -1,5 +1,5 @@
 {
-  "name": "core-template-cfw-assets-astro-shadcn",
+  "name": "core-resumes",
   "main": "dist/_worker.js/index.js",
   "compatibility_date": "2026-03-09",
   "compatibility_flags": ["nodejs_compat"],
@@ -29,16 +29,28 @@
   },
   "ai": {
     "binding": "AI",
+    "remote": true,
   },
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "core-template-cfw-assets-astro-shadcn",
-      "database_id": "d126139f-6f57-49d2-bbc4-d20bbd46bbf4",
-      "preview_database_id": "d126139f-6f57-49d2-bbc4-d20bbd46bbf4",
+      "database_name": "core-resumes",
+      "database_id": "1a6c8186-f9a3-4b3d-ab9c-e8b4541536cd",
       "migrations_dir": "drizzle",
+      "remote": true,
     },
   ],
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "40090557ec9e4f63bd839e862b28a825",
+      "remote": true,
+    }
+  ],
+  "vars": {
+    "DEFAULT_MODEL_EMBEDDING": "@cf/baai/bge-large-en-v1.5",
+    "PARENT_DRIVE_FOLDER_ID": "1jCokY9_gi3w3_qjdCX8MbnbtZrF9p52j"
+  },
   "secrets_store_secrets": [
     {
       "binding": "GITHUB_TOKEN",
@@ -51,29 +63,9 @@
       "secret_name": "CLOUDFLARE_ACCOUNT_ID",
     },
     {
-      "binding": "CLOUDFLARE_API_TOKEN",
+      "binding": "CLOUDFLARE_WRANGLER_API_TOKEN",
       "store_id": "8c42fa70938644e0a8a109744467375f",
-      "secret_name": "CLOUDFLARE_API_TOKEN",
-    },
-    {
-      "binding": "CLOUDFLARE_SECRETS_STORE_TOKEN",
-      "store_id": "8c42fa70938644e0a8a109744467375f",
-      "secret_name": "CLOUDFLARE_SECRETS_STORE_TOKEN",
-    },
-    {
-      "binding": "CLOUDFLARE_WORKER_ADMIN_TOKEN",
-      "store_id": "8c42fa70938644e0a8a109744467375f",
-      "secret_name": "CLOUDFLARE_WORKER_ADMIN_TOKEN",
-    },
-    {
-      "binding": "CLOUDFLARE_AI_SEARCH_TOKEN",
-      "store_id": "8c42fa70938644e0a8a109744467375f",
-      "secret_name": "CLOUDFLARE_AI_SEARCH_TOKEN",
-    },
-    {
-      "binding": "CLOUDFLARE_OBSERVABILITY_TOKEN",
-      "store_id": "8c42fa70938644e0a8a109744467375f",
-      "secret_name": "CLOUDFLARE_OBSERVABILITY_TOKEN",
+      "secret_name": "CLOUDFLARE_WRANGLER_API_TOKEN",
     },
     {
       "binding": "WORKER_API_KEY",
@@ -101,19 +93,19 @@
       "secret_name": "JULES_API_KEY",
     },
     {
-      "binding": "GEMINI_API_KEY",
+      "binding": "GOOGLE_CREDS_SA_PRIVATE_KEY_PT_1",
       "store_id": "8c42fa70938644e0a8a109744467375f",
-      "secret_name": "GOOGLE_API_KEY",
+      "secret_name": "GOOGLE_CREDS_SA_PRIVATE_KEY_PT_1",
     },
     {
-      "binding": "ANTHROPIC_API_KEY",
+      "binding": "GOOGLE_CREDS_SA_PRIVATE_KEY_PT_2",
       "store_id": "8c42fa70938644e0a8a109744467375f",
-      "secret_name": "ANTHROPIC_API_KEY",
+      "secret_name": "GOOGLE_CREDS_SA_PRIVATE_KEY_PT_2",
     },
     {
-      "binding": "OPENAI_API_KEY",
+      "binding": "GOOGLE_CREDS_SA_CLIENT_EMAIL",
       "store_id": "8c42fa70938644e0a8a109744467375f",
-      "secret_name": "OPENAI_API_KEY",
-    },
+      "secret_name": "GOOGLE_CREDS_SA_CLIENT_EMAIL",
+    }
   ],
 }
