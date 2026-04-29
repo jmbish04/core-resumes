@@ -1,5 +1,5 @@
 {
-  "name": "core-template-cfw-assets-astro-shadcn",
+  "name": "core-resumes",
   "version": "26.02.24",
   "description": "The template helps you build apps with Astro, Tailwind CSS, and shadcn/ui.",
   "license": "MIT",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/126colby/core-template-cfw-assets-astro-shadcn"
+    "url": "https://github.com/jmbish04/core-resumes"
   },
   "scripts": {
     "dev": "astro dev",
