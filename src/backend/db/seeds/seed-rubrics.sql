@@ -1,0 +1,18 @@
+INSERT INTO `scoring_rubrics` (`type`, `criteria`, `score_range_min`, `score_range_max`, `sort_order`, `is_active`, `created_at`, `updated_at`) VALUES
+('location', 'Full remote / WFH', 90, 100, 0, 1, 1714521600000, 1714521600000),
+('location', 'Hybrid 2 days, short commute (<30 min) in SF', 75, 90, 1, 1, 1714521600000, 1714521600000),
+('location', 'Hybrid 3 days, short commute in SF', 60, 75, 2, 1, 1714521600000, 1714521600000),
+('location', 'Hybrid 2-3 days, medium commute (30-60 min)', 50, 65, 3, 1, 1714521600000, 1714521600000),
+('location', '5 days/wk, short commute in SF', 50, 60, 4, 1, 1714521600000, 1714521600000),
+('location', 'Hybrid 2-3 days, long commute (>60 min)', 30, 50, 5, 1, 1714521600000, 1714521600000),
+('location', '5 days/wk, long commute (Mountain View etc.)', 10, 30, 6, 1, 1714521600000, 1714521600000),
+('compensation', 'Significantly exceeds Google Total Compensation (~$260K+) with comparable equity', 85, 100, 0, 1, 1714521600000, 1714521600000),
+('compensation', 'Matches or slightly exceeds Google Total Compensation ($240K–$260K)', 65, 85, 1, 1, 1714521600000, 1714521600000),
+('compensation', 'Slightly below Google Total Compensation ($200K–$240K) — negotiable to parity', 45, 65, 2, 1, 1714521600000, 1714521600000),
+('compensation', 'Materially below Google Total Compensation ($150K–$200K) — significant gap', 25, 45, 3, 1, 1714521600000, 1714521600000),
+('compensation', 'Well below Google Total Compensation (<$150K) — hard to justify', 0, 25, 4, 1, 1714521600000, 1714521600000),
+('combined', 'Top location + top compensation — ideal match', 90, 100, 0, 1, 1714521600000, 1714521600000),
+('combined', 'Strong in one dimension, acceptable in the other', 65, 90, 1, 1, 1714521600000, 1714521600000),
+('combined', 'Moderate in both — trade-offs exist but manageable', 40, 65, 2, 1, 1714521600000, 1714521600000),
+('combined', 'Weak in one dimension, moderate in other — needs careful evaluation', 20, 40, 3, 1, 1714521600000, 1714521600000),
+('combined', 'Weak in both — likely not worth pursuing', 0, 20, 4, 1, 1714521600000, 1714521600000);

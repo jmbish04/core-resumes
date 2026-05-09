@@ -1,0 +1,66 @@
+{
+  "companyName": "Anthropic",
+  "jobTitle": "Legal Operations Specialist, Tooling & Enablement",
+  "jobUrl": "https://job-boards.greenhouse.io/anthropic",
+  "salaryMin": 170000,
+  "salaryMax": 220000,
+  "salaryCurrency": "USD",
+  "responsibilities": [
+    "Coordinate the legal team's AI tooling roadmap — maintaining visibility into what's in progress, tracking timelines across multiple concurrent workstreams, and communicating status to stakeholders",
+    "Triage incoming tooling requests, assess complexity and scope, and route work appropriately — handling straightforward builds yourself and flagging those that need deeper technical review",
+    "Build no-code and low-code solutions end-to-end: Claude.ai Projects, AppSheet apps, Slack workflows, and similar tools that solve real pain points without requiring deployment infrastructure",
+    "Partner with the team on AI adoption efforts — contributing to training materials, documentation, and user guides as new tools ship",
+    "Support the legal team onboarding process and maintain onboarding content as our tooling evolves",
+    "Track adoption signals and surface patterns: what's being used, what isn't, and what that tells us about where to focus"
+  ],
+  "requiredQualifications": [
+    "Have at least 4–7 years of experience in legal operations, legal technology, or a technical operations role",
+    "Are comfortable keeping multiple projects organized and visible simultaneously — you can track dependencies, flag risks early, and keep stakeholders informed without being asked",
+    "Are comfortable building lightweight technical solutions — Claude Projects, no-code apps, Slack automations — and know how to scope what's appropriate for DIY versus what needs engineering input",
+    "Have worked alongside teams building and shipping tools, and understand what it takes to get a new workflow actually adopted",
+    "Lead with curiosity — you ask good questions, want to understand how things work, and are honest when you don't know something",
+    "Bring empathy to the work: you understand that change is hard, especially for busy lawyers, and you meet people where they are rather than where you wish they were",
+    "Are collaborative and low-ego — you'll flex into adjacent work as the team grows and don't protect scope at the expense of outcomes",
+    "Have enough of a sense of humor to keep the work enjoyable, even when it's complex"
+  ],
+  "preferredQualifications": [
+    "Experience in legal operations at a law firm, in-house legal department, or legal technology company",
+    "Hands-on experience with Claude, Claude Code, or MCP integrations",
+    "A track record of building or contributing to training programs or onboarding processes in a technical environment",
+    "Familiarity with change management in professional services environments, where skepticism about new tools is real and earned",
+    "Experience with tools like AppSheet, Tines, Zapier, or similar no-code/low-code platforms"
+  ],
+  "requiredSkills": [],
+  "preferredSkills": [
+    "Claude",
+    "Claude Code",
+    "MCP integrations",
+    "AppSheet",
+    "Tines",
+    "Zapier"
+  ],
+  "location": "San Francisco, CA",
+  "workplaceType": "Hybrid",
+  "rtoPolicy": "3 days a week",
+  "yearsExperienceMin": 4,
+  "yearsExperienceMax": 7,
+  "educationRequirements": [
+    "Bachelor’s degree or an equivalent combination of education, training, and/or experience"
+  ],
+  "department": "Legal Operations",
+  "reportingTo": null,
+  "travelRequirements": null,
+  "securityClearance": null,
+  "visaSponsorship": "Yes",
+  "benefits": [
+    "Competitive compensation",
+    "Optional equity donation matching",
+    "Generous vacation and parental leave",
+    "Flexible working hours",
+    "Lovely office space"
+  ],
+  "additionalNotes": "We encourage you to apply even if you do not believe you meet every single qualification.",
+  "aboutCompany": "Anthropic’s mission is to create reliable, interpretable, and steerable AI systems. We want AI to be safe and beneficial for our users and for society as a whole.",
+  "aboutRoleNarrative": "As a Legal Operations Specialist, Tooling & Enablement, you'll sit at the intersection of three things: keeping our tooling work organized and moving, partnering with the team on getting tools into the legal team’s hands, and contributing directly to technical builds.",
+  "otherContent": "The easiest way to understand our research directions is to read our recent research. This research continues many of the directions our team worked on prior to Anthropic, including: GPT-3, Circuit-Based Interpretability, Multimodal Neurons, Scaling Laws, AI & Compute, Concrete Problems in AI Safety, and Learning from Human Preferences."
+}

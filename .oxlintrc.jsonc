@@ -24,4 +24,32 @@
     "**/.astro",
     "**/.netlify",
   ],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": ["@ai/providers/*", "@ai/models/*", "**/ai/providers/*", "**/ai/models/*"],
+      },
+    ],
+  },
+  "overrides": [
+    {
+      "files": ["src/backend/ai/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": "off",
+      },
+    },
+    {
+      "files": ["src/frontend/components/ui/input-group.tsx"],
+      "rules": {
+        "jsx-a11y/click-events-have-key-events": "off",
+      },
+    },
+    {
+      "files": ["src/frontend/components/ui/label.tsx"],
+      "rules": {
+        "jsx-a11y/label-has-associated-control": "off",
+      },
+    },
+  ],
 }

@@ -1,0 +1,20 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { Sidebar } from "@/components/Sidebar";
+import { CompaniesPage } from "@/components/company/CompaniesPage";
+
+if (!Astro.cookies.has("cr_session")) {
+  return Astro.redirect("/login");
+}
+---
+
+<BaseLayout title="Companies | Analytics" description="Company analytics dashboard with charts and metrics">
+  <div class="flex flex-1">
+    <Sidebar client:load />
+    <section class="min-w-0 flex-1">
+      <div class="mx-auto grid w-full max-w-screen-2xl gap-5 px-4 py-5 lg:px-8">
+        <CompaniesPage client:load />
+      </div>
+    </section>
+  </div>
+</BaseLayout>

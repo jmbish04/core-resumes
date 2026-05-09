@@ -1,0 +1,62 @@
+---
+import { siteConfig } from "@/lib/config";
+import { HealthBadge } from "@/components/HealthBadge";
+
+const path = Astro.url.pathname;
+---
+
+<header class="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75">
+  <div class="mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4 lg:px-8">
+    <div class="flex items-center gap-3">
+      <a href="/" class="flex min-w-0 items-center gap-2 font-medium">
+        <span class="flex size-7 items-center justify-center rounded-md bg-primary text-xs font-semibold text-primary-foreground">
+          CO
+        </span>
+        <span class="truncate">{siteConfig.name}</span>
+      </a>
+      <HealthBadge client:load />
+    </div>
+
+    <nav class="hidden items-center gap-1 md:flex">
+      {
+        siteConfig.navItems.map((item) => (
+          <a
+            href={item.href}
+            target={item.external ? "_blank" : undefined}
+            rel={item.external ? "noreferrer" : undefined}
+            class:list={[
+              "rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground",
+              path === item.href && "bg-muted text-foreground",
+            ]}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <details class="relative md:hidden">
+      <summary class="flex size-9 list-none items-center justify-center rounded-md border border-border bg-background text-sm [&::-webkit-details-marker]:hidden">
+        <span class="sr-only">Open navigation</span>
+        <span class="block h-0.5 w-4 bg-foreground before:relative before:-top-1.5 before:block before:h-0.5 before:bg-foreground after:relative after:top-1 after:block after:h-0.5 after:bg-foreground"></span>
+      </summary>
+      <div class="absolute right-0 mt-2 grid min-w-48 gap-1 rounded-lg border border-border bg-popover p-2 shadow-lg">
+        {
+          siteConfig.navItems.map((item) => (
+            <a
+              href={item.href}
+              target={item.external ? "_blank" : undefined}
+              rel={item.external ? "noreferrer" : undefined}
+              class:list={[
+                "rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground",
+                path === item.href && "bg-muted text-foreground",
+              ]}
+            >
+              {item.label}
+            </a>
+          ))
+        }
+      </div>
+    </details>
+  </div>
+</header>

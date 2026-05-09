@@ -1,160 +1,218 @@
-/**
- * @fileoverview Documents API routes for PlateJS integration
- */
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { and, eq } from "drizzle-orm";
 
-import { Hono } from 'hono';
-import { zValidator } from '@hono/zod-validator';
-import { z } from 'zod';
-import { drizzle } from 'drizzle-orm/d1';
-import { desc, eq } from 'drizzle-orm';
-import { documents } from '../../db/schema';
-import { authMiddleware } from '../middleware/auth';
-import type { Bindings, Variables } from '../index';
+import { GoogleDriveClient } from "@/backend/ai/tools/google/drive";
+import { getDb } from "@/backend/db";
+import { getServiceAccountAccessToken } from "@/backend/lib/google-auth";
+import { documents, insertDocumentSchema, roles, selectDocumentSchema } from "@/backend/db/schema";
 
-const documentsRouter = new Hono<{ Bindings: Bindings; Variables: Variables }>();
+const documentQuery = z.object({ roleId: z.string().optional() });
+const documentParam = z.object({ id: z.string() });
+const documentCreate = insertDocumentSchema.omit({ id: true });
 
-// Apply auth middleware
-documentsRouter.use('*', authMiddleware);
+export const documentsRouter = new OpenAPIHono<{ Bindings: Env }>();
 
-const createDocumentSchema = z.object({
-  title: z.string().min(1),
-  content: z.string(), // JSON string of Slate nodes
-});
+documentsRouter.openapi(
+  createRoute({
+    method: "get",
+    path: "/",
+    operationId: "documentsList",
+    request: { query: documentQuery },
+    responses: {
+      200: {
+        description: "List documents",
+        content: { "application/json": { schema: z.array(selectDocumentSchema) } },
+      },
+    },
+  }),
+  async (c) => {
+    const { roleId } = c.req.valid("query");
+    const db = getDb(c.env);
+    const rows = roleId
+      ? await db.select().from(documents).where(eq(documents.roleId, roleId))
+      : await db.select().from(documents);
 
-// GET /api/documents
-documentsRouter.get('/', async (c) => {
-  const db = drizzle(c.env.DB);
-  const userId = c.get('userId')!;
+    return c.json(rows);
+  },
+);
 
-  try {
-    const userDocuments = await db
-      .select()
-      .from(documents)
-      .where(eq(documents.userId, userId))
-      .orderBy(desc(documents.updatedAt));
-
-    return c.json({ documents: userDocuments });
-  } catch (error) {
-    console.error('Error fetching documents:', error);
-    return c.json({ error: 'Failed to fetch documents' }, 500);
-  }
-});
-
-// POST /api/documents
-documentsRouter.post('/', zValidator('json', createDocumentSchema), async (c) => {
-  const db = drizzle(c.env.DB);
-  const userId = c.get('userId')!;
-  const { title, content } = c.req.valid('json');
-
-  try {
-    const result = await db
+documentsRouter.openapi(
+  createRoute({
+    method: "post",
+    path: "/",
+    operationId: "documentsCreate",
+    request: { body: { content: { "application/json": { schema: documentCreate } } } },
+    responses: {
+      201: {
+        description: "Created document link",
+        content: { "application/json": { schema: selectDocumentSchema } },
+      },
+    },
+  }),
+  async (c) => {
+    const body = c.req.valid("json");
+    const [document] = await getDb(c.env)
       .insert(documents)
-      .values({
-        userId,
-        title,
-        content,
-      })
+      .values({ ...body, id: crypto.randomUUID() })
       .returning();
 
-    return c.json({ document: result[0] }, 201);
-  } catch (error) {
-    console.error('Error creating document:', error);
-    return c.json({ error: 'Failed to create document' }, 500);
-  }
-});
+    return c.json(document, 201);
+  },
+);
 
-// GET /api/documents/:id
-documentsRouter.get('/:id', async (c) => {
-  const db = drizzle(c.env.DB);
-  const userId = c.get('userId')!;
-  const documentId = parseInt(c.req.param('id'));
+documentsRouter.openapi(
+  createRoute({
+    method: "delete",
+    path: "/{id}",
+    operationId: "documentsDelete",
+    request: { params: documentParam },
+    responses: {
+      200: {
+        description: "Deleted document",
+        content: { "application/json": { schema: z.object({ ok: z.boolean() }) } },
+      },
+    },
+  }),
+  async (c) => {
+    const { id } = c.req.valid("param");
+    await getDb(c.env).delete(documents).where(eq(documents.id, id));
 
-  try {
-    const documentResult = await db
-      .select()
+    return c.json({ ok: true });
+  },
+);
+
+// ---------------------------------------------------------------------------
+// GET /:id/markdown — Export a Google Doc as Markdown
+// ---------------------------------------------------------------------------
+
+documentsRouter.openapi(
+  createRoute({
+    method: "get",
+    path: "/{id}/markdown",
+    operationId: "documentsExportMarkdown",
+    request: { params: documentParam },
+    responses: {
+      200: {
+        description: "Exported Markdown",
+        content: {
+          "text/markdown": {
+            schema: z.string(),
+          },
+        },
+      },
+      500: {
+        description: "Server Error",
+        content: {
+          "application/json": { schema: z.object({ error: z.string() }) },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    const { id } = c.req.valid("param");
+    const token = await getServiceAccountAccessToken(c.env, ["https://www.googleapis.com/auth/drive"]);
+    
+    // Google Drive v3 API endpoint to export the document natively to text/markdown
+    const url = `https://www.googleapis.com/drive/v3/files/${id}/export?mimeType=text/markdown`;
+    
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return c.json({ error: `Google API Error: ${response.status} - ${errorText}` }, 500);
+      }
+
+      const markdown = await response.text();
+      return new Response(markdown, {
+        status: 200,
+        headers: { "Content-Type": "text/markdown" }
+      });
+    } catch (err: any) {
+      return c.json({ error: err.message || "Unknown error occurred during export" }, 500);
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// POST /sync/:roleId — Scan Google Drive folder and sync to D1
+// ---------------------------------------------------------------------------
+
+documentsRouter.openapi(
+  createRoute({
+    method: "post",
+    path: "/sync/{roleId}",
+    operationId: "documentsSync",
+    request: { params: z.object({ roleId: z.string() }) },
+    responses: {
+      200: {
+        description: "Sync result",
+        content: {
+          "application/json": {
+            schema: z.object({ synced: z.number(), total: z.number() }),
+          },
+        },
+      },
+      404: {
+        description: "Role or folder not found",
+        content: {
+          "application/json": { schema: z.object({ error: z.string() }) },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    const { roleId } = c.req.valid("param");
+    const db = getDb(c.env);
+
+    // Load role to get Drive folder ID
+    const [role] = await db.select().from(roles).where(eq(roles.id, roleId)).limit(1);
+    if (!role?.driveFolderId) {
+      return c.json({ error: "Role has no Google Drive folder linked" }, 404);
+    }
+
+    // List files from Google Drive
+    const drive = new GoogleDriveClient(c.env);
+    const driveFiles = await drive.listFilesInFolderSorted(role.driveFolderId);
+
+    // Load existing documents for this role
+    const existingDocs = await db
+      .select({ gdocId: documents.gdocId })
       .from(documents)
-      .where(eq(documents.id, documentId))
-      .limit(1);
+      .where(eq(documents.roleId, roleId));
+    const existingGdocIds = new Set(existingDocs.map((d) => d.gdocId));
 
-    if (documentResult.length === 0) {
-      return c.json({ error: 'Document not found' }, 404);
+    // Insert new documents that aren't already tracked
+    let synced = 0;
+    for (const file of driveFiles) {
+      if (existingGdocIds.has(file.id)) continue;
+
+      // Infer document type from file name
+      const nameLower = file.name.toLowerCase();
+      const type = nameLower.includes("resume")
+        ? "resume"
+        : nameLower.includes("cover")
+          ? "cover_letter"
+          : nameLower.includes("note")
+            ? "notes"
+            : "other";
+
+      await db.insert(documents).values({
+        id: crypto.randomUUID(),
+        gdocId: file.id,
+        roleId,
+        type: type as "resume" | "cover_letter" | "notes" | "other",
+        version: 1,
+        name: file.name,
+      });
+      synced++;
     }
 
-    const document = documentResult[0];
-
-    if (document.userId !== userId) {
-      return c.json({ error: 'Unauthorized' }, 403);
-    }
-
-    return c.json({ document });
-  } catch (error) {
-    console.error('Error fetching document:', error);
-    return c.json({ error: 'Failed to fetch document' }, 500);
-  }
-});
-
-// PUT /api/documents/:id
-documentsRouter.put('/:id', zValidator('json', createDocumentSchema), async (c) => {
-  const db = drizzle(c.env.DB);
-  const userId = c.get('userId')!;
-  const documentId = parseInt(c.req.param('id'));
-  const { title, content } = c.req.valid('json');
-
-  try {
-    // Verify ownership
-    const documentResult = await db
-      .select()
-      .from(documents)
-      .where(eq(documents.id, documentId))
-      .limit(1);
-
-    if (documentResult.length === 0 || documentResult[0].userId !== userId) {
-      return c.json({ error: 'Document not found' }, 404);
-    }
-
-    // Update document
-    const result = await db
-      .update(documents)
-      .set({
-        title,
-        content,
-        updatedAt: new Date(),
-      })
-      .where(eq(documents.id, documentId))
-      .returning();
-
-    return c.json({ document: result[0] });
-  } catch (error) {
-    console.error('Error updating document:', error);
-    return c.json({ error: 'Failed to update document' }, 500);
-  }
-});
-
-// DELETE /api/documents/:id
-documentsRouter.delete('/:id', async (c) => {
-  const db = drizzle(c.env.DB);
-  const userId = c.get('userId')!;
-  const documentId = parseInt(c.req.param('id'));
-
-  try {
-    // Verify ownership
-    const documentResult = await db
-      .select()
-      .from(documents)
-      .where(eq(documents.id, documentId))
-      .limit(1);
-
-    if (documentResult.length === 0 || documentResult[0].userId !== userId) {
-      return c.json({ error: 'Document not found' }, 404);
-    }
-
-    await db.delete(documents).where(eq(documents.id, documentId));
-
-    return c.json({ message: 'Document deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting document:', error);
-    return c.json({ error: 'Failed to delete document' }, 500);
-  }
-});
-
-export { documentsRouter };
+    return c.json({ synced, total: driveFiles.length }, 200);
+  },
+);

@@ -1,0 +1,1033 @@
+{
+  "project": "002_greenhouse",
+  "title": "Greenhouse retrofit into core-resumes",
+  "version": "1.0",
+  "prd": "docs/002_greenhouse/PRD.md",
+  "conventions": [
+    "Read AGENTS.md before starting any task",
+    "Apply the Cloudflare Jedi skill conventions: docstrings, modular folders, health.ts per module, no flat schemas, no hardcoded data",
+    "Never hand-edit migrations — always pnpm run db:generate",
+    "Never run wrangler deploy directly — always pnpm run deploy",
+    "After any wrangler.jsonc change run pnpm run cf-typegen",
+    "Every Workers AI call must route through env.AI_GATEWAY_ID",
+    "Every new file gets a @file docstring; every export gets a JSDoc; sections > 20 lines get banner comments",
+    "Update task status to in_progress before starting and completed when done",
+    "If you get stuck or need to verify a Cloudflare API, run: ask --cloudflare-docs \"<your query>\" > docs/cloudflare-docs/<short-name>.md, then read the saved file"
+  ],
+  "phases": [
+    {
+      "phase": 1,
+      "name": "wrangler.jsonc bindings & env vars",
+      "tasks": [
+        {
+          "id": "1.1",
+          "title": "Add Vectorize, R2 jobs bucket, GEMINI_API_KEY, env vars",
+          "depends_on": [],
+          "files_modified": ["wrangler.jsonc"],
+          "files_created": [],
+          "details": "Per PRD Phase 1. Add VECTORIZE_JOBS binding (index_name greenhouse-jobs, remote=true). Add R2_JOBS_BUCKET (bucket_name core-resumes-jobs, remote=true). Add GEMINI_API_KEY secrets_store_secrets entry (store_id 8c42fa70938644e0a8a109744467375f, secret_name GEMINI_API_KEY). Add vars: AI_GATEWAY_NAME, GREENHOUSE_API_BASE, VECTORIZE_INDEX_NAME, VECTORIZE_DIMENSIONS=768, MODEL_EMBED_JOBS=gemini-embedding-001, MODEL_TRIAGE=@cf/openai/gpt-oss-120b, DEFAULT_BOARD_TOKENS=cloudflare,vercel,anthropic,headway.",
+          "acceptance_criteria": [
+            "wrangler.jsonc parses (pnpm run cf-typegen succeeds)",
+            "Env global types include VECTORIZE_JOBS (Vectorize index), R2_JOBS_BUCKET (R2 bucket), GEMINI_API_KEY (SecretsStoreSecret)",
+            "All new vars typed as string in Env"
+          ],
+          "complexity": "small",
+          "status": "pending"
+        },
+        {
+          "id": "1.2",
+          "title": "Add JobScannerAgent + JobAnalysisAgent durable objects + migrations v4/v5",
+          "depends_on": ["1.1"],
+          "files_modified": ["wrangler.jsonc"],
+          "files_created": [],
+          "details": "Add durable_objects.bindings entries: JOB_SCANNER_AGENT (class JobScannerAgent), JOB_ANALYSIS_AGENT (class JobAnalysisAgent). Add migrations entries v4 (new_sqlite_classes: JobScannerAgent), v5 (new_sqlite_classes: JobAnalysisAgent).",
+          "acceptance_criteria": [
+            "pnpm run cf-typegen succeeds",
+            "Env global types JOB_SCANNER_AGENT and JOB_ANALYSIS_AGENT as DurableObjectNamespace"
+          ],
+          "complexity": "trivial",
+          "status": "pending"
+        },
+        {
+          "id": "1.3",
+          "title": "Add second cron trigger 0 */6 * * *",
+          "depends_on": ["1.1"],
+          "files_modified": ["wrangler.jsonc"],
+          "files_created": [],
+          "details": "Append to triggers.crons array. Branch logic added later in Phase 12 task 12.1.",
+          "acceptance_criteria": [
+            "wrangler.jsonc cron list contains both 0 */4 * * * and 0 */6 * * *"
+          ],
+          "complexity": "trivial",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "D1 schema modular full refactor",
+      "tasks": [
+        {
+          "id": "2.1",
+          "title": "Create category folders + git mv existing schemas",
+          "depends_on": [],
+          "files_modified": [],
+          "files_created": [
+            "src/backend/db/schemas/applications/index.ts",
+            "src/backend/db/schemas/career/index.ts",
+            "src/backend/db/schemas/communications/index.ts",
+            "src/backend/db/schemas/system/index.ts"
+          ],
+          "details": "Run: git mv src/backend/db/schemas/{roles,role-analyses,role-alignment-scores,documents}.ts src/backend/db/schemas/applications/. Run: git mv src/backend/db/schemas/resume-bullets.ts src/backend/db/schemas/career/. Run: git mv src/backend/db/schemas/{threads,messages,emails}.ts src/backend/db/schemas/communications/. Run: git mv src/backend/db/schemas/{health-screenings,global-config,job-failures}.ts src/backend/db/schemas/system/. Each new index.ts re-exports the schemas in that folder.",
+          "acceptance_criteria": [
+            "Files moved per PRD Phase 2 final structure",
+            "Each category index.ts re-exports every named export from its schema files"
+          ],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "2.2",
+          "title": "Update top-level src/backend/db/schema.ts barrel",
+          "depends_on": ["2.1"],
+          "files_modified": ["src/backend/db/schema.ts"],
+          "files_created": [],
+          "details": "Re-export from ./schemas/applications, ./schemas/career, ./schemas/communications, ./schemas/system, ./schemas/jobs. Preserve every previously-exported identifier so consumers' wildcard imports keep working.",
+          "acceptance_criteria": [
+            "tsc --noEmit reports zero export-shape regressions",
+            "drizzle-kit can still find every table from the barrel"
+          ],
+          "complexity": "small",
+          "status": "pending"
+        },
+        {
+          "id": "2.3",
+          "title": "Update all import paths across codebase for schema moves",
+          "depends_on": ["2.1", "2.2"],
+          "files_modified": ["multiple — all consumers of schema files"],
+          "files_created": [],
+          "details": "Find consumers: rg \"from .*db/schemas/(roles|documents|threads|messages|emails|resume-bullets|role-analyses|role-alignment-scores|health-screenings|global-config|job-failures)\" -t ts. Update each import to point at the new category folder (or, preferably, at the @/backend/db/schema barrel). Verify pnpm run types passes.",
+          "acceptance_criteria": [
+            "rg shows zero matches against the old flat paths",
+            "pnpm run types — zero errors"
+          ],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "2.4",
+          "title": "Add `source` and `source_snapshot_id` columns to roles schema",
+          "depends_on": ["2.3"],
+          "files_modified": ["src/backend/db/schemas/applications/roles.ts"],
+          "files_created": [],
+          "details": "Add columns: source: text(\"source\").notNull().default(\"manual\"), source_snapshot_id: text(\"source_snapshot_id\"). Update ROLES_COLUMN_DESCRIPTIONS with snake_case keys. Update insertRolesSchema/selectRolesSchema (drizzle-zod will pick up automatically). Add a TypeScript union type for source: \"manual\" | \"greenhouse_scan\" | \"email\".",
+          "acceptance_criteria": [
+            "tsc clean",
+            "ROLES_COLUMN_DESCRIPTIONS has source and source_snapshot_id keys"
+          ],
+          "complexity": "trivial",
+          "status": "pending"
+        },
+        {
+          "id": "2.5",
+          "title": "Create jobs/boards schemas",
+          "depends_on": ["2.1"],
+          "files_modified": [],
+          "files_created": [
+            "src/backend/db/schemas/jobs/boards/board-tokens.ts",
+            "src/backend/db/schemas/jobs/boards/board-template-analyses.ts",
+            "src/backend/db/schemas/jobs/boards/index.ts"
+          ],
+          "details": "Port from Python /Volumes/Projects/greenhouse/app/db.py: BoardToken (token unique, is_active bool, created_at). BoardTemplateAnalysis (company text, css_selectors json, salary_markers json, structural_notes text, created_at).",
+          "acceptance_criteria": [
+            "Each schema file exports table + insert/select Zod schemas + types + TABLE_DESCRIPTION + COLUMN_DESCRIPTIONS",
+            "Index.ts re-exports both"
+          ],
+          "complexity": "small",
+          "status": "pending"
+        },
+        {
+          "id": "2.6",
+          "title": "Create jobs/postings schemas",
+          "depends_on": ["2.1"],
+          "files_modified": [],
+          "files_created": [
+            "src/backend/db/schemas/jobs/postings/jobs.ts",
+            "src/backend/db/schemas/jobs/postings/job-snapshots.ts",
+            "src/backend/db/schemas/jobs/postings/index.ts"
+          ],
+          "details": "jobs_postings: id, job_site_id (unique), job_title, company, date_first_seen, triage_passed, triage_reason, analysis_executed, is_favorite. jobs_snapshots: id, job_id (FK→jobs_postings.id), snapshot_timestamp, vectorize_id (UUID), session_uuid, raw_assessment_json, match_score, verdict, builder_alignment, jd_trap_detected, job_summary, salary_min/max/currency, benefits_*, historic_comparison, negotiation_strategy, extracted_location, experience_level, is_manual_reprocess, reprocess_rationale, archive_md_key (R2), archive_pdf_key (R2), archive_html_key (R2). Reference: /Volumes/Projects/greenhouse/app/db.py.",
+          "acceptance_criteria": [
+            "Both schemas exported with TABLE_DESCRIPTION + COLUMN_DESCRIPTIONS (snake_case)",
+            "Foreign keys typed correctly"
+          ],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "2.7",
+          "title": "Create jobs/analysis schemas",
+          "depends_on": ["2.6"],
+          "files_modified": [],
+          "files_created": [
+            "src/backend/db/schemas/jobs/analysis/job-req-snapshots.ts",
+            "src/backend/db/schemas/jobs/analysis/job-skill-snapshots.ts",
+            "src/backend/db/schemas/jobs/analysis/job-responsibility-snapshots.ts",
+            "src/backend/db/schemas/jobs/analysis/job-notebook-consultations.ts",
+            "src/backend/db/schemas/jobs/analysis/ai-log-workers-ai.ts",
+            "src/backend/db/schemas/jobs/analysis/index.ts"
+          ],
+          "details": "job_req_snapshots: snapshot_id (FK), requirement (text), match_score (1-10), match_rationale. Same shape for skills and responsibilities. job_notebook_consultations (NEW): id, snapshot_id (FK), question, answer, references_json, turn_number, conversation_id, created_at. ai_log_workers_ai: timestamp, model, direction, job_title, schema_target, input_tokens, output_tokens, response_preview, duration_seconds, error, http_status.",
+          "acceptance_criteria": ["All five schemas exported with descriptions"],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "2.8",
+          "title": "Create jobs/taxonomy schemas",
+          "depends_on": ["2.6"],
+          "files_modified": [],
+          "files_created": [
+            "src/backend/db/schemas/jobs/taxonomy/job-categories.ts",
+            "src/backend/db/schemas/jobs/taxonomy/job-category-mappings.ts",
+            "src/backend/db/schemas/jobs/taxonomy/job-category-hitl-feedback.ts",
+            "src/backend/db/schemas/jobs/taxonomy/job-tags.ts",
+            "src/backend/db/schemas/jobs/taxonomy/job-tag-mappings.ts",
+            "src/backend/db/schemas/jobs/taxonomy/job-tag-hitl-feedback.ts",
+            "src/backend/db/schemas/jobs/taxonomy/index.ts"
+          ],
+          "details": "Port from Python: job_categories (name unique, description, is_active, created_at). job_category_mappings (job_category_id FK, job_snapshot_id FK, ai_rationale). job_category_hitl_feedback (category_mapping_id FK, signal up/down/added, user_rationale, created_at). Same triplet for tags.",
+          "acceptance_criteria": ["All six schemas exported with descriptions"],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "2.9",
+          "title": "Create jobs/hitl/hitl-reviews schema",
+          "depends_on": ["2.6"],
+          "files_modified": [],
+          "files_created": [
+            "src/backend/db/schemas/jobs/hitl/hitl-reviews.ts",
+            "src/backend/db/schemas/jobs/hitl/index.ts"
+          ],
+          "details": "hitl_reviews: id, snapshot_id FK, human_fit (high/medium/low/trap), human_fit_reason, human_match_score (0-100), human_match_reason, additional_notes, reviewed_at.",
+          "acceptance_criteria": ["Schema exported with descriptions"],
+          "complexity": "trivial",
+          "status": "pending"
+        },
+        {
+          "id": "2.10",
+          "title": "Create jobs/sessions/session-runs schema",
+          "depends_on": [],
+          "files_modified": [],
+          "files_created": [
+            "src/backend/db/schemas/jobs/sessions/session-runs.ts",
+            "src/backend/db/schemas/jobs/sessions/index.ts"
+          ],
+          "details": "session_runs: id, session_uuid unique, timestamp, total_scraped, total_triaged, total_analyzed, total_failed, total_cost_usd, taxonomy_categories, taxonomy_tags.",
+          "acceptance_criteria": ["Schema exported with descriptions"],
+          "complexity": "trivial",
+          "status": "pending"
+        },
+        {
+          "id": "2.11",
+          "title": "Create jobs/lists schemas",
+          "depends_on": ["2.6"],
+          "files_modified": [],
+          "files_created": [
+            "src/backend/db/schemas/jobs/lists/starred-job-lists.ts",
+            "src/backend/db/schemas/jobs/lists/starred-job-list-mappings.ts",
+            "src/backend/db/schemas/jobs/lists/index.ts"
+          ],
+          "details": "starred_job_lists (name, description, is_active, created_at). starred_job_list_mappings (list_id FK, job_id FK, is_deleted, created_at — soft delete pattern).",
+          "acceptance_criteria": ["Both schemas exported with descriptions"],
+          "complexity": "trivial",
+          "status": "pending"
+        },
+        {
+          "id": "2.12",
+          "title": "Create jobs/index.ts barrel",
+          "depends_on": ["2.5", "2.6", "2.7", "2.8", "2.9", "2.10", "2.11"],
+          "files_modified": [],
+          "files_created": ["src/backend/db/schemas/jobs/index.ts"],
+          "details": "Re-export from ./boards, ./postings, ./analysis, ./taxonomy, ./hitl, ./sessions, ./lists.",
+          "acceptance_criteria": [
+            "src/backend/db/schema.ts can import * as jobs from \"./schemas/jobs\""
+          ],
+          "complexity": "trivial",
+          "status": "pending"
+        },
+        {
+          "id": "2.13",
+          "title": "Generate + apply migration",
+          "depends_on": ["2.2", "2.4", "2.12"],
+          "files_modified": [],
+          "files_created": ["drizzle/<auto>.sql"],
+          "details": "Run pnpm run db:generate. Review the migration: every new jobs/* table appears once, plus the two roles columns. No spurious renames or drops. Run pnpm run migrate:local to validate locally. DO NOT run migrate:remote until Phase 13.",
+          "acceptance_criteria": [
+            "Migration applies cleanly on local D1",
+            "drizzle/migrations contains exactly one new SQL file for this batch",
+            "No table-rename statements (proves the file moves were schema-neutral)"
+          ],
+          "complexity": "small",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "AI providers + models",
+      "tasks": [
+        {
+          "id": "3.1",
+          "title": "Install @google/genai dependency",
+          "depends_on": [],
+          "files_modified": ["package.json", "pnpm-lock.yaml"],
+          "files_created": [],
+          "details": "pnpm add @google/genai. Verify it bundles cleanly under workerd (no Node-only crypto or fs imports).",
+          "acceptance_criteria": ["pnpm run build succeeds with the new dep"],
+          "complexity": "trivial",
+          "status": "pending"
+        },
+        {
+          "id": "3.2",
+          "title": "Create google-ai-studio.ts provider",
+          "depends_on": ["3.1", "1.1"],
+          "files_modified": [],
+          "files_created": ["src/backend/ai/providers/google-ai-studio.ts"],
+          "details": "Implements AIProvider (invokeModel, invokeStructured, streamModel). Build the GoogleGenAI client with baseUrl from env.AI.gateway(env.AI_GATEWAY_NAME).getUrl(\"google-ai-studio\"). Pass cf-aig-authorization: Bearer <CLOUDFLARE_AI_GATEWAY_TOKEN.get()> as a request header. Include user GEMINI_API_KEY as apiKey for now (documented BYOK fallback). See PRD 'BYOK Gemini path'. If unsure of @google/genai client construction options, run ask --cloudflare-docs \"google-ai-studio gemini SDK base URL httpOptions\" > docs/cloudflare-docs/gemini-sdk.md.",
+          "acceptance_criteria": [
+            "Class exports cleanly and conforms to AIProvider interface",
+            "All Cloudflare bindings accessed via env (no module-level state)"
+          ],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "3.3",
+          "title": "Create gemini-embedding-001 model descriptor",
+          "depends_on": ["3.2"],
+          "files_modified": [],
+          "files_created": ["src/backend/ai/models/gemini-embedding-001.ts"],
+          "details": "Mirror the existing gpt-oss-120b descriptor pattern. input: Zod schema for { text: string | string[] }. serialize(): builds Gemini batchEmbedContents request with outputDimensionality: parseInt(env.VECTORIZE_DIMENSIONS). parseResponse(): extracts embeddings[].values arrays. Include the task: retrieval document and task: retrieval query prefixes (port from /Volumes/Projects/greenhouse/app/vectorize_service.py _build_embedding_text).",
+          "acceptance_criteria": [
+            "Descriptor produces Float arrays of length 768",
+            "Zod input schema rejects empty strings"
+          ],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "3.4",
+          "title": "Update providers/index.ts and models/index.ts",
+          "depends_on": ["3.2", "3.3"],
+          "files_modified": ["src/backend/ai/providers/index.ts", "src/backend/ai/models/index.ts"],
+          "files_created": [],
+          "details": "providers/index.ts: extend ProviderName = 'workers-ai' | 'google-ai-studio'. Switch in getProvider(). Add embedJobsBatch(env, texts) and embedJobsQuery(env, text) helpers wrapping the new provider+model. models/index.ts: add embedJobs to the registry returned by getModelRegistry(env), pulling MODEL_EMBED_JOBS env var.",
+          "acceptance_criteria": [
+            "embedJobsQuery(env, 'ping') returns number[] of length 768 in test",
+            "Existing generateStructuredOutput/streamChat untouched"
+          ],
+          "complexity": "small",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "phase": 4,
+      "name": "Cloudflare Agents SDK Durable Objects",
+      "tasks": [
+        {
+          "id": "4.1",
+          "title": "Refactor existing single-file agents to folder form",
+          "depends_on": [],
+          "files_modified": ["src/backend/index.ts"],
+          "files_created": [
+            "src/backend/ai/agents/orchestrator/index.ts",
+            "src/backend/ai/agents/orchestrator/types.ts",
+            "src/backend/ai/agents/orchestrator/health.ts",
+            "src/backend/ai/agents/orchestrator/methods/index.ts",
+            "src/backend/ai/agents/notebooklm/index.ts",
+            "src/backend/ai/agents/notebooklm/types.ts",
+            "src/backend/ai/agents/notebooklm/health.ts",
+            "src/backend/ai/agents/notebooklm-mcp/index.ts",
+            "src/backend/ai/agents/notebooklm-mcp/types.ts",
+            "src/backend/ai/agents/notebooklm-mcp/health.ts"
+          ],
+          "details": "Convert colby.ts → colby/. Split methods (scrape_job, extract_job_details, consult_notebook, create_doc_from_template, etc.) into colby/methods/<name>.ts each. Keep class name OrchestratorAgent. Same treatment for notebooklm.ts and notebooklm-mcp.ts. The DO migration tags don't change because class names stay identical.",
+          "acceptance_criteria": [
+            "wrangler.jsonc DO bindings still resolve",
+            "pnpm run build + pnpm run dev — agents still register",
+            "WebSocket / RPC behavior unchanged"
+          ],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "4.2",
+          "title": "Create JobScannerAgent folder + methods",
+          "depends_on": ["1.2", "2.13", "5.1"],
+          "files_modified": ["src/backend/index.ts"],
+          "files_created": [
+            "src/backend/ai/agents/job-scanner/index.ts",
+            "src/backend/ai/agents/job-scanner/types.ts",
+            "src/backend/ai/agents/job-scanner/health.ts",
+            "src/backend/ai/agents/job-scanner/methods/scan-board.ts",
+            "src/backend/ai/agents/job-scanner/methods/scan-all.ts",
+            "src/backend/ai/agents/job-scanner/methods/triage-batch.ts",
+            "src/backend/ai/agents/job-scanner/methods/index.ts"
+          ],
+          "details": "Class JobScannerAgent extends Agent<Env, { runs: Record<string, RunState>, queue: AnalyzeJob[] }>. RPC: scanBoard(token), scanAll(), getRunStatus(sessionId). onConnect handler streams ScanProgress events over WebSocket. Scheduled callback every 30s drains queue and forwards to JobAnalysisAgent via stub. health.ts probes greenhouse API (HEAD on one known board) + DB connectivity.",
+          "acceptance_criteria": [
+            "DO instantiates without error",
+            "scanBoard('cloudflare') populates jobs_postings + enqueues analyses",
+            "WebSocket clients receive { type: 'scan-progress', token, scraped, triaged }"
+          ],
+          "complexity": "large",
+          "status": "pending"
+        },
+        {
+          "id": "4.3",
+          "title": "Create JobAnalysisAgent folder + methods",
+          "depends_on": ["1.2", "2.13", "3.4", "5.2", "5.3", "5.5", "9.1"],
+          "files_modified": ["src/backend/index.ts"],
+          "files_created": [
+            "src/backend/ai/agents/job-analysis/index.ts",
+            "src/backend/ai/agents/job-analysis/types.ts",
+            "src/backend/ai/agents/job-analysis/health.ts",
+            "src/backend/ai/agents/job-analysis/methods/consult-notebook.ts",
+            "src/backend/ai/agents/job-analysis/methods/deep-analyze.ts",
+            "src/backend/ai/agents/job-analysis/methods/persist.ts",
+            "src/backend/ai/agents/job-analysis/methods/archive.ts",
+            "src/backend/ai/agents/job-analysis/methods/embed.ts",
+            "src/backend/ai/agents/job-analysis/methods/index.ts"
+          ],
+          "details": "Class JobAnalysisAgent. RPC: analyze(snapshotId), reanalyze(jobSiteId, hitlContext). State tracks per-snapshot phase. Each method file owns one phase: consult-notebook generates N questions and calls existing consultNotebook helper, persists to job_notebook_consultations. deep-analyze invokes gpt-oss-120b structured output with the analysis schema and notebook evidence injected. persist writes snapshot, requirements, taxonomy. archive captures markdown + pdf via browser-rendering services. embed calls embedJobsBatch and upserts to Vectorize. Each phase is independently retryable on failure.",
+          "acceptance_criteria": [
+            "analyze(snapshotId) completes all 5 phases for a real Greenhouse posting",
+            "Each phase failure is logged + retried on next scheduled tick",
+            "vectorize_id on the snapshot matches the upserted Vectorize id"
+          ],
+          "complexity": "large",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "phase": 5,
+      "name": "Service modules — greenhouse domain logic",
+      "tasks": [
+        {
+          "id": "5.1",
+          "title": "Create services/jobs/scraper",
+          "depends_on": [],
+          "files_modified": [],
+          "files_created": [
+            "src/backend/services/jobs/scraper/fetch-board.ts",
+            "src/backend/services/jobs/scraper/fetch-single.ts",
+            "src/backend/services/jobs/scraper/parse.ts",
+            "src/backend/services/jobs/scraper/apply-template.ts",
+            "src/backend/services/jobs/scraper/index.ts"
+          ],
+          "details": "Port /Volumes/Projects/greenhouse/app/scraper.py functions to TypeScript. fetch-board: GET ${GREENHOUSE_API_BASE}/{token}/jobs?content=true → list of job objects. parse: use linkedom or htmlparser2 (pnpm add linkedom — workerd-compatible). Implement heal_html, _strip_boilerplate (remove .content-intro, .content-conclusion, About Us blocks), extract_plain_text, extract_location_info, extract_requirements_snippet. apply-template: per-company CSS-selector based stripping using board_template_analyses rows.",
+          "acceptance_criteria": [
+            "fetchBoard('cloudflare') returns >=1 job object",
+            "parse(rawHtml) returns clean plain text matching Python output for a snapshot test"
+          ],
+          "complexity": "large",
+          "status": "pending"
+        },
+        {
+          "id": "5.2",
+          "title": "Create services/jobs/archive",
+          "depends_on": ["1.1"],
+          "files_modified": [],
+          "files_created": [
+            "src/backend/services/jobs/archive/markdown.ts",
+            "src/backend/services/jobs/archive/pdf.ts",
+            "src/backend/services/jobs/archive/r2-keys.ts",
+            "src/backend/services/jobs/archive/health.ts",
+            "src/backend/services/jobs/archive/index.ts"
+          ],
+          "details": "markdown: POST https://api.cloudflare.com/client/v4/accounts/{await env.CLOUDFLARE_ACCOUNT_ID.get()}/browser-rendering/markdown with Authorization: Bearer {await env.CF_BROWSER_RENDER_TOKEN.get()}, body { url }. pdf: same shape, /pdf endpoint. r2-keys: helper buildR2Key(token, jobSiteId, snapshotId, kind) → string. Both helpers write to env.R2_JOBS_BUCKET. health: write+read+delete a tiny test object. If you need to verify the request shape run ask --cloudflare-docs \"browser rendering rest api markdown pdf request body\" > docs/cloudflare-docs/browser-rendering.md.",
+          "acceptance_criteria": [
+            "captureJobMarkdown(env, url) writes a non-empty .md file to R2 and returns its key",
+            "captureJobPdf(env, url) writes a non-empty .pdf binary to R2 and returns its key"
+          ],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "5.3",
+          "title": "Create services/jobs/vectorize",
+          "depends_on": ["1.1", "3.4"],
+          "files_modified": [],
+          "files_created": [
+            "src/backend/services/jobs/vectorize/upsert.ts",
+            "src/backend/services/jobs/vectorize/query.ts",
+            "src/backend/services/jobs/vectorize/health.ts",
+            "src/backend/services/jobs/vectorize/index.ts"
+          ],
+          "details": "upsert: takes snapshot records, calls embedJobsBatch, calls env.VECTORIZE_JOBS.upsert(). Mirror metadata shape from /Volumes/Projects/greenhouse/app/vectorize_service.py (company, title, verdict, match_score, salary_min/max). query: takes natural-language query, calls embedJobsQuery, then env.VECTORIZE_JOBS.query(vector, { topK, returnMetadata: 'all' }). health: query a known test vector, assert at least 0 matches.",
+          "acceptance_criteria": [
+            "upsertSnapshotVectors([record]) returns count=1",
+            "searchSimilarJobs('senior engineer', 5) returns 0..5 matches with metadata"
+          ],
+          "complexity": "small",
+          "status": "pending"
+        },
+        {
+          "id": "5.4",
+          "title": "Create services/jobs/triage",
+          "depends_on": ["3.4"],
+          "files_modified": [],
+          "files_created": [
+            "src/backend/services/jobs/triage/prompt.ts",
+            "src/backend/services/jobs/triage/batch.ts",
+            "src/backend/services/jobs/triage/run.ts",
+            "src/backend/services/jobs/triage/index.ts"
+          ],
+          "details": "prompt: port TRIAGE_PROMPT from /Volumes/Projects/greenhouse/app/config.py — candidate stories baked in. batch: pack jobs into context-aware groups (~30% of model context reserved for schema+response). run: calls generateStructuredOutput with gpt-oss-120b and a Zod schema { decisions: [{ job_site_id, decision: 'Include' | 'Exclude', reasoning }] }.",
+          "acceptance_criteria": [
+            "runTriage(env, [job1, job2, job3]) returns decisions for all three",
+            "Reasoning is non-empty when decision = 'Include'"
+          ],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "5.5",
+          "title": "Create services/jobs/analysis",
+          "depends_on": ["3.4"],
+          "files_modified": [],
+          "files_created": [
+            "src/backend/services/jobs/analysis/prompt.ts",
+            "src/backend/services/jobs/analysis/schema.ts",
+            "src/backend/services/jobs/analysis/notebook-questions.ts",
+            "src/backend/services/jobs/analysis/index.ts"
+          ],
+          "details": "schema: port JobAssessment Pydantic model from /Volumes/Projects/greenhouse/app/models.py to Zod (match_score, verdict, builder_alignment, salary, benefits, story alignment, per-requirement scores, taxonomy). prompt: port JOB_ASSESSMENT_PROMPT from app/config.py. notebook-questions: Zod schema { questions: string[] } and a small extraction prompt that turns a job posting + candidate stories into 5–8 targeted NotebookLM queries.",
+          "acceptance_criteria": [
+            "JobAssessment Zod schema deeply matches Python Pydantic model",
+            "buildNotebookQuestions(env, jobPosting) returns string[5..8]"
+          ],
+          "complexity": "large",
+          "status": "pending"
+        },
+        {
+          "id": "5.6",
+          "title": "Create services/jobs/hitl/load-context",
+          "depends_on": ["2.13"],
+          "files_modified": [],
+          "files_created": [
+            "src/backend/services/jobs/hitl/load-context.ts",
+            "src/backend/services/jobs/hitl/index.ts"
+          ],
+          "details": "Port get_hitl_context_for_analysis from /Volumes/Projects/greenhouse/app/db.py — fetches similar HITL reviews (same company or overlapping categories) to calibrate the AI scoring prompt. Returns a structured context block.",
+          "acceptance_criteria": [
+            "loadHitlContext(env, { company, categories }) returns array of past reviews"
+          ],
+          "complexity": "small",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "phase": 6,
+      "name": "Hono routes",
+      "tasks": [
+        {
+          "id": "6.1",
+          "title": "Create /api/jobs/tokens routes",
+          "depends_on": ["2.13"],
+          "files_modified": [],
+          "files_created": ["src/backend/api/routes/jobs/tokens.ts"],
+          "details": "GET /api/jobs/tokens (list), POST /api/jobs/tokens (create), PATCH /api/jobs/tokens/:id (toggle is_active). Use OpenAPIHono + zod-openapi. Reference existing routes for the auto-doc pattern.",
+          "acceptance_criteria": ["Routes appear in /openapi.json"],
+          "complexity": "small",
+          "status": "pending"
+        },
+        {
+          "id": "6.2",
+          "title": "Create /api/jobs/scan + WebSocket route",
+          "depends_on": ["4.2"],
+          "files_modified": [],
+          "files_created": ["src/backend/api/routes/jobs/scan.ts"],
+          "details": "POST /api/jobs/scan { token } → calls JobScannerAgent stub, returns { sessionId }. WebSocket /api/jobs/scan/ws — proxies to the agent's WebSocket so the frontend can subscribe to ScanProgress events. Uses Hono's upgrade helper.",
+          "acceptance_criteria": [
+            "POST returns sessionId immediately (non-blocking)",
+            "WebSocket upgrades and forwards messages from the DO"
+          ],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "6.3",
+          "title": "Create /api/jobs/pipeline route",
+          "depends_on": ["4.2"],
+          "files_modified": [],
+          "files_created": ["src/backend/api/routes/jobs/pipeline.ts"],
+          "details": "POST /api/jobs/pipeline → calls JobScannerAgent.scanAll(). Returns sessionId for tracking.",
+          "acceptance_criteria": ["Triggers a scan across every active board_token"],
+          "complexity": "small",
+          "status": "pending"
+        },
+        {
+          "id": "6.4",
+          "title": "Create /api/jobs list + detail routes",
+          "depends_on": ["2.13"],
+          "files_modified": [],
+          "files_created": [
+            "src/backend/api/routes/jobs/list.ts",
+            "src/backend/api/routes/jobs/detail.ts"
+          ],
+          "details": "GET /api/jobs supports filters: company, since (ISO timestamp), score_min, score_max, verdict, fav. Returns paginated. GET /api/jobs/:job_site_id/history returns full history (snapshots, requirements, skills, responsibilities, applications, HITL reviews, notebook consultations).",
+          "acceptance_criteria": [
+            "Filters compose cleanly via Drizzle and()",
+            "/history nests all related rows"
+          ],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "6.5",
+          "title": "Create /api/jobs/search route",
+          "depends_on": ["5.3"],
+          "files_modified": [],
+          "files_created": ["src/backend/api/routes/jobs/search.ts"],
+          "details": "GET /api/jobs/search?q=&top_k=5 → calls searchSimilarJobs. Returns [{ id, score, metadata }].",
+          "acceptance_criteria": ["q='senior engineer' returns 0..5 ranked results"],
+          "complexity": "trivial",
+          "status": "pending"
+        },
+        {
+          "id": "6.6",
+          "title": "Create /api/jobs/taxonomy routes",
+          "depends_on": ["2.13"],
+          "files_modified": [],
+          "files_created": ["src/backend/api/routes/jobs/taxonomy.ts"],
+          "details": "GET/POST /api/jobs/categories, GET/POST /api/jobs/tags. POST /api/jobs/snapshots/:id/add-category, /add-tag. DELETE for mappings.",
+          "acceptance_criteria": ["CRUD complete"],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "6.7",
+          "title": "Create /api/jobs/hitl routes",
+          "depends_on": ["2.13"],
+          "files_modified": [],
+          "files_created": ["src/backend/api/routes/jobs/hitl.ts"],
+          "details": "POST /api/jobs/:job_site_id/review (human fit + match + notes). POST /api/jobs/category-feedback (thumbs up/down). POST /api/jobs/tag-feedback.",
+          "acceptance_criteria": ["All three endpoints persist and return 201"],
+          "complexity": "small",
+          "status": "pending"
+        },
+        {
+          "id": "6.8",
+          "title": "Create /api/jobs/lists routes",
+          "depends_on": ["2.13"],
+          "files_modified": [],
+          "files_created": ["src/backend/api/routes/jobs/lists.ts"],
+          "details": "GET/POST /api/jobs/lists. POST /api/jobs/lists/:id/add. DELETE /api/jobs/lists/:id/jobs/:jobId (soft delete).",
+          "acceptance_criteria": ["Soft-delete preserves audit trail"],
+          "complexity": "small",
+          "status": "pending"
+        },
+        {
+          "id": "6.9",
+          "title": "Create /api/jobs/archive routes (markdown + pdf streaming)",
+          "depends_on": ["5.2"],
+          "files_modified": [],
+          "files_created": ["src/backend/api/routes/jobs/archive.ts"],
+          "details": "GET /api/jobs/:snapshot_id/markdown → loads archive_md_key from D1, fetches from R2, streams with Content-Type: text/markdown. GET /api/jobs/:snapshot_id/pdf → same pattern, application/pdf.",
+          "acceptance_criteria": [
+            "<iframe src='/api/jobs/<id>/pdf' /> renders PDF inline in Chrome",
+            "Markdown route content matches what was stored on archive"
+          ],
+          "complexity": "small",
+          "status": "pending"
+        },
+        {
+          "id": "6.10",
+          "title": "Create /api/jobs/analytics routes",
+          "depends_on": ["2.13"],
+          "files_modified": [],
+          "files_created": ["src/backend/api/routes/jobs/analytics.ts"],
+          "details": "GET /api/jobs/stats/boards (per-token aggregates). GET /api/jobs/companies/:token/analytics (verdict distribution, category/tag pies, salary bars, location markers).",
+          "acceptance_criteria": ["Frontend CompanyProfile.tsx renders without empty states"],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "6.11",
+          "title": "Create /api/jobs/:snapshot_id/apply route",
+          "depends_on": ["2.4"],
+          "files_modified": [],
+          "files_created": ["src/backend/api/routes/jobs/apply.ts"],
+          "details": "POST /api/jobs/:snapshot_id/apply → 1) fetch snapshot + parent job 2) insert into roles with title, company, salary_min, salary_max, job_posting_url, source='greenhouse_scan', source_snapshot_id, status='preparing' 3) return { role_id }.",
+          "acceptance_criteria": [
+            "Returns role_id pointing at a real row",
+            "Subsequent GET /api/roles/:id resolves cleanly"
+          ],
+          "complexity": "small",
+          "status": "pending"
+        },
+        {
+          "id": "6.12",
+          "title": "Create /api/jobs/:job_site_id/reprocess route",
+          "depends_on": ["4.3"],
+          "files_modified": [],
+          "files_created": ["src/backend/api/routes/jobs/reprocess.ts"],
+          "details": "POST /api/jobs/:job_site_id/reprocess → loads HITL context via services/jobs/hitl/load-context, calls JobAnalysisAgent.reanalyze(jobSiteId, hitlContext). Returns the new snapshotId.",
+          "acceptance_criteria": ["A new snapshot row appears with is_manual_reprocess=true"],
+          "complexity": "small",
+          "status": "pending"
+        },
+        {
+          "id": "6.13",
+          "title": "Mount /api/jobs router in api/index.ts",
+          "depends_on": [
+            "6.1",
+            "6.2",
+            "6.3",
+            "6.4",
+            "6.5",
+            "6.6",
+            "6.7",
+            "6.8",
+            "6.9",
+            "6.10",
+            "6.11",
+            "6.12"
+          ],
+          "files_modified": ["src/backend/api/index.ts"],
+          "files_created": ["src/backend/api/routes/jobs/index.ts"],
+          "details": "jobs/index.ts hangs every subrouter under app.route('/...', ...). api/index.ts mounts app.route('/api/jobs', jobsRouter).",
+          "acceptance_criteria": [
+            "Every route appears in /openapi.json",
+            "GET /scalar renders all of them"
+          ],
+          "complexity": "trivial",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "phase": 7,
+      "name": "Frontend migration",
+      "tasks": [
+        {
+          "id": "7.1",
+          "title": "Install leaflet + leaflet.markercluster + types",
+          "depends_on": [],
+          "files_modified": ["package.json", "pnpm-lock.yaml"],
+          "files_created": [],
+          "details": "pnpm add leaflet leaflet.markercluster @types/leaflet @types/leaflet.markercluster.",
+          "acceptance_criteria": ["pnpm run build succeeds"],
+          "complexity": "trivial",
+          "status": "pending"
+        },
+        {
+          "id": "7.2",
+          "title": "Create /jobs/index.astro + CommandCenter.tsx",
+          "depends_on": ["6.13"],
+          "files_modified": [],
+          "files_created": [
+            "src/frontend/pages/jobs/index.astro",
+            "src/frontend/components/jobs/CommandCenter.tsx"
+          ],
+          "details": "Port from /Volumes/Projects/greenhouse/frontend/src/components/CommandCenter.tsx. Drop BACKEND_PORT env constant; use same-origin fetch. Replace EventSource with WebSocket (PipelineProgress component). Wrap in BaseLayout.astro. Use client:only='react' island per existing pattern.",
+          "acceptance_criteria": [
+            "/jobs renders the table with no console errors",
+            "Empty state shows when no jobs exist (no mock data)"
+          ],
+          "complexity": "large",
+          "status": "pending"
+        },
+        {
+          "id": "7.3",
+          "title": "Extract JobsTable + JobDetailModal components",
+          "depends_on": ["7.2"],
+          "files_modified": ["src/frontend/components/jobs/CommandCenter.tsx"],
+          "files_created": [
+            "src/frontend/components/jobs/JobsTable.tsx",
+            "src/frontend/components/jobs/JobDetailModal.tsx"
+          ],
+          "details": "Split table + modal out of CommandCenter for reuse on /jobs/history. JobDetailModal has tabs: Summary, HITL Review, Notebook Evidence, Markdown, PDF, Apply.",
+          "acceptance_criteria": [
+            "CommandCenter file shrinks (table+modal moved out)",
+            "Tabs deep-link via ?tab= on the modal"
+          ],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "7.4",
+          "title": "Create JobMarkdownViewer + JobPdfViewer",
+          "depends_on": ["6.9", "7.3"],
+          "files_modified": [],
+          "files_created": [
+            "src/frontend/components/jobs/JobMarkdownViewer.tsx",
+            "src/frontend/components/jobs/JobPdfViewer.tsx"
+          ],
+          "details": "Markdown viewer fetches /api/jobs/:id/markdown and pipes through src/frontend/components/assistant-ui/markdown-text.tsx. PDF viewer is just a shadcn Dialog with an <iframe src='/api/jobs/:id/pdf' className='w-full h-[80vh]' />.",
+          "acceptance_criteria": [
+            "Markdown renders with code blocks + headings styled per existing theme",
+            "PDF iframe loads inline (no download prompt)"
+          ],
+          "complexity": "small",
+          "status": "pending"
+        },
+        {
+          "id": "7.5",
+          "title": "Create ApplyButton with confirmation",
+          "depends_on": ["6.11", "7.3"],
+          "files_modified": [],
+          "files_created": ["src/frontend/components/jobs/ApplyButton.tsx"],
+          "details": "shadcn AlertDialog confirms 'Start application for {title} at {company}?'. On confirm: POST /api/jobs/:snapshot_id/apply → on success window.location.assign(`/roles/${role_id}`). NEVER use window.confirm.",
+          "acceptance_criteria": [
+            "Click → AlertDialog opens",
+            "Confirm → POSTs and redirects to /roles/:id"
+          ],
+          "complexity": "small",
+          "status": "pending"
+        },
+        {
+          "id": "7.6",
+          "title": "Create HitlReviewTab",
+          "depends_on": ["6.7"],
+          "files_modified": [],
+          "files_created": ["src/frontend/components/jobs/HitlReviewTab.tsx"],
+          "details": "Port from /Volumes/Projects/greenhouse/frontend/src/components/HitlReviewTab.tsx. Swap fetch URLs to /api/jobs/*. Keep the slider+thumbs-up/down UX intact.",
+          "acceptance_criteria": [
+            "Submit posts, success toast, modal stays open with refreshed data"
+          ],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "7.7",
+          "title": "Create /jobs/history page",
+          "depends_on": ["7.3"],
+          "files_modified": [],
+          "files_created": ["src/frontend/pages/jobs/history.astro"],
+          "details": "Reuse JobsTable in 'history' mode (no since-filter). Hides pipeline-control UI.",
+          "acceptance_criteria": ["Page renders without re-implementing table logic"],
+          "complexity": "small",
+          "status": "pending"
+        },
+        {
+          "id": "7.8",
+          "title": "Create /jobs/sessions page + SessionsTable",
+          "depends_on": ["6.4"],
+          "files_modified": [],
+          "files_created": [
+            "src/frontend/pages/jobs/sessions.astro",
+            "src/frontend/components/jobs/SessionsTable.tsx"
+          ],
+          "details": "Port SessionsTable.tsx from greenhouse. Fetches GET /api/sessions (need to expose this — fold into 6.4 or add a dedicated route).",
+          "acceptance_criteria": ["Table renders with sort/filter"],
+          "complexity": "small",
+          "status": "pending"
+        },
+        {
+          "id": "7.9",
+          "title": "Create /jobs/companies/[token] page + CompanyProfile",
+          "depends_on": ["6.10", "7.1"],
+          "files_modified": [],
+          "files_created": [
+            "src/frontend/pages/jobs/companies/[token].astro",
+            "src/frontend/components/jobs/CompanyProfile.tsx"
+          ],
+          "details": "Port CompanyProfile.tsx — Recharts radar/pie/bar + Leaflet map with marker clusters. Wrap Leaflet in client-only island. Use existing chart color tokens from src/frontend/styles/charts.ts (port if missing).",
+          "acceptance_criteria": ["All five visualizations render against real data"],
+          "complexity": "large",
+          "status": "pending"
+        },
+        {
+          "id": "7.10",
+          "title": "Create PipelineProgress (WebSocket) component",
+          "depends_on": ["6.2"],
+          "files_modified": [],
+          "files_created": ["src/frontend/components/jobs/PipelineProgress.tsx"],
+          "details": "Opens WebSocket to /api/jobs/scan/ws. Consumes ScanProgress events and renders progress UI inside CommandCenter's pipeline modal.",
+          "acceptance_criteria": ["UI updates in real time during a scan"],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "7.11",
+          "title": "Refactor /config page into multi-tab layout",
+          "depends_on": [],
+          "files_modified": ["src/frontend/pages/config.astro"],
+          "files_created": ["src/frontend/components/config/ConfigTabs.tsx"],
+          "details": "Wrap existing editors in shadcn Tabs (Resume, Career Stories, Agent Rules, Prompts, Compensation, Templates). Persist active tab via ?tab= query param. Each existing editor component is unchanged — it just becomes the body of one TabsContent.",
+          "acceptance_criteria": [
+            "Existing /config behavior unchanged when no ?tab=",
+            "Reload preserves active tab via URL"
+          ],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "7.12",
+          "title": "Create JobBoardsTab",
+          "depends_on": ["6.1", "7.11"],
+          "files_modified": ["src/frontend/components/config/ConfigTabs.tsx"],
+          "files_created": ["src/frontend/components/jobs/JobBoardsTab.tsx"],
+          "details": "Port SettingsPanel.tsx from greenhouse — board-token CRUD using /api/jobs/tokens. Add as 'Job Boards' TabsTrigger in ConfigTabs.tsx.",
+          "acceptance_criteria": [
+            "Tab visible at /config?tab=job-boards",
+            "Add/toggle/remove flows persist to D1"
+          ],
+          "complexity": "small",
+          "status": "pending"
+        },
+        {
+          "id": "7.13",
+          "title": "Create /applications page + ApplicationsTable",
+          "depends_on": ["6.11"],
+          "files_modified": [],
+          "files_created": [
+            "src/frontend/pages/applications/index.astro",
+            "src/frontend/components/applications/ApplicationsTable.tsx",
+            "src/frontend/components/applications/ApplicationsKanban.tsx"
+          ],
+          "details": "Kanban grouped by status (preparing | applied | interviewing | offer | rejected | withdrawn | archived). Toggle to table view (sort + filter). Row click → /roles/:id.",
+          "acceptance_criteria": ["Both views render against real /api/roles data"],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "7.14",
+          "title": "Update Sidebar with Jobs + Applications",
+          "depends_on": ["7.2", "7.13"],
+          "files_modified": ["src/frontend/components/Sidebar.tsx"],
+          "files_created": [],
+          "details": "Add 'Jobs' group with sub-items: Command Center (/jobs), History (/jobs/history), Sessions (/jobs/sessions), Companies (/jobs/companies). Add top-level 'Applications' link → /applications.",
+          "acceptance_criteria": ["Sidebar collapses correctly on mobile"],
+          "complexity": "trivial",
+          "status": "pending"
+        },
+        {
+          "id": "7.15",
+          "title": "Update /roles/[id] page for greenhouse-sourced roles",
+          "depends_on": ["6.9", "6.12", "7.4"],
+          "files_modified": ["src/frontend/components/role/RoleViewport.tsx"],
+          "files_created": [],
+          "details": "When role.source === 'greenhouse_scan' && role.source_snapshot_id, surface two extra buttons in the role header: 'View original posting (PDF)' (opens JobPdfViewer) and 'Re-analyze' (POST /api/jobs/:job_site_id/reprocess).",
+          "acceptance_criteria": ["Buttons hidden when source is not greenhouse_scan"],
+          "complexity": "small",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "phase": 9,
+      "name": "NotebookLM consultation during analysis",
+      "tasks": [
+        {
+          "id": "9.1",
+          "title": "Implement notebook-questions builder",
+          "depends_on": ["3.4", "5.5"],
+          "files_modified": ["src/backend/services/jobs/analysis/notebook-questions.ts"],
+          "files_created": [],
+          "details": "Already created in 5.5; this task covers the actual implementation. generateNotebookQuestions(env, posting, candidateStories) → string[]. Use generateStructuredOutput with gpt-oss-120b and the QuestionsSchema.",
+          "acceptance_criteria": [
+            "Returns 5–8 questions",
+            "Each question references a specific job requirement"
+          ],
+          "complexity": "small",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "phase": 11,
+      "name": "Health system extensions",
+      "tasks": [
+        {
+          "id": "11.1",
+          "title": "Add 6 new health modules",
+          "depends_on": ["1.1", "5.2", "5.3", "4.2", "4.3"],
+          "files_modified": ["src/backend/services/health-service.ts"],
+          "files_created": [],
+          "details": "Add: vectorize (env.VECTORIZE_JOBS.query), r2Jobs (env.R2_JOBS_BUCKET.head), googleAiStudio (embedJobsQuery 'ping' + assert dim 768), greenhouseApi (HEAD https://boards-api.greenhouse.io/v1/boards/cloudflare/jobs), jobScanner (DO checkHealth), jobAnalysis (DO checkHealth). Each follows the existing module shape: { name, status, latencyMs, error?, details? }.",
+          "acceptance_criteria": [
+            "Total 16 modules in the health output",
+            "Each new module returns latency or error within 5s"
+          ],
+          "complexity": "medium",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "phase": 12,
+      "name": "Cron + scheduled scanning",
+      "tasks": [
+        {
+          "id": "12.1",
+          "title": "Add second cron branch in _worker.ts scheduled handler",
+          "depends_on": ["1.3", "4.2"],
+          "files_modified": ["src/_worker.ts"],
+          "files_created": [],
+          "details": "Branch on event.cron: '0 */4 * * *' → existing health screening. '0 */6 * * *' → if global_config.pipeline_enabled === true: env.JOB_SCANNER_AGENT.idFromName('singleton').get().scanAll(). Use ctx.waitUntil for the long-running call.",
+          "acceptance_criteria": [
+            "Both crons fire on schedule (verify with Trigger Cron Event in dashboard)",
+            "Pipeline cron is a no-op when pipeline_enabled is false"
+          ],
+          "complexity": "small",
+          "status": "pending"
+        },
+        {
+          "id": "12.2",
+          "title": "Seed pipeline_enabled flag in global_config",
+          "depends_on": ["2.13"],
+          "files_modified": [],
+          "files_created": [],
+          "details": "On first boot, ensure global_config has key 'pipeline_enabled' (value 'false') if missing. Implement as a small idempotent seed in JobBoardsTab on mount, OR as a one-shot helper called from the health-service initialization path.",
+          "acceptance_criteria": [
+            "global_config 'pipeline_enabled' row exists after first request to /api/health"
+          ],
+          "complexity": "trivial",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "phase": 13,
+      "name": "Verification",
+      "tasks": [
+        {
+          "id": "13.1",
+          "title": "Local end-to-end smoke test",
+          "depends_on": ["7.14", "11.1", "12.1"],
+          "files_modified": [],
+          "files_created": [],
+          "details": "Follow PRD Phase 13 steps 1–12 against pnpm run dev locally.",
+          "acceptance_criteria": [
+            "All 12 steps pass without manual intervention",
+            "/health shows all 16 modules green or yellow with explanations"
+          ],
+          "complexity": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "13.2",
+          "title": "Production deploy + smoke test",
+          "depends_on": ["13.1"],
+          "files_modified": [],
+          "files_created": [],
+          "details": "Run pnpm run deploy. Visit production URL. Repeat steps 5–11 from PRD Phase 13 against the remote deployment.",
+          "acceptance_criteria": [
+            "Deploy succeeds (build → migrate:remote → wrangler deploy)",
+            "All smoke tests pass on production"
+          ],
+          "complexity": "medium",
+          "status": "pending"
+        }
+      ]
+    }
+  ]
+}

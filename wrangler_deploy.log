@@ -1,0 +1,206 @@
+npm warn Unknown env config "_jsr-registry". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown env config "store-dir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown env config "npm-globalconfig". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown global config "store-dir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ ⛅️ wrangler 4.86.0 (update available 4.87.0)
+─────────────────────────────────────────────
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mProcessing wrangler.jsonc configuration:[0m
+
+    - "secrets" fields are experimental and may change or break at any time.
+
+
+🌀 Building list of assets...
+✨ Read 159 files from the assets directory /Volumes/Projects/workers/core-resumes/dist
+🌀 Starting asset upload...
+🌀 Found 32 new or modified static assets to upload. Proceeding with upload...
++ /_astro/AgentRulesEditor.Di71fHfK.js
++ /_astro/PendingTasks.C_sxchiM.js
++ /_astro/PromptEditor.uVlmlkrR.js
++ /_astro/RecentEmails.CqxaHasO.js
++ /_astro/EmailAssociate.CIAaExDZ.js
++ /_astro/RolesTable.BRdgEk4A.js
++ /_astro/IntakeModal.TX8Wuesm.js
++ /_astro/CompaniesEditor.rkXuhOnl.js
++ /_astro/SalaryRangeChart.yHWQOdpz.js
++ /_astro/ResumeBulletsEditor.BjdJ-Kso.js
++ /_astro/CategoricalChart.BaDJSv5m.js
++ /_astro/shadowDom.Bt-hSG7i.js
++ /_astro/CareerStoriesEditor.BxINKGPP.js
++ /_astro/StatCards.DDwUuFd8.js
++ /_astro/PreparingList.cHXMzsnt.js
++ /_astro/with-selector.BA5BsobW.js
++ /_astro/ErrorLogger.BFqkoQ7R.js
++ /_astro/useRole.D0AL5Qer.js
++ /_astro/HealthDashboard.Ci4pwhga.js
++ /_astro/getPseudoElementBounds.B26_a07s.js
++ /_astro/useOpenInteractionType.nD3ovA7e.js
++ /_astro/RoleViewport.DK-wJZ5X.js
++ /_astro/api-client.0ySoHBCM.js
++ /_astro/CompensationEditor.C39lYmlt.js
++ /_astro/TemplateIdsEditor.DTyXUWIY.js
++ /_astro/HealthBadge.BIWIsa9e.js
++ /_astro/getZIndexFromUnknown.CNOid7mv.js
++ /_astro/input.OmWrZyv_.js
++ /_astro/NotebookChat.BSwqrXA3.js
++ /_astro/JobsByCompanyChart.DFFjDnuL.js
++ /_astro/RoleHeader.hEGu9ir4.js
++ /_astro/CartesianChart.C72mhNNC.js
+Uploaded 11 of 32 assets
+Uploaded 22 of 32 assets
+Uploaded 32 of 32 assets
+✨ Success! Uploaded 32 files (65 already uploaded) (2.36 sec)
+
+Total Upload: 11189.81 KiB / gzip: 2215.90 KiB
+Worker Startup Time: 198 ms
+Your Worker has access to the following bindings:
+Binding                                                                                                       Resource                  
+env.ORCHESTRATOR_AGENT (OrchestratorAgent)                                                                    Durable Object            
+env.NOTEBOOKLM_AGENT (NotebookLMAgent)                                                                        Durable Object            
+env.NOTEBOOKLM_MCP_AGENT (NotebookLMMcpAgent)                                                                 Durable Object            
+env.TRANSCRIPTION_AGENT (TranscriptionAgent)                                                                  Durable Object            
+env.SANDBOX (Sandbox)                                                                                         Durable Object            
+env.KV (40090557ec9e4f63bd839e862b28a825)                                                                     KV Namespace              
+env.SESSIONS (80e53208e05d488e95a5db8141ebc233)                                                               KV Namespace              
+env.EMAIL_OUT (unrestricted)                                                                                  Send Email                
+env.DB (core-resumes)                                                                                         D1 Database               
+env.R2_AUDIO_BUCKET (core-resumes-audio)                                                                      R2 Bucket                 
+env.GITHUB_TOKEN (8c42fa70938644e0a8a109744467375f/GH_TOKEN)                                                  Secrets Store Secret      
+env.CLOUDFLARE_ACCOUNT_ID (8c42fa70938644e0a8a109744467375f/CLOUDFLARE_ACCOUNT_ID)                            Secrets Store Secret      
+env.CLOUDFLARE_WRANGLER_API_TOKEN (8c42fa70938644e0a8a109744467375f/CLOUDFLARE_WRANGLER_API_TOKEN)            Secrets Store Secret      
+env.WORKER_API_KEY (8c42fa70938644e0a8a109744467375f/WORKER_API_KEY)                                          Secrets Store Secret      
+env.CLOUDFLARE_IMAGES_STREAM_TOKEN (8c42fa70938644e0a8a109744467375f/CLOUDFLARE_IMAGES_STREAM_TOKEN)          Secrets Store Secret      
+env.AGENTIC_WORKER_API_KEY (8c42fa70938644e0a8a109744467375f/AGENTIC_WORKER_API_KEY)                          Secrets Store Secret      
+env.CLOUDFLARE_AI_GATEWAY_TOKEN (8c42fa70938644e0a8a109744467375f/CLOUDFLARE_AI_GATEWAY_TOKEN)                Secrets Store Secret      
+env.CF_BROWSER_RENDER_TOKEN (8c42fa70938644e0a8a109744467375f/CLOUDFLARE_BROWSER_RENDER_TOKEN)                Secrets Store Secret      
+env.JULES_API_KEY (8c42fa70938644e0a8a109744467375f/JULES_API_KEY)                                            Secrets Store Secret      
+env.GOOGLE_CREDS_SA_PRIVATE_KEY_PT_1 (8c42fa70938644e0a8a109744467375f/GOOGLE_CREDS_SA_PRIVATE_KEY_PT_1)      Secrets Store Secret      
+env.GOOGLE_CREDS_SA_PRIVATE_KEY_PT_2 (8c42fa70938644e0a8a109744467375f/GOOGLE_CREDS_SA_PRIVATE_KEY_PT_2)      Secrets Store Secret      
+env.GOOGLE_CREDS_SA_CLIENT_EMAIL (8c42fa70938644e0a8a109744467375f/GOOGLE_CREDS_SA_CLIENT_EMAIL)              Secrets Store Secret      
+env.NOTEBOOKLM_AUTH_TOKEN (8c42fa70938644e0a8a109744467375f/NOTEBOOKLM_AUTH_TOKEN)                            Secrets Store Secret      
+env.BROWSER                                                                                                   Browser Run               
+env.AI                                                                                                        AI                        
+env.ASSETS                                                                                                    Assets                    
+env.DEFAULT_MODEL_EMBEDDING ("@cf/baai/bge-large-en-v1.5")                                                    Environment Variable      
+env.PARENT_DRIVE_FOLDER_ID ("1jCokY9_gi3w3_qjdCX8MbnbtZrF9p52j")                                              Environment Variable      
+env.HEALTH_CHECK_DRIVE_FOLDER_ID ("1Sc-uzcth6LfaaDvWsTI7tCcbzL1eTwym")                                        Environment Variable      
+env.AI_GATEWAY_ID ("default-gateway")                                                                         Environment Variable      
+env.CAREER_NOTEBOOKLM_ID ("ae2a743f-231b-4b05-ab98-683d01dd5c65")                                             Environment Variable      
+env.MODEL_CHAT ("@cf/openai/gpt-oss-120b")                                                                    Environment Variable      
+env.MODEL_EXTRACT ("@cf/openai/gpt-oss-120b")                                                                 Environment Variable      
+env.MODEL_DRAFT ("@cf/openai/gpt-oss-120b")                                                                   Environment Variable      
+env.MODEL_TRANSCRIBE ("@cf/openai/whisper-large-v3-turbo")                                                    Environment Variable      
+env.BUCKET_NAME_AUDIO ("core-resumes-audio")                                                                  Environment Variable      
+env.BUCKET_NAME_FILES ("core-resumes-files")                                                                  Environment Variable      
+
+The following containers are available:
+- core-resumes-sandbox (/Volumes/Projects/workers/core-resumes/Dockerfile)
+
+Uploaded core-resumes (15.05 sec)
+Building image core-resumes-sandbox:506717b0
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 367B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/cloudflare/sandbox:0.9.2
+#2 DONE 1.0s
+
+#3 [internal] load .dockerignore
+#3 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context:
+#3 transferring context: 2B 0.1s done
+#3 DONE 1.4s
+
+#4 [1/3] FROM docker.io/cloudflare/sandbox:0.9.2@sha256:3a8626db5d3d838d947abadd37b818e48628b17f12cf2e87d89b8e83a6676482
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 128B done
+#5 DONE 0.0s
+
+#6 [2/3] RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+#6 CACHED
+
+#7 [3/3] COPY scripts/container_src/process_audio.py /workspace/process_audio.py
+#7 CACHED
+
+#8 exporting to image
+#8 exporting layers done
+#8 writing image sha256:7e8943303e82d7c6740fbda116b4877383808160d5c7185c3c1a59e3e42a89b8 done
+#8 naming to docker.io/library/core-resumes-sandbox:506717b0 done
+#8 DONE 0.0s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/84dhgz9h6js3ucbhrsg44adqw
+Login Succeeded
+Image does not exist remotely, pushing: registry.cloudflare.com/b3304b14848de15c72c24a14b0cd187d/core-resumes-sandbox:506717b0
+The push refers to repository [registry.cloudflare.com/b3304b14848de15c72c24a14b0cd187d/core-resumes-sandbox]
+ebe2f52e18fc: Preparing
+ce77f3ad33c5: Preparing
+74f1ee367548: Preparing
+fcec614a150d: Preparing
+643703b92c60: Preparing
+5f70bf18a086: Preparing
+493c60777a0a: Preparing
+0b66d98df66d: Preparing
+08b4bf77ef33: Preparing
+2d7e79a4d527: Preparing
+094d3575eec8: Preparing
+489265559acc: Preparing
+1a72252ac573: Preparing
+6b1ff7341b78: Preparing
+39fbf5f8fe52: Preparing
+08b4bf77ef33: Waiting
+2d7e79a4d527: Waiting
+094d3575eec8: Waiting
+489265559acc: Waiting
+1a72252ac573: Waiting
+6b1ff7341b78: Waiting
+39fbf5f8fe52: Waiting
+5f70bf18a086: Waiting
+493c60777a0a: Waiting
+0b66d98df66d: Waiting
+ce77f3ad33c5: Layer already exists
+643703b92c60: Layer already exists
+ebe2f52e18fc: Layer already exists
+fcec614a150d: Layer already exists
+74f1ee367548: Layer already exists
+5f70bf18a086: Layer already exists
+493c60777a0a: Layer already exists
+0b66d98df66d: Layer already exists
+08b4bf77ef33: Layer already exists
+2d7e79a4d527: Layer already exists
+094d3575eec8: Layer already exists
+1a72252ac573: Layer already exists
+489265559acc: Layer already exists
+6b1ff7341b78: Layer already exists
+39fbf5f8fe52: Layer already exists
+506717b0: digest: sha256:088034635ed988e8e8649d6587c984650ef01b017089f177bee86471f2a8ccec size: 3460
+╭ Deploy a container application deploy changes to your application
+│
+│ Container application changes
+│
+├ EDIT core-resumes-sandbox
+│
+│           "command": [],
+│           "durable_object_offset_instances": 4,
+│           "entrypoint": [],
+│ -         "image": "registry.cloudflare.com/b3304b14848de15c72c24a14b0cd187d/core-resumes-sandbox:3f4a5c9b",
+│ +         "image": "registry.cloudflare.com/b3304b14848de15c72c24a14b0cd187d/core-resumes-sandbox:506717b0",
+│           "instance_type": "lite",
+│           "network": {
+│             "assign_ipv4": "none",
+│
+│
+│  SUCCESS  Modified application core-resumes-sandbox (Application ID: a0393aff-16ea-436c-9889-0fa7ffb38fc7)
+│
+╰ Applied changes 
+
+Deployed core-resumes triggers (1.02 sec)
+  https://core-resumes.hacolby.workers.dev
+  schedule: 0 */4 * * *
+Current Version ID: 506717b0-388c-4452-b246-1a5dda334559

@@ -1,59 +1,54 @@
 /**
- * @fileoverview Authentication middleware
+ * @fileoverview Session-cookie authentication middleware for protected API routes.
+ *
+ * API-key protected NotebookLM session endpoints bypass browser session auth so
+ * local automation can manage cookies without a `cr_session` browser cookie.
  */
 
-import type { Context, Next } from 'hono';
-import { drizzle } from 'drizzle-orm/d1';
-import { eq } from 'drizzle-orm';
-import { sessions, users } from '../../db/schema';
-import type { Bindings, Variables } from '../index';
+import { createMiddleware } from "hono/factory";
 
-export async function authMiddleware(
-  c: Context<{ Bindings: Bindings; Variables: Variables }>,
-  next: Next
-) {
-  const authHeader = c.req.header('Authorization');
+import { getWorkerApiKey } from "@/backend/utils/secrets";
+import { verifySessionCookie } from "@/backend/lib/cookies";
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
-
-  const token = authHeader.substring(7);
-  const db = drizzle(c.env.DB);
-
-  try {
-    const sessionResult = await db
-      .select({
-        userId: sessions.userId,
-        expiresAt: sessions.expiresAt,
-        email: users.email,
-        name: users.name,
-      })
-      .from(sessions)
-      .innerJoin(users, eq(sessions.userId, users.id))
-      .where(eq(sessions.token, token))
-      .limit(1);
-
-    if (sessionResult.length === 0) {
-      return c.json({ error: 'Invalid session' }, 401);
-    }
-
-    const session = sessionResult[0];
-
-    if (session.expiresAt * 1000 < Date.now()) {
-      return c.json({ error: 'Session expired' }, 401);
-    }
-
-    c.set('userId', session.userId);
-    c.set('user', {
-      id: session.userId,
-      email: session.email,
-      name: session.name,
-    });
-
+export const authMiddleware = createMiddleware<{
+  Bindings: Env;
+  Variables: { authed: true };
+}>(async (c, next) => {
+  if (
+    c.req.path === "/api/auth/login" ||
+    c.req.path === "/api/notebook/session/sync" ||
+    c.req.path === "/api/notebook/session/check"
+  ) {
     await next();
-  } catch (error) {
-    console.error('Auth middleware error:', error);
-    return c.json({ error: 'Authentication failed' }, 500);
+    return;
   }
-}
+
+  // 1. Try Session Cookie Auth
+  const cookieHeader = c.req.header("cookie");
+  const sessionPayload = await verifySessionCookie(c.env, cookieHeader);
+  if (sessionPayload) {
+    c.set("authed", true);
+    return next();
+  }
+
+  // 2. Try API Key Auth (for programmatic/automation access)
+  const workerApiKey = await getWorkerApiKey(c.env);
+  const authHeader = c.req.header("Authorization") || c.req.header("x-api-key");
+  
+  if (workerApiKey && authHeader) {
+    let providedKey = "";
+    if (authHeader.startsWith("Bearer ")) {
+      providedKey = authHeader.substring(7);
+    } else {
+      providedKey = authHeader;
+    }
+    
+    if (providedKey === workerApiKey) {
+      c.set("authed", true);
+      return next();
+    }
+  }
+
+  // If both fail, reject
+  return c.json({ error: "Unauthorized" }, 401);
+});

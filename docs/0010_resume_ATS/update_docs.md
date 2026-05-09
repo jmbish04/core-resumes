@@ -1,0 +1,18 @@
+Please update AGENTS.md and applicable .agent/rules files with the context around the email to role mapping and frontend component with role mapping section so future agents are awarre of how it works. 
+
+Also update the AGENTS.md and applicable .agent/rules files with the improvements to the resume generation and analysis functionality (like ATS)  implemented from this implementation plan: docs/0010_resume_ATS/implementation_plan.md
+
+Then please update the frontend docs suite of documentation pages with 1) the email to role processing pipeline and how to utilize the global email inbox page to match up roles -- cover the fact that currently the global email email component will allow for viewing role match up, correcting the role association, creating the role association when ai has failed to do so or got it wrong
+
+2) Please discuss the additional functionality in the global inbox for view auto generated draft replies from the agent created automatically upon delivery to the worker inbox and/or other things automated and created as a result of the email delivery (there were others, please go and figure this out and outline it) -- and how the user can also ask an agent to create an artifact like a draft email etc from a selected email in the global email inbox .. via assistant-ui modal being present on this screen with that modals ability to detect which email the user is viewing in their email inbox shadcn preview pane. For example, the user could be looking at an email from @acme.com and ask for a draft reply which the agent will generate and will show here in this email view upon finalization -- with progress visible there in the component and/or error message if the draft fails .... or if the user asks the agent via assistant-ui modal to modify the draft already there, etc 
+
+3) Please also discuss how the resume ATS feature works and operates and how to utilize this feature in the user interface along with google docs integration for comments etc with the agent on the backend; also discusee the resume viewport  via the frontend page dedicated to resume scoring and ATS metrics -- showing an overall score at the top with # of warnings and # open comments, etc ... on this page there should also be an assistant-ui for the user to interact with the agent to make changes to the resume based on what is discussed in the chat and the agent using its skills to interact with google docs.  >>  with the improvements to the resume generation and analysis functionality (like ATS)  implemented from this implementation plan: docs/0010_resume_ATS/implementation_plan.md
+
+with the improvements to the resume generation and analysis functionality (like ATS)  implemented from this implementation plan: docs/0010_resume_ATS/implementation_plan.md
+
+
+
+---------
+
+
+Please now review the code base for other features regarding the email inbox including the ability for the agent on the backend to be triggered based on the email content to do things like draft reply messages for confirming scheduling, updating status of the email's associated role upon receiving a rejection letter, drafting an email for negotiating a better total comp, negotiating a thank you letter following an interview, etc -- all of these things doable from the preview editor of that email compent as buttons but also doable via chat with the assistant-ui modal on this screen ... where the agent is aware of which email the user is currently viewing in the email widget / component so depending on the nature of the chat with assistant-ui, the agent should be able to CRUD these docuemnts. 

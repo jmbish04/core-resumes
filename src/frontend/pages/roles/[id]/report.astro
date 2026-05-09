@@ -1,0 +1,134 @@
+---
+import { eq, desc, inArray } from "drizzle-orm";
+import { getDb } from "@/backend/db";
+import {
+  roles,
+  roleAnalyses,
+  roleBullets,
+  roleBulletAnalyses,
+  roleAlignmentScores,
+  mockInterviews,
+  careerMemory,
+  documents,
+} from "@/backend/db/schema";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { RoleReport } from "@/components/role/RoleReport";
+import { Sidebar } from "@/components/Sidebar";
+
+if (!Astro.cookies.has("cr_session")) {
+  return Astro.redirect("/login");
+}
+
+const { id } = Astro.params;
+const db = getDb((Astro.locals as any).runtime.env);
+
+// 1. Fetch Role
+const [role] = await db.select().from(roles).where(eq(roles.id, id!)).limit(1);
+if (!role) {
+  return new Response("Role not found", { status: 404 });
+}
+
+// 2. Fetch Overall Analysis
+const [analysis] = await db
+  .select()
+  .from(roleAnalyses)
+  .where(eq(roleAnalyses.roleId, role.id))
+  .orderBy(desc(roleAnalyses.analyzedAt))
+  .limit(1);
+
+// 3. Fetch Alignment Scores
+const alignmentScores = analysis 
+  ? await db.select().from(roleAlignmentScores).where(eq(roleAlignmentScores.analysisId, analysis.id))
+  : [];
+
+// 4. Fetch Bullets
+const bullets = await db.select().from(roleBullets).where(eq(roleBullets.roleId, role.id));
+
+// 5. Fetch Bullet Analyses (Revisions)
+// We'll get all bullet analyses for all bullets of this role.
+// Since we don't have a direct roleId on bullet_analyses, we'll fetch them where bulletId IN (bullets.map(b => b.id))
+// But SQLite Drizzle IN clause limits are generous. 
+const bulletIds = bullets.map(b => b.id);
+let allBulletAnalyses: typeof roleBulletAnalyses.$inferSelect[] = [];
+if (bulletIds.length > 0) {
+  // SQLite inArray with large arrays might fail, but role bullets are typically < 100.
+  // Workaround: we can fetch all and filter, or just use a standard where-in if it works.
+  // Actually, we can join or just query in chunks.
+  // For simplicity, let's just query them:
+  allBulletAnalyses = await db
+    .select()
+    .from(roleBulletAnalyses)
+    .where(inArray(roleBulletAnalyses.bulletId, bulletIds));
+}
+
+// 6. Fetch Mock Interviews
+const mockInterviewsData = await db
+  .select()
+  .from(mockInterviews)
+  .where(eq(mockInterviews.roleId, role.id))
+  .orderBy(desc(mockInterviews.version));
+
+// 7. Fetch Career Memory for this role
+const memory = await db
+  .select()
+  .from(careerMemory)
+  .where(eq(careerMemory.roleId, role.id))
+  .orderBy(desc(careerMemory.createdAt));
+
+// 8. Fetch Documents
+const docs = await db
+  .select()
+  .from(documents)
+  .where(eq(documents.roleId, role.id))
+  .orderBy(desc(documents.version));
+
+// We need to fetch the markdown content for each document directly on the server to pass to the client, 
+// or let the client fetch it via our new API.
+// Letting the client fetch it is cleaner and doesn't block the initial page render.
+
+const payload = {
+  role,
+  analysis,
+  alignmentScores,
+  bullets,
+  bulletAnalyses: allBulletAnalyses,
+  mockInterviews: mockInterviewsData,
+  careerMemory: memory,
+  documents: docs,
+};
+---
+
+<BaseLayout title={`Report: ${role.companyName} | Career Orchestrator`} description={`Total Role Analysis for ${role.jobTitle}`}>
+  <div class="flex flex-1">
+    <!-- Hide sidebar when printing -->
+    <div class="print:hidden h-full flex flex-shrink-0 border-r border-border bg-sidebar">
+      <Sidebar client:load />
+    </div>
+    
+    <section class="min-w-0 flex-1 print:p-0">
+      <div class="mx-auto w-full max-w-screen-2xl px-4 py-5 lg:px-8 print:max-w-none print:p-0">
+        <RoleReport payload={payload} client:load />
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style is:global>
+  @media print {
+    body {
+      background: white !important;
+      color: black !important;
+    }
+    
+    /* Ensure page breaks don't cut content in half */
+    h1, h2, h3, h4, h5, h6 {
+      page-break-after: avoid;
+    }
+    .print-avoid-break {
+      page-break-inside: avoid;
+    }
+    .print-page-break-before {
+      page-break-before: always;
+    }
+  }
+</style>

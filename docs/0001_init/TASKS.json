@@ -1,0 +1,744 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "0001",
+  "project": "core-resumes",
+  "title": "Career Orchestrator Worker — Initial Build",
+  "prd": "./PRD.md",
+  "principles": [
+    "Modular: one file per DB table, one file per AI model, per-provider AI handlers, per-task AI helpers",
+    "All AI calls go through src/backend/ai/tasks/* — direct env.AI.run() is forbidden outside the AI layer",
+    "All Workers AI calls route through AI Gateway (caching + observability)",
+    "Schema changes always: pnpm run db:generate, never hand-edit SQL migrations",
+    "wrangler.jsonc binding changes always: pnpm run cf-typegen immediately after",
+    "Frontend defaults to shadcn dark theme; Navbar + ErrorLogger on every page; never window.alert/prompt/confirm; no mock data",
+    "OpenAPI doc routes (/openapi.json, /scalar, /swagger) are dynamic — derived from drizzle-zod schemas, never hardcoded"
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Foundation cleanup + dependency install",
+      "tasks": [
+        {
+          "id": "T0.1",
+          "title": "Install new dependencies",
+          "depends_on": [],
+          "actions": [
+            "pnpm add @hono/zod-openapi drizzle-zod agents notebooklm-sdk recharts postal-mime zod-to-json-schema",
+            "Add scripts to package.json: db:studio, types"
+          ],
+          "acceptance": [
+            "package.json includes all 7 new deps and 2 new scripts",
+            "pnpm install completes cleanly"
+          ]
+        },
+        {
+          "id": "T0.2",
+          "title": "Update wrangler.jsonc bindings",
+          "depends_on": ["T0.1"],
+          "files": ["wrangler.jsonc"],
+          "actions": [
+            "Add browser binding { binding: 'BROWSER' }",
+            "Add send_email [{ name: 'EMAIL_OUT' }]",
+            "Add durable_objects.bindings ORCHESTRATOR_AGENT (class_name: OrchestratorAgent)",
+            "Add migrations [{ tag: 'v1', new_sqlite_classes: ['OrchestratorAgent'] }]",
+            "Add vars: AI_GATEWAY_ID, AI_GATEWAY_ACCOUNT_ID, MODEL_CHAT, MODEL_EXTRACT, MODEL_DRAFT",
+            "Add 5 new secrets_store_secrets entries: NOTEBOOKLM_OAUTH_REFRESH_TOKEN, NOTEBOOKLM_OAUTH_CLIENT_ID, NOTEBOOKLM_OAUTH_CLIENT_SECRET, NOTEBOOKLM_NOTEBOOK_ID, COOKIE_SIGNING_KEY",
+            "Run wrangler types"
+          ],
+          "acceptance": [
+            "worker-configuration.d.ts regenerated; Env interface includes BROWSER, EMAIL_OUT, ORCHESTRATOR_AGENT, all new secrets",
+            "Note in implementation log: user must populate the 5 new secrets via `wrangler secrets-store secret create` before first deploy"
+          ]
+        },
+        {
+          "id": "T0.3",
+          "title": "Delete obsolete frontend components and route files",
+          "depends_on": [],
+          "delete": [
+            "src/frontend/components/Header.tsx",
+            "src/frontend/components/MainNav.tsx",
+            "src/frontend/components/MobileNav.tsx",
+            "src/frontend/components/Footer.tsx",
+            "src/frontend/components/ComponentExample.tsx",
+            "src/frontend/components/ThemeToggle.tsx",
+            "src/frontend/components/Icons.tsx",
+            "src/frontend/components/HeadSEO.astro",
+            "src/backend/api/routes/auth.ts",
+            "src/backend/api/routes/dashboard.ts",
+            "src/backend/api/routes/threads.ts",
+            "src/backend/api/routes/notifications.ts",
+            "src/backend/api/routes/documents.ts",
+            "src/backend/api/routes/health.ts",
+            "src/backend/api/routes/ai.ts",
+            "src/backend/api/routes/openapi.ts",
+            "src/backend/api/middleware/auth.ts",
+            "src/backend/db/schema.ts",
+            "drizzle/0000_*.sql",
+            "drizzle/0001_*.sql",
+            "drizzle/meta/_journal.json"
+          ],
+          "acceptance": [
+            "All 14 shadcn primitives in src/frontend/components/ui/ remain untouched",
+            "src/frontend/layouts/BaseLayout.astro remains (will be edited later)"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P1",
+      "name": "Database — modular per-table schema",
+      "tasks": [
+        {
+          "id": "T1.1",
+          "title": "Create db/schemas/roles.ts",
+          "depends_on": ["T0.3"],
+          "files": ["src/backend/db/schemas/roles.ts"],
+          "spec": "PRD §3 — drizzle table + insertRoleSchema + selectRoleSchema + Role/NewRole types"
+        },
+        {
+          "id": "T1.2",
+          "title": "Create db/schemas/documents.ts",
+          "depends_on": ["T1.1"],
+          "files": ["src/backend/db/schemas/documents.ts"],
+          "spec": "id, gdocId, roleId (FK roles cascade), type ['resume','cover_letter','notes','other'], version, name, createdAt; index on roleId"
+        },
+        {
+          "id": "T1.3",
+          "title": "Create db/schemas/threads.ts",
+          "depends_on": ["T1.1"],
+          "files": ["src/backend/db/schemas/threads.ts"],
+          "spec": "id, title, roleId (FK roles cascade, nullable), createdAt"
+        },
+        {
+          "id": "T1.4",
+          "title": "Create db/schemas/messages.ts",
+          "depends_on": ["T1.3"],
+          "files": ["src/backend/db/schemas/messages.ts"],
+          "spec": "id, threadId (FK threads cascade), roleId (FK roles cascade, nullable), author ['user','agent','system'], content, metadata JSON, timestamp; index on threadId"
+        },
+        {
+          "id": "T1.5",
+          "title": "Create db/schemas/emails.ts",
+          "depends_on": ["T1.1"],
+          "files": ["src/backend/db/schemas/emails.ts"],
+          "spec": "id, roleId (FK roles set null, nullable), subject, body, sender, rawContent, processedStatus ['pending','associated','unmatched','responded','ignored'], receivedAt; index on processedStatus"
+        },
+        {
+          "id": "T1.6",
+          "title": "Create db/schemas/global-config.ts",
+          "depends_on": [],
+          "files": ["src/backend/db/schemas/global-config.ts"],
+          "spec": "key (PK), value (JSON), updatedAt"
+        },
+        {
+          "id": "T1.7",
+          "title": "Create db/schema.ts barrel",
+          "depends_on": ["T1.1", "T1.2", "T1.3", "T1.4", "T1.5", "T1.6"],
+          "files": ["src/backend/db/schema.ts"],
+          "spec": "export * from each schemas/* file. No inline definitions."
+        },
+        {
+          "id": "T1.8",
+          "title": "Create db/index.ts (drizzle factory)",
+          "depends_on": ["T1.7"],
+          "files": ["src/backend/db/index.ts"],
+          "spec": "export function getDb(env: Env) { return drizzle(env.DB) }"
+        },
+        {
+          "id": "T1.9",
+          "title": "Generate single fresh migration",
+          "depends_on": ["T1.7"],
+          "actions": [
+            "pnpm run db:generate",
+            "pnpm run migrate:local",
+            "wrangler d1 execute DB --local --command \"select name from sqlite_master where type='table'\""
+          ],
+          "acceptance": [
+            "drizzle/0000_*.sql exists with CREATE TABLE IF NOT EXISTS  for roles, documents, threads, messages, emails, global_config",
+            "Local D1 query returns all 6 tables"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P2",
+      "name": "AI layer — providers, models, tasks",
+      "tasks": [
+        {
+          "id": "T2.1",
+          "title": "Provider base contract",
+          "depends_on": ["T0.2"],
+          "files": ["src/backend/ai/providers/base.ts"],
+          "spec": "AIProvider interface with invokeModel + streamModel; ModelDescriptor<TInput, TOutput> generic with id, capabilities, input zod, output zod, serialize, parseResponse; InvokeOpts with cacheTtl, signal"
+        },
+        {
+          "id": "T2.2",
+          "title": "Workers AI provider (gateway-routed)",
+          "depends_on": ["T2.1"],
+          "files": ["src/backend/ai/providers/workers-ai.ts"],
+          "spec": "Class WorkersAIProvider implements AIProvider. invokeModel: validates input via model.input, calls https://gateway.ai.cloudflare.com/v1/{AI_GATEWAY_ACCOUNT_ID}/{AI_GATEWAY_ID}/workers-ai/{model.id} with Bearer ${AI_GATEWAY_TOKEN.get()} header; passes cf-aig-cache-ttl header from opts.cacheTtl; runs model.parseResponse on result. streamModel: same path, returns ReadableStream. Falls back to env.AI.run for streams the gateway can't proxy."
+        },
+        {
+          "id": "T2.3",
+          "title": "Provider factory + barrel",
+          "depends_on": ["T2.2"],
+          "files": ["src/backend/ai/providers/index.ts"],
+          "spec": "export function getProvider(env: Env, name: 'workers-ai' = 'workers-ai'): AIProvider; switch on name; default workers-ai"
+        },
+        {
+          "id": "T2.4",
+          "title": "Model definition helper",
+          "depends_on": [],
+          "files": ["src/backend/ai/models/_define.ts"],
+          "spec": "export function defineModel<TIn, TOut>(spec: { id, capabilities, input: ZodType<TIn>, output: ZodType<TOut>, serialize: (i: TIn) => unknown, parseResponse: (raw: unknown) => TOut }): ModelDescriptor<TIn, TOut>"
+        },
+        {
+          "id": "T2.5",
+          "title": "Model: llama-3.3-70b-instruct-fp8-fast",
+          "depends_on": ["T2.4"],
+          "files": ["src/backend/ai/models/llama-3-3-70b-instruct-fp8-fast.ts"],
+          "spec": "Input zod: { messages: ChatMessage[], max_tokens?, temperature?, response_format? }. Output zod: { response: string }. See PRD §5.2."
+        },
+        {
+          "id": "T2.6",
+          "title": "Model: llama-3.1-8b-instruct",
+          "depends_on": ["T2.4"],
+          "files": ["src/backend/ai/models/llama-3-1-8b-instruct.ts"],
+          "spec": "Same shape as 70b, smaller default token budget (1024)"
+        },
+        {
+          "id": "T2.7",
+          "title": "Model: bge-large-en-v1.5",
+          "depends_on": ["T2.4"],
+          "files": ["src/backend/ai/models/bge-large-en-v1-5.ts"],
+          "spec": "Input zod: { text: string[] }. Output zod: { data: number[][] }."
+        },
+        {
+          "id": "T2.8",
+          "title": "Model: whisper",
+          "depends_on": ["T2.4"],
+          "files": ["src/backend/ai/models/whisper.ts"],
+          "spec": "Input zod: { audio: number[] | ArrayBuffer }. Output zod: { text: string, words?: Array<{...}> }."
+        },
+        {
+          "id": "T2.9",
+          "title": "Model: aura-1 (TTS)",
+          "depends_on": ["T2.4"],
+          "files": ["src/backend/ai/models/aura-1.ts"],
+          "spec": "Input zod: { text: string, voice?: string }. Output is ReadableStream — use streamModel only."
+        },
+        {
+          "id": "T2.10",
+          "title": "Model: llava-1.5-7b-hf (vision)",
+          "depends_on": ["T2.4"],
+          "files": ["src/backend/ai/models/llava-1-5-7b-hf.ts"],
+          "spec": "Input zod: { image: number[], prompt: string, max_tokens? }. Output zod: { description: string }."
+        },
+        {
+          "id": "T2.11",
+          "title": "Model registry",
+          "depends_on": ["T2.5", "T2.6", "T2.7", "T2.8", "T2.9", "T2.10"],
+          "files": ["src/backend/ai/models/index.ts"],
+          "spec": "Export modelRegistry mapping task names (chat/extract/draft/embed/stt/tts/vision) to model descriptors. Allow overrides via env.MODEL_CHAT etc."
+        },
+        {
+          "id": "T2.12",
+          "title": "Task: chat",
+          "depends_on": ["T2.11", "T2.3"],
+          "files": ["src/backend/ai/tasks/chat.ts"],
+          "spec": "chat(env, { messages, cacheTtl? }) → string. Uses modelRegistry.chat."
+        },
+        {
+          "id": "T2.13",
+          "title": "Task: extract",
+          "depends_on": ["T2.11", "T2.3"],
+          "files": ["src/backend/ai/tasks/extract.ts"],
+          "spec": "extract<T>(env, { text, schema: T, cacheTtl? }) → z.infer<T>. JSON-mode via response_format json_schema. See PRD §5.3."
+        },
+        {
+          "id": "T2.14",
+          "title": "Task: draft",
+          "depends_on": ["T2.11", "T2.3"],
+          "files": ["src/backend/ai/tasks/draft.ts"],
+          "spec": "draft(env, { docType: 'resume'|'cover_letter'|'email_reply', context }) → string. Uses modelRegistry.draft."
+        },
+        {
+          "id": "T2.15",
+          "title": "Task: stream-chat",
+          "depends_on": ["T2.11", "T2.3"],
+          "files": ["src/backend/ai/tasks/stream-chat.ts"],
+          "spec": "streamChat(env, { messages }) → ReadableStream<Uint8Array> formatted as SSE."
+        },
+        {
+          "id": "T2.16",
+          "title": "Task: embed",
+          "depends_on": ["T2.11", "T2.3"],
+          "files": ["src/backend/ai/tasks/embed.ts"],
+          "spec": "embed(env, { texts: string[] }) → number[][]"
+        },
+        {
+          "id": "T2.17",
+          "title": "Add oxlint no-restricted-imports rule",
+          "depends_on": ["T2.16"],
+          "files": [".oxlintrc.json"],
+          "spec": "Forbid imports of src/backend/ai/providers/* and src/backend/ai/models/* from anywhere outside src/backend/ai/. Tasks may import from providers/models. Rest of codebase imports only from tasks/."
+        }
+      ]
+    },
+    {
+      "id": "P3",
+      "name": "Auth + crypto + cookie helpers",
+      "tasks": [
+        {
+          "id": "T3.1",
+          "title": "lib/crypto.ts — HMAC helpers",
+          "depends_on": ["T0.2"],
+          "files": ["src/backend/lib/crypto.ts"],
+          "spec": "hmacSign(key: string, payload: string): Promise<string> using crypto.subtle HMAC-SHA256, returns base64url. constantTimeEqual(a,b): boolean."
+        },
+        {
+          "id": "T3.2",
+          "title": "lib/cookies.ts — signed cookie helpers",
+          "depends_on": ["T3.1"],
+          "files": ["src/backend/lib/cookies.ts"],
+          "spec": "createSessionCookie(env, payload): Promise<string> mints cr_session with 2-year exp; verifySessionCookie(env, raw): Promise<payload | null>; clearSessionCookie() returns expiring cookie header."
+        },
+        {
+          "id": "T3.3",
+          "title": "Auth middleware",
+          "depends_on": ["T3.2"],
+          "files": ["src/backend/api/middleware/auth.ts"],
+          "spec": "Hono middleware. Skips /api/auth/login. Reads cr_session cookie, verifies via lib/cookies, sets c.set('authed', true) on success. 401 on failure."
+        },
+        {
+          "id": "T3.4",
+          "title": "Error middleware",
+          "depends_on": [],
+          "files": ["src/backend/api/middleware/error.ts"],
+          "spec": "app.onError handler — JSON-formats errors, logs with severity, masks 5xx details in prod."
+        },
+        {
+          "id": "T3.5",
+          "title": "Auth routes",
+          "depends_on": ["T3.3"],
+          "files": ["src/backend/api/routes/auth.ts"],
+          "spec": "OpenAPIHono router. POST /api/auth/login: { apiKey } → constant-time compare with env.WORKER_API_KEY.get(); on success Set-Cookie cr_session. POST /api/auth/logout: clear cookie."
+        }
+      ]
+    },
+    {
+      "id": "P4",
+      "name": "AI tools (Browser Rendering, Google Docs, NotebookLM)",
+      "tasks": [
+        {
+          "id": "T4.1",
+          "title": "Browser Rendering tool",
+          "depends_on": ["T0.2"],
+          "files": ["src/backend/ai/tools/browser-rendering.ts"],
+          "spec": "scrapeUrl(env, url): { html, text, links, screenshotR2Key? }. POST https://api.cloudflare.com/client/v4/accounts/{CLOUDFLARE_ACCOUNT_ID.get()}/browser-rendering/scrape with Bearer CF_BROWSER_RENDER_TOKEN."
+        },
+        {
+          "id": "T4.2",
+          "title": "Google Service-Account auth helper",
+          "depends_on": ["T0.2"],
+          "files": ["src/backend/lib/google-auth.ts"],
+          "spec": "Joins GOOGLE_CREDS_SA_PRIVATE_KEY_PT_1 + _PT_2, builds JWT (RS256 via crypto.subtle), exchanges at https://oauth2.googleapis.com/token. Caches access token in KV keyed by sa-client-email hash, TTL = expires_in - 60s. getServiceAccountAccessToken(env, scopes: string[]): Promise<string>"
+        },
+        {
+          "id": "T4.3",
+          "title": "Google Docs/Drive tool",
+          "depends_on": ["T4.2"],
+          "files": ["src/backend/ai/tools/google-docs.ts"],
+          "spec": "GoogleDocsClient class methods: createFromTemplate(templateId, replacements, parentFolderId), read(docId), appendText(docId, text), addComment(docId, anchor, text), replyToComment(docId, commentId, text), listComments(docId, filter?). All call Drive v3 + Docs v1 REST APIs via fetch."
+        },
+        {
+          "id": "T4.4",
+          "title": "NotebookLM tool",
+          "depends_on": ["T4.2", "T1.6"],
+          "files": ["src/backend/ai/tools/notebooklm.ts"],
+          "spec": "Imports notebooklm-sdk (agmmnn). Mints user-OAuth access token from refresh-token grant (NOTEBOOKLM_OAUTH_REFRESH_TOKEN/_CLIENT_ID/_CLIENT_SECRET) — cache in KV. consultNotebook(env, query): reads agent_rules from global_config and prepends as guardrail; calls SDK with NOTEBOOKLM_NOTEBOOK_ID. Smoke-test in wrangler dev to confirm isolate compatibility."
+        }
+      ]
+    },
+    {
+      "id": "P5",
+      "name": "Colby Agent (Durable Object)",
+      "tasks": [
+        {
+          "id": "T5.1",
+          "title": "OrchestratorAgent Durable Object",
+          "depends_on": ["T2.16", "T4.1", "T4.3", "T4.4", "T1.9"],
+          "files": ["src/backend/ai/agents/orchestrator.ts"],
+          "spec": "extends Agent<Env, OrchestratorState>. State: { roleId, pendingTasks }. Tools registered: scrape_job, extract_job_details, consult_notebook, create_doc_from_template, read_doc, write_doc, comment_on_doc, reply_to_thread, list_doc_comments_tagged, list_roles, update_role, draft_email_reply. 30s alarm orchestration loop. WebSocket streaming back to UI via SDK."
+        }
+      ]
+    },
+    {
+      "id": "P6",
+      "name": "Hono routes (zod-openapi)",
+      "tasks": [
+        {
+          "id": "T6.1",
+          "title": "Hono app shell",
+          "depends_on": ["T3.3", "T3.4"],
+          "files": ["src/backend/api/index.ts"],
+          "spec": "OpenAPIHono<{Bindings:Env, Variables:{authed:true}}>. Mounts errorMiddleware + authMiddleware + 8 routers. doc('/openapi.json'). apiReference for /scalar. swaggerUI for /swagger. /docs redirects /scalar."
+        },
+        {
+          "id": "T6.2",
+          "title": "Roles CRUD route",
+          "depends_on": ["T6.1", "T1.7"],
+          "files": ["src/backend/api/routes/roles.ts"],
+          "spec": "GET /api/roles (list, sort, filter), GET /:id, POST (createRoute with insertRoleSchema), PATCH /:id, DELETE /:id."
+        },
+        {
+          "id": "T6.3",
+          "title": "Intake route (SSE)",
+          "depends_on": ["T6.1", "T4.1", "T2.13", "T1.7", "T5.1"],
+          "files": ["src/backend/api/routes/intake.ts"],
+          "spec": "POST /api/intake/scrape → SSE stream emitting {stage:'scraping'|'extracting'|'mapping', payload}. Calls scrapeUrl → tasks/extract with JobPosting zod schema. POST /api/intake/confirm → persist role, create Drive folder via google-docs tool, dispatch Colby job_extract task."
+        },
+        {
+          "id": "T6.4",
+          "title": "Threads + messages route",
+          "depends_on": ["T6.1", "T1.7", "T5.1"],
+          "files": ["src/backend/api/routes/threads.ts"],
+          "spec": "GET /api/threads/:roleId, POST /:roleId/messages (proxies to OrchestratorAgent WebSocket via SDK)."
+        },
+        {
+          "id": "T6.5",
+          "title": "Documents route",
+          "depends_on": ["T6.1", "T1.7"],
+          "files": ["src/backend/api/routes/documents.ts"],
+          "spec": "GET /api/documents (filter by roleId), POST (manual link to existing GDoc), DELETE /:id."
+        },
+        {
+          "id": "T6.6",
+          "title": "Emails route",
+          "depends_on": ["T6.1", "T1.7"],
+          "files": ["src/backend/api/routes/emails.ts"],
+          "spec": "GET /api/emails (filter), GET /unmatched, POST /:id/associate { roleId }, GET /:id."
+        },
+        {
+          "id": "T6.7",
+          "title": "Config route",
+          "depends_on": ["T6.1", "T1.6"],
+          "files": ["src/backend/api/routes/config.ts"],
+          "spec": "GET /api/config, GET /:key, PUT /:key { value }. POST /api/admin/seed (idempotent — seeds default agent_rules, resume_bullets, template_ids)."
+        },
+        {
+          "id": "T6.8",
+          "title": "Dashboard route",
+          "depends_on": ["T6.1", "T1.7"],
+          "files": ["src/backend/api/routes/dashboard.ts"],
+          "spec": "GET /api/dashboard/summary (counts by status), /by-company (Recharts data), /by-salary, /preparing, /pending-tasks, /recent-emails."
+        },
+        {
+          "id": "T6.9",
+          "title": "Client error ingestion",
+          "depends_on": ["T6.1"],
+          "files": ["src/backend/api/routes/client-error.ts"],
+          "spec": "POST /api/__client-error → log with stack, url, userAgent. Auth required."
+        }
+      ]
+    },
+    {
+      "id": "P7",
+      "name": "Email handler",
+      "tasks": [
+        {
+          "id": "T7.1",
+          "title": "Email handler",
+          "depends_on": ["T1.7", "T2.14", "T5.1"],
+          "files": ["src/backend/email/handler.ts"],
+          "spec": "handleInboundEmail(message, env, ctx): parses with postal-mime, persists to emails table, runs match heuristic (keyword scan against active roles, scored), match → enqueue Colby email_draft task; no match → EMAIL_OUT.send templated reply with link to /email-associate/{id}."
+        },
+        {
+          "id": "T7.2",
+          "title": "Wire _worker.ts",
+          "depends_on": ["T7.1", "T5.1", "T6.1"],
+          "files": ["src/_worker.ts"],
+          "spec": "ExportedHandler with fetch (existing routing) + email (delegates to handleInboundEmail). Add `export { OrchestratorAgent } from './backend/ai/agents/orchestrator'`. Update fetch to also handle /api/__client-error."
+        }
+      ]
+    },
+    {
+      "id": "P8",
+      "name": "Frontend foundation + dashboard",
+      "tasks": [
+        {
+          "id": "T8.1",
+          "title": "API client",
+          "depends_on": ["T6.1"],
+          "files": ["src/frontend/lib/api-client.ts"],
+          "spec": "Typed fetch wrapper. credentials: 'include'. Surfaces non-2xx as toast errors. Single source for all client → /api/* calls."
+        },
+        {
+          "id": "T8.2",
+          "title": "Navbar.astro",
+          "depends_on": [],
+          "files": ["src/frontend/components/Navbar.astro"],
+          "spec": "Top nav with links: Dashboard / Roles / Config / Docs / OpenAPI / Scalar / Swagger. Mobile-responsive hamburger. shadcn dark."
+        },
+        {
+          "id": "T8.3",
+          "title": "Sidebar.tsx (collapsible)",
+          "depends_on": [],
+          "files": ["src/frontend/components/Sidebar.tsx"],
+          "spec": "Collapsible sidebar (mobile drawer). Links keyed off active route. shadcn primitives."
+        },
+        {
+          "id": "T8.4",
+          "title": "ErrorLogger.tsx",
+          "depends_on": ["T8.1"],
+          "files": ["src/frontend/components/ErrorLogger.tsx"],
+          "spec": "React island. Wraps window.onerror + window.onunhandledrejection. POSTs to /api/__client-error. Renders shadcn Toaster for runtime errors."
+        },
+        {
+          "id": "T8.5",
+          "title": "BaseLayout.astro update",
+          "depends_on": ["T8.2", "T8.4"],
+          "files": ["src/frontend/layouts/BaseLayout.astro"],
+          "spec": "Always renders <Navbar /> + <ErrorLogger client:load />. Default dark mode. Loads shadcn Toaster."
+        },
+        {
+          "id": "T8.6",
+          "title": "Login page",
+          "depends_on": ["T8.5", "T3.5"],
+          "files": ["src/frontend/pages/login.astro"],
+          "spec": "Single-input form for API key. Posts to /api/auth/login. SSR check: if cookie valid, redirect /."
+        },
+        {
+          "id": "T8.7",
+          "title": "Dashboard stat cards",
+          "depends_on": ["T8.1", "T6.8"],
+          "files": ["src/frontend/components/dashboard/StatCards.tsx"],
+          "spec": "4 cards: Total / Preparing / Applied / Interviewing. Real data from /api/dashboard/summary."
+        },
+        {
+          "id": "T8.8",
+          "title": "Jobs-by-company bar chart",
+          "depends_on": ["T8.1", "T6.8"],
+          "files": ["src/frontend/components/dashboard/JobsByCompanyChart.tsx"],
+          "spec": "Recharts BarChart from /api/dashboard/by-company."
+        },
+        {
+          "id": "T8.9",
+          "title": "Salary-range line chart",
+          "depends_on": ["T8.1", "T6.8"],
+          "files": ["src/frontend/components/dashboard/SalaryRangeChart.tsx"],
+          "spec": "Recharts LineChart from /api/dashboard/by-salary."
+        },
+        {
+          "id": "T8.10",
+          "title": "Dashboard widgets (PreparingList, PendingTasks, RecentEmails)",
+          "depends_on": ["T8.1", "T6.8"],
+          "files": [
+            "src/frontend/components/dashboard/PreparingList.tsx",
+            "src/frontend/components/dashboard/PendingTasks.tsx",
+            "src/frontend/components/dashboard/RecentEmails.tsx"
+          ],
+          "spec": "Three list widgets wired to /api/dashboard endpoints."
+        },
+        {
+          "id": "T8.11",
+          "title": "Dashboard page",
+          "depends_on": ["T8.5", "T8.7", "T8.8", "T8.9", "T8.10"],
+          "files": ["src/frontend/pages/index.astro"],
+          "spec": "SSR cookie check. Composes all dashboard components. + 'New Role' button triggering IntakeModal."
+        }
+      ]
+    },
+    {
+      "id": "P9",
+      "name": "Job intake modal + role viewport",
+      "tasks": [
+        {
+          "id": "T9.1",
+          "title": "IntakeProgress component",
+          "depends_on": [],
+          "files": ["src/frontend/components/intake/IntakeProgress.tsx"],
+          "spec": "Checklist UI: Scraping ✓ / Extracting ✓ / Mapping ✓. Receives stage updates."
+        },
+        {
+          "id": "T9.2",
+          "title": "IntakeModal component",
+          "depends_on": ["T9.1", "T8.1", "T6.3"],
+          "files": ["src/frontend/components/intake/IntakeModal.tsx"],
+          "spec": "shadcn Dialog. 3-step wizard: URL input → SSE consumer of /api/intake/scrape → prefilled form → POST /api/intake/confirm. NEVER window.prompt."
+        },
+        {
+          "id": "T9.3",
+          "title": "Roles list page",
+          "depends_on": ["T8.5", "T6.2"],
+          "files": ["src/frontend/pages/roles/index.astro"],
+          "spec": "shadcn Table with sort + filter (status chips). Rows link to /roles/[id]."
+        },
+        {
+          "id": "T9.4",
+          "title": "Role components (Header, Config, ThreadSidebar, DocumentsList)",
+          "depends_on": ["T8.1", "T6.2", "T6.4", "T6.5"],
+          "files": [
+            "src/frontend/components/role/RoleHeader.tsx",
+            "src/frontend/components/role/RoleConfig.tsx",
+            "src/frontend/components/role/ThreadSidebar.tsx",
+            "src/frontend/components/role/DocumentsList.tsx"
+          ],
+          "spec": "RoleHeader: company/title/status/salary. RoleConfig: edit role_instructions override. ThreadSidebar: assistant-ui chat bound to ORCHESTRATOR_AGENT via Agents SDK WebSocket. DocumentsList: lists documents rows with open-in-Drive."
+        },
+        {
+          "id": "T9.5",
+          "title": "Role viewport page",
+          "depends_on": ["T9.4"],
+          "files": ["src/frontend/pages/roles/[id].astro"],
+          "spec": "Tabs: Overview | Documents | Threads | Config | Emails. Sidebar always visible (chat). SSR fetches role record."
+        }
+      ]
+    },
+    {
+      "id": "P10",
+      "name": "Global config + email association pages",
+      "tasks": [
+        {
+          "id": "T10.1",
+          "title": "Config editor components",
+          "depends_on": ["T8.1", "T6.7"],
+          "files": [
+            "src/frontend/components/config/AgentRulesEditor.tsx",
+            "src/frontend/components/config/ResumeBulletsEditor.tsx",
+            "src/frontend/components/config/TemplateIdsEditor.tsx"
+          ],
+          "spec": "Three card editors. Drag-to-reorder for arrays. Persist via PUT /api/config/:key."
+        },
+        {
+          "id": "T10.2",
+          "title": "Config page",
+          "depends_on": ["T10.1"],
+          "files": ["src/frontend/pages/config.astro"],
+          "spec": "Composes the three editors. SSR cookie check."
+        },
+        {
+          "id": "T10.3",
+          "title": "Email association page",
+          "depends_on": ["T8.1", "T6.6"],
+          "files": ["src/frontend/pages/email-associate/[id].astro"],
+          "spec": "Shows email summary. Lists active roles as cards. One-click 'Associate' → POST /api/emails/:id/associate."
+        },
+        {
+          "id": "T10.4",
+          "title": "Internal docs route",
+          "depends_on": ["T8.5"],
+          "files": ["src/frontend/pages/docs/[...slug].astro"],
+          "spec": "Renders markdown docs from src/frontend/content/docs/* (placeholder content acceptable initially)."
+        }
+      ]
+    },
+    {
+      "id": "P11",
+      "name": "Antigravity rules + workflows + AGENTS.md",
+      "tasks": [
+        {
+          "id": "T11.1",
+          "title": ".agent/rules/ai-wrapper.md",
+          "depends_on": ["T2.17"],
+          "files": [".agent/rules/ai-wrapper.md"],
+          "spec": "All AI must go through src/backend/ai/tasks/. Direct env.AI calls in agent/tool/route code fail review. Adding a model = one file in models/ + one entry in registry."
+        },
+        {
+          "id": "T11.2",
+          "title": ".agent/rules/sdk-choice.md",
+          "depends_on": ["T4.4"],
+          "files": [".agent/rules/sdk-choice.md"],
+          "spec": "NotebookLM must use notebooklm-sdk (agmmnn) — not the official one. Verify isolate compatibility on first install."
+        },
+        {
+          "id": "T11.3",
+          "title": ".agent/rules/google-auth.md",
+          "depends_on": ["T4.2"],
+          "files": [".agent/rules/google-auth.md"],
+          "spec": "All Workspace API calls use Service Account + DWD via src/backend/lib/google-auth.ts. Refresh tokens cached in KV with TTL = expires_in - 60s."
+        },
+        {
+          "id": "T11.4",
+          "title": ".agent/workflows/implement-feature.md",
+          "depends_on": [],
+          "files": [".agent/workflows/implement-feature.md"],
+          "spec": "Order: D1 schema → AI provider/model/tasks → Tools → Agent → Hono routes → Frontend. Stitch mockups before frontend per cloudflare-jedi."
+        },
+        {
+          "id": "T11.5",
+          "title": "/AGENTS.md project briefing",
+          "depends_on": [],
+          "files": ["AGENTS.md"],
+          "spec": "Briefing for Jules sessions. Project goal, architecture summary, golden rules, modularization principles, link to PRD."
+        }
+      ]
+    },
+    {
+      "id": "P12",
+      "name": "Verification + deploy",
+      "tasks": [
+        {
+          "id": "T12.1",
+          "title": "Type check + lint",
+          "depends_on": ["T11.5"],
+          "actions": ["pnpm run cf-typegen", "pnpm run check", "tsc --noEmit"],
+          "acceptance": ["Zero type errors. Zero lint violations. AI-import lint rule enforced."]
+        },
+        {
+          "id": "T12.2",
+          "title": "Local D1 verification",
+          "depends_on": ["T1.9"],
+          "actions": [
+            "pnpm run migrate:local",
+            "wrangler d1 execute DB --local --command \"select name from sqlite_master where type='table'\""
+          ],
+          "acceptance": [
+            "6 tables present: roles, documents, threads, messages, emails, global_config"
+          ]
+        },
+        {
+          "id": "T12.3",
+          "title": "Local smoke test",
+          "depends_on": ["T12.2", "T12.1"],
+          "actions": [
+            "pnpm run dev (Astro)",
+            "wrangler dev (worker, separate terminal)",
+            "POST /api/auth/login with WORKER_API_KEY → cookie returned",
+            "GET /api/dashboard/summary → 200",
+            "Visit /scalar and /swagger — confirm dynamic OpenAPI spec",
+            "Trigger IntakeModal with a real LinkedIn URL → SSE checklist completes → row persists"
+          ],
+          "acceptance": ["All steps pass. AI Gateway dashboard shows requests with model labels."]
+        },
+        {
+          "id": "T12.4",
+          "title": "Email handler smoke test",
+          "depends_on": ["T7.2", "T12.2"],
+          "actions": [
+            "Forward a test email matching an active role's company name",
+            "Forward an unrelated email"
+          ],
+          "acceptance": [
+            "Match: emails row created with status=associated, messages row appended to thread, Colby task enqueued",
+            "No match: emails row created with status=unmatched, auto-reply received with link to /email-associate/{id}"
+          ]
+        },
+        {
+          "id": "T12.5",
+          "title": "Production deploy",
+          "depends_on": ["T12.3", "T12.4"],
+          "actions": [
+            "Confirm the 5 new secrets are populated via wrangler secrets-store",
+            "pnpm run deploy"
+          ],
+          "acceptance": [
+            "wrangler_deploy.log shows successful migration + deploy",
+            "Production /scalar reachable",
+            "Cookie auth works against deployed worker"
+          ]
+        }
+      ]
+    }
+  ]
+}

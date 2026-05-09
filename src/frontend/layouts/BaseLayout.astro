@@ -1,25 +1,25 @@
 ---
+import { ErrorLogger } from "@/components/ErrorLogger";
+import Navbar from "@/components/Navbar.astro";
 import { cn } from "@/lib/utils";
+import "@/styles/global.css";
 
-import HeadSEO from "@/components/HeadSEO.astro";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
-
-const { title, description, ogImage } = Astro.props;
+const { title, description } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
-    <HeadSEO title={title} description={description} ogImage={ogImage} />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <script is:inline>
       (() => {
         try {
           const stored = localStorage.getItem("theme");
-          const prefersDark = window.matchMedia(
-            "(prefers-color-scheme: dark)",
-          ).matches;
-          const dark = stored ? stored === "dark" : prefersDark;
+          const dark = stored ? stored === "dark" : true;
           document.documentElement.classList.toggle("dark", dark);
         } catch {}
       })();
@@ -31,11 +31,11 @@ const { title, description, ogImage } = Astro.props;
     )}
   >
     <div class="bg-background relative z-10 flex min-h-svh flex-col">
-      <Header client:load />
+      <Navbar />
       <main class="flex flex-1 flex-col">
         <slot />
       </main>
-      <Footer />
+      <ErrorLogger client:load />
     </div>
   </body>
 </html>

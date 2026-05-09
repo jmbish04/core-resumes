@@ -1,35 +1,75 @@
+/**
+ * @fileoverview Site-wide configuration constants for the Career Orchestrator
+ * frontend.
+ *
+ * Consumed by:
+ *  - `Navbar.astro` — renders the top navigation bar items
+ *  - `Sidebar.tsx`  — renders the sidebar navigation (uses its own link set)
+ *  - `BaseLayout.astro` — page titles and meta descriptions
+ *
+ * When adding a new page, add its nav entry to `navItems` here **and** to
+ * the `mainLinks` / `docsSublinks` arrays in `Sidebar.tsx`.
+ */
+
+// ---------------------------------------------------------------------------
+// Type definition
+// ---------------------------------------------------------------------------
+
+/** Shape of the global site configuration object. */
 export type SiteConfig = {
+  /** Application display name. */
   name: string;
+  /** Short description used in meta tags. */
   description: string;
+  /** Canonical production URL. */
   url: string;
+  /** Author metadata. */
   author: {
     name: string;
     url: string;
   };
+  /** External links. */
   links: {
     github: string;
   };
+  /** Top-level navigation items rendered in the Navbar. */
   navItems: {
+    /** Route path (relative) or full URL for external links. */
     href: string;
+    /** Display label. */
     label: string;
+    /** If true, opens in a new tab with `rel="noreferrer"`. */
     external?: boolean;
   }[];
 };
 
+// ---------------------------------------------------------------------------
+// Configuration instance
+// ---------------------------------------------------------------------------
+
+/** Global site configuration used across all frontend layouts and components. */
 export const siteConfig: SiteConfig = {
-  name: "Astro shadcn/ui template",
-  description: "The template helps you build apps with Astro, Tailwind CSS, and shadcn/ui.",
-  url: "https://astro-shadcn-ui-template.vercel.app",
+  name: "Classified",
+  description: "Single-user resume, role, email, and Colby agent workspace.",
+  url: "https://core-resumes.hacolby.workers.dev",
   author: {
-    name: "AREA44",
-    url: "https://github.com/area44",
+    name: "jmbish04",
+    url: "https://github.com/jmbish04/core-resumes",
   },
   links: {
-    github: "https://github.com/area44/astro-shadcn-ui-template",
+    github: "https://github.com/jmbish04/core-resumes",
   },
   navItems: [
-    { href: "https://astro.build", label: "Astro", external: true },
-    { href: "https://tailwindcss.com", label: "Tailwind CSS", external: true },
-    { href: "https://ui.shadcn.com", label: "shadcn/ui", external: true },
+    { href: "/", label: "Dashboard" },
+    { href: "/roles", label: "Roles" },
+    { href: "/emails", label: "Emails" },
+    { href: "/notebook", label: "Notebook" },
+    { href: "/memory", label: "Memory" },
+    { href: "/config", label: "Config" },
+    { href: "/health", label: "Health" },
+    { href: "/docs", label: "Docs" },
+    { href: "/openapi.json", label: "OpenAPI" },
+    { href: "/scalar", label: "Scalar" },
+    { href: "/swagger", label: "Swagger" },
   ],
 };
