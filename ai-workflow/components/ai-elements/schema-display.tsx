@@ -9,7 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ChevronRightIcon } from "lucide-react";
 import type { ComponentProps, HTMLAttributes } from "react";
-import { createContext, useContext, useMemo } from "react";
+import { Fragment, createContext, useContext, useMemo } from "react";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -103,13 +103,16 @@ export const SchemaDisplayPath = ({
     return segments.map((segment, index) => {
       if (/^\{[^}]+\}$/.test(segment)) {
         return (
-          <span className="text-blue-600 dark:text-blue-400" key={index}>
+          <span
+            className="text-blue-600 dark:text-blue-400"
+            key={`param-${index}-${segment}`}
+          >
             {segment}
           </span>
         );
       }
 
-      return segment;
+      return <Fragment key={`text-${index}-${segment}`}>{segment}</Fragment>;
     });
   }, [path]);
 
