@@ -227,7 +227,7 @@ For complex queries, use the embedded SQLite database:
 ```typescript
 // CREATE TABLE IF NOT EXISTS s
 await this.sql`
-  CREATE TABLE IF NOT EXISTS  IF NOT EXISTS documents (
+  CREATE TABLE IF NOT EXISTS documents (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     content TEXT,
