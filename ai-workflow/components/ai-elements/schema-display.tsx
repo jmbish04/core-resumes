@@ -105,14 +105,14 @@ export const SchemaDisplayPath = ({
         return (
           <span
             className="text-blue-600 dark:text-blue-400"
-            key={`param-${index}-${segment}`}
+            key={`param-${index}`}
           >
             {segment}
           </span>
         );
       }
 
-      return <Fragment key={`text-${index}-${segment}`}>{segment}</Fragment>;
+      return <Fragment key={`text-${index}`}>{segment}</Fragment>;
     });
   }, [path]);
 
