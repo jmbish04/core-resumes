@@ -2,7 +2,11 @@ packages:
   - "."
 
 allowBuilds:
+  '@google/genai': true
+  better-sqlite3: true
+  core-js-pure: true
   esbuild: true
   msw: true
+  protobufjs: true
   sharp: true
   workerd: true
