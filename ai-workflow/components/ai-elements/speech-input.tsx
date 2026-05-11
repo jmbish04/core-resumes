@@ -217,7 +217,7 @@ export const SpeechInput = ({
         streamRef.current = null;
 
         const audioBlob = new Blob(audioChunksRef.current, {
-          type: mediaRecorder.mimeType || "audio/webm",
+          type: mediaRecorderRef.current?.mimeType || "audio/webm",
         });
 
         if (audioBlob.size > 0 && onAudioRecordedRef.current) {
