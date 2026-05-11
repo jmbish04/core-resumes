@@ -1,0 +1,203 @@
+---
+import { DocsSidebar } from "@/components/docs/DocsSidebar";
+import { SchemaViewer } from "@/components/docs/SchemaViewer";
+import { AgentCard } from "@/components/docs/AgentCard";
+import { GoogleDocPreview } from "@/components/docs/GoogleDocPreview";
+import { NotebookInfoCard } from "@/components/docs/NotebookInfo";
+import { Sidebar } from "@/components/Sidebar";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { ChevronRight } from "lucide-react";
+
+const modules = import.meta.glob("../../content/docs/**/*.md", {
+  eager: true,
+}) as Record<string, any>;
+
+const slug = Astro.params.slug ?? "overview";
+const docPath = `../../content/docs/${slug}.md`;
+const fallbackPath = "../../content/docs/overview.md";
+const doc = modules[docPath] ?? modules[fallbackPath];
+
+const Content = doc?.default || doc?.Content;
+const headings = doc?.getHeadings?.() || [];
+
+// Detect which dynamic components to embed based on slug
+const showSchemaViewer = slug === "database";
+const showAgentCard = slug?.startsWith("agents/") && slug !== "agents";
+const agentClassName = showAgentCard ? getAgentClassName(slug) : null;
+const showNotebookInfo = slug === "integrations/notebooklm";
+const showResumePreview = slug === "resume-template";
+const showCoverLetterPreview = slug === "cover-letter-template";
+
+function getAgentClassName(s: string): string | null {
+  const map: Record<string, string> = {
+    "agents/colby": "OrchestratorAgent",
+    "agents/notebooklm": "NotebookLMAgent",
+    "agents/notebooklm-mcp": "NotebookLMMcpAgent",
+  };
+  return map[s] ?? null;
+}
+
+// Compute breadcrumbs
+const pathParts = slug.split("/");
+const breadcrumbs = pathParts.map((part, index) => {
+  const isLast = index === pathParts.length - 1;
+  const href = "/docs/" + pathParts.slice(0, index + 1).join("/");
+  const label = part.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+  return { label, href, isLast };
+});
+---
+
+<BaseLayout title={`Docs | Career Orchestrator`} description="Technical documentation for the Career Orchestrator application.">
+  <div class="flex flex-1 relative">
+    <Sidebar client:load />
+    <DocsSidebar client:load />
+    
+    <main class="min-w-0 flex-1 relative flex">
+      {/* Main Content Area */}
+      <div class="flex-1 min-w-0 pb-12">
+        <article class="mx-auto w-full max-w-3xl px-4 py-8 lg:px-8 relative">
+          {/* Breadcrumbs */}
+          <nav class="mb-4 flex items-center text-sm text-muted-foreground">
+            <a href="/docs" class="hover:text-foreground transition-colors">Docs</a>
+            {breadcrumbs.map(crumb => (
+              <>
+                <ChevronRight className="h-4 w-4 mx-1" />
+                {crumb.isLast ? (
+                  <span class="text-foreground font-medium">{crumb.label}</span>
+                ) : (
+                  <a href={crumb.href} class="hover:text-foreground transition-colors">{crumb.label}</a>
+                )}
+              </>
+            ))}
+          </nav>
+
+          <div class="prose prose-slate dark:prose-invert max-w-none 
+            [&_h1]:scroll-mt-24 [&_h2]:scroll-mt-24 [&_h3]:scroll-mt-24 [&_h4]:scroll-mt-24
+            [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:tracking-tight [&_h1]:mb-6
+            [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:tracking-tight [&_h2]:mt-10 [&_h2]:mb-4 [&_h2]:border-b [&_h2]:pb-2
+            [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:tracking-tight [&_h3]:mt-8 [&_h3]:mb-4
+            [&_h4]:text-lg [&_h4]:font-semibold [&_h4]:tracking-tight [&_h4]:mt-6 [&_h4]:mb-4
+            [&_p]:leading-7 [&_p]:mb-4
+            [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ul_li]:mt-2
+            [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_ol_li]:mt-2
+            [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary/80
+            [&_code]:relative [&_code]:rounded [&_code]:bg-muted [&_code]:px-[0.3rem] [&_code]:py-[0.2rem] [&_code]:font-mono [&_code]:text-sm
+            [&_pre]:bg-muted/50 [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:overflow-x-auto [&_pre]:mb-4 [&_pre>code]:bg-transparent [&_pre>code]:p-0
+            [&_blockquote]:border-l-2 [&_blockquote]:border-primary/50 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground">
+            {Content ? <Content /> : (
+              <div>
+                <h1>Page not found</h1>
+                <p>This documentation page does not exist yet.</p>
+              </div>
+            )}
+          </div>
+        </article>
+
+        {/* Dynamic components embedded after the markdown content */}
+        <div class="mx-auto w-full max-w-3xl px-4 lg:px-8 border-t mt-8 pt-8">
+          {showSchemaViewer && <SchemaViewer client:load />}
+          {showAgentCard && agentClassName && <AgentCard client:load agentClassName={agentClassName} />}
+          {showNotebookInfo && <NotebookInfoCard client:load />}
+          {showResumePreview && <GoogleDocPreview client:load docType="resume" title="Resume Template" />}
+          {showCoverLetterPreview && <GoogleDocPreview client:load docType="coverLetter" title="Cover Letter Template" />}
+        </div>
+      </div>
+
+      {/* Table of Contents (Right Sidebar) */}
+      {headings.length > 0 && (
+        <aside class="hidden xl:block w-64 shrink-0 px-4 py-8 sticky top-0 h-screen overflow-y-auto border-l">
+          <div class="space-y-4">
+            <h4 class="font-medium text-sm uppercase tracking-wider text-muted-foreground">On This Page</h4>
+            <ul class="text-sm space-y-2 toc-list">
+              {headings.filter((h: any) => h.depth === 2 || h.depth === 3).map((h: any) => (
+                <li class={`${h.depth === 3 ? 'pl-4' : ''}`}>
+                  <a href={`#${h.slug}`} class="text-muted-foreground hover:text-foreground transition-colors block py-0.5">
+                    {h.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+      )}
+    </main>
+  </div>
+</BaseLayout>
+
+<script>
+  function setupScrollSpy() {
+    const headings = document.querySelectorAll('article h2[id], article h3[id]');
+    if (!headings.length) return;
+    
+    const tocLinks = document.querySelectorAll('.toc-list a');
+
+    // Make headings hyperlinkable
+    headings.forEach(heading => {
+      heading.classList.add('group', 'relative', 'flex', 'items-center');
+      // Only add anchor if it doesn't already have one
+      if (!heading.querySelector('.heading-anchor')) {
+        const anchor = document.createElement('a');
+        anchor.href = `#${heading.id}`;
+        anchor.className = 'heading-anchor absolute -left-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary';
+        anchor.innerHTML = '#';
+        anchor.setAttribute('aria-label', `Link to this section: ${heading.textContent}`);
+        heading.appendChild(anchor);
+      }
+    });
+
+    // Handle initial load with param
+    const params = new URLSearchParams(window.location.search);
+    const section = params.get('section');
+    if (section) {
+      const el = document.getElementById(section);
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 100);
+      }
+    } else if (window.location.hash) {
+      const el = document.getElementById(window.location.hash.slice(1));
+      if (el) {
+         setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 100);
+      }
+    }
+
+    // Intersection Observer for scroll spy
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const id = entry.target.id;
+            
+            // Update URL
+            const url = new URL(window.location.href);
+            if (url.searchParams.get('section') !== id) {
+              url.searchParams.set('section', id);
+              window.history.replaceState({}, '', url);
+            }
+
+            // Update TOC active state
+            tocLinks.forEach(link => {
+              if (link.getAttribute('href') === `#${id}`) {
+                link.classList.add('text-foreground', 'font-medium');
+                link.classList.remove('text-muted-foreground');
+              } else {
+                link.classList.remove('text-foreground', 'font-medium');
+                link.classList.add('text-muted-foreground');
+              }
+            });
+          }
+        });
+      },
+      { rootMargin: '-10% 0px -80% 0px' }
+    );
+
+    headings.forEach((h) => observer.observe(h));
+  }
+
+  // Support for both standard load and Astro view transitions
+  document.addEventListener('astro:page-load', setupScrollSpy);
+  if (document.readyState === 'complete') {
+    setupScrollSpy();
+  } else {
+    window.addEventListener('DOMContentLoaded', setupScrollSpy);
+  }
+</script>

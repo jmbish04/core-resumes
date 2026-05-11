@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { Sidebar } from "../components/Sidebar";
+import { HealthDashboard } from "../components/HealthDashboard";
+---
+
+<BaseLayout title="System Health | Career Orchestrator" description="On-demand system diagnostics and health screening across all backend services.">
+  <div class="flex flex-1">
+    <Sidebar client:load />
+    <div class="flex-1 overflow-y-auto">
+      <HealthDashboard client:load />
+    </div>
+  </div>
+</BaseLayout>

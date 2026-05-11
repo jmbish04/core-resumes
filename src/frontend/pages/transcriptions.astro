@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { Sidebar } from "../components/Sidebar";
+import TranscriptionJobsList from "../components/transcription/TranscriptionJobsList";
+---
+
+<BaseLayout title="Transcriptions | Career Orchestrator" description="View and monitor audio transcription jobs across all roles.">
+  <div class="flex flex-1">
+    <Sidebar client:load />
+    <div class="flex-1 overflow-y-auto p-6">
+      <TranscriptionJobsList client:load />
+    </div>
+  </div>
+</BaseLayout>

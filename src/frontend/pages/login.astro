@@ -1,0 +1,84 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { siteConfig } from "@/lib/config";
+
+if (Astro.cookies.has("cr_session")) {
+  return Astro.redirect("/");
+}
+---
+
+<BaseLayout title={`${siteConfig.name} | Login`} description={siteConfig.description}>
+  <section class="flex min-h-[calc(100svh-3.5rem)] items-center justify-center px-4 py-10">
+    <div class="w-full max-w-sm rounded-lg border border-border bg-card p-6 text-card-foreground shadow-sm">
+      <div class="space-y-2">
+        <h1 class="text-xl font-semibold tracking-tight">Sign in</h1>
+        <p class="text-sm text-muted-foreground">Enter the Worker API key to unlock the workspace.</p>
+      </div>
+
+      <form id="login-form" class="mt-6 grid gap-4">
+        <label class="grid gap-2 text-sm font-medium">
+          API key
+          <input
+            id="api-key"
+            name="apiKey"
+            type="text"
+            style="-webkit-text-security: disc;"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="none"
+            spellcheck="false"
+            data-form-type="other"
+            required
+            class="h-10 rounded-md border border-input bg-input/30 px-3 text-base md:text-sm outline-none transition focus:border-ring focus:ring-[3px] focus:ring-ring/50"
+          />
+        </label>
+        <button
+          id="login-submit"
+          type="submit"
+          class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground transition hover:bg-primary/80 disabled:pointer-events-none disabled:opacity-50"
+        >
+          Continue
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <script is:inline>
+    const form = document.getElementById("login-form");
+    const submit = document.getElementById("login-submit");
+
+    form?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const input = document.getElementById("api-key");
+      const apiKey = input instanceof HTMLInputElement ? input.value : "";
+      submit?.setAttribute("disabled", "true");
+
+      try {
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          credentials: "include",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ apiKey }),
+        });
+
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({ error: response.statusText }));
+          window.dispatchEvent(
+            new CustomEvent("app:toast", {
+              detail: {
+                title: "Login failed",
+                description: body.error || response.statusText,
+                variant: "destructive",
+              },
+            }),
+          );
+          return;
+        }
+
+        window.location.href = "/";
+      } finally {
+        submit?.removeAttribute("disabled");
+      }
+    });
+  </script>
+</BaseLayout>

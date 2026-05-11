@@ -1,0 +1,505 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "0004",
+  "project": "core-resumes",
+  "title": "Comprehensive Health Service",
+  "prd": "./PRD.md",
+  "prompt": "./PROMPT.md",
+  "principles": [
+    "Use tsconfig path aliases (@/, @db/, @ai/, @logging/, @modules/) — never relative paths like '../../foo'",
+    "Every modular health.ts exports `checkHealth(env: Env): Promise<HealthStepResult>` — identical signature, no exceptions",
+    "Every check actually exercises the subsystem and validates response SHAPE — never `return { status: 'ok' }`",
+    "Use `safeRun` to wrap every sub-check; one crashing sub-check must not kill the suite",
+    "Run sub-checks in parallel with Promise.all when independent",
+    "Schema changes always: pnpm run db:generate. Never hand-edit drizzle/*.sql",
+    "wrangler.jsonc binding/var changes always: pnpm run cf-typegen immediately after",
+    "Add @callable() to all 4 agent classes; rename method to healthProbe; coordinator uses getAgentByName(env.X, 'health-probe').healthProbe()",
+    "Drive lifecycle retains the most recent run's docs so the user can manually verify URL rendering on the frontend",
+    "Frontend response shape changes from { screening: { resultsJson } } to { run, results } — update HealthDashboard and HealthBadge in lockstep with route changes"
+  ],
+  "phases": [
+    {
+      "id": "P1",
+      "name": "Shared types + new schema",
+      "tasks": [
+        {
+          "id": "T1.1",
+          "title": "Create shared health types",
+          "depends_on": [],
+          "files": ["src/health/types.ts"],
+          "actions": [
+            "Create src/health/types.ts exporting HealthStatus, CheckStatus, HealthCategory, HealthStepResult, HealthRun, HealthResult per PRD §5",
+            "Extend HealthCategory enum with values 'binding', 'google', and keep existing values from cloudflare-jedi",
+            "Add a transition shim: `export type ModuleResult = HealthStepResult` so legacy callers compile until P6 cleanup"
+          ],
+          "acceptance": [
+            "src/health/types.ts compiles standalone (tsc --noEmit on the file)",
+            "All exported types match cloudflare-jedi references/health-system.md lines 50-86 verbatim"
+          ]
+        },
+        {
+          "id": "T1.2",
+          "title": "Create relational health schema",
+          "depends_on": ["T1.1"],
+          "files": [
+            "src/backend/db/schemas/health/runs.ts",
+            "src/backend/db/schemas/health/results.ts",
+            "src/backend/db/schemas/health/test-definitions.ts",
+            "src/backend/db/schemas/health/index.ts"
+          ],
+          "actions": [
+            "runs.ts: define healthRuns table per PRD §4 (id text PK, status enum, trigger enum, duration_ms, created_at, metadata JSON). Export createSelectSchema + createInsertSchema",
+            "results.ts: define healthResults with FK to healthRuns (onDelete: 'cascade'). Category enum includes 'binding' and 'google'. Export selectHealthResultSchema",
+            "test-definitions.ts: define healthTestDefinitions per cloudflare-jedi reference",
+            "index.ts: barrel `export * from './runs'`, etc."
+          ],
+          "acceptance": [
+            "All 3 tables defined with correct FK, default(CURRENT_TIMESTAMP), and JSON modes",
+            "Drizzle-zod select+insert schemas exported"
+          ]
+        },
+        {
+          "id": "T1.3",
+          "title": "Wire health schema into db/schema.ts (transitional — keep health-screenings)",
+          "depends_on": ["T1.2"],
+          "files": ["src/backend/db/schema.ts"],
+          "actions": [
+            "Add `export * from './schemas/health'` to the schema barrel",
+            "Keep the existing health-screenings re-export — it gets removed in P6"
+          ],
+          "acceptance": [
+            "db/schema.ts re-exports both legacy health-screenings and new health/* schemas with no duplicate-export errors"
+          ]
+        },
+        {
+          "id": "T1.4",
+          "title": "Generate migration for the 3 new tables",
+          "depends_on": ["T1.3"],
+          "actions": [
+            "pnpm run db:generate",
+            "Inspect generated SQL — must add health_runs, health_results, health_test_definitions; must NOT touch health_screenings yet"
+          ],
+          "acceptance": [
+            "New file in drizzle/ adds the three tables",
+            "pnpm run db:migrate:local applies cleanly"
+          ]
+        }
+      ],
+      "verification": [
+        "pnpm exec tsc --noEmit → 0 errors",
+        "wrangler d1 execute core-resumes --local --command \"SELECT name FROM sqlite_master WHERE type='table'\" → includes health_runs, health_results, health_test_definitions, health_screenings"
+      ]
+    },
+    {
+      "id": "P2",
+      "name": "wrangler.jsonc env var",
+      "tasks": [
+        {
+          "id": "T2.1",
+          "title": "Add RESUME_TEMPLATE_DOC_ID to wrangler.jsonc vars",
+          "depends_on": [],
+          "files": ["wrangler.jsonc"],
+          "actions": [
+            "Add `RESUME_TEMPLATE_DOC_ID: \"<doc-id-here>\"` under the `vars` block",
+            "Run `pnpm run cf-typegen` (or `wrangler types`)",
+            "Confirm Env interface in worker-configuration.d.ts now exposes RESUME_TEMPLATE_DOC_ID"
+          ],
+          "acceptance": [
+            "Env now includes RESUME_TEMPLATE_DOC_ID as string",
+            "User must populate the actual Doc ID before deploy — log this requirement in implementation log"
+          ]
+        }
+      ],
+      "verification": ["pnpm exec tsc --noEmit → 0 errors"]
+    },
+    {
+      "id": "P3",
+      "name": "Modular health.ts files (one per subsystem)",
+      "tasks": [
+        {
+          "id": "T3.1",
+          "title": "src/backend/db/health.ts",
+          "depends_on": ["T1.1"],
+          "files": ["src/backend/db/health.ts"],
+          "actions": [
+            "Export checkHealth(env): SELECT 1 + PRAGMA table_list",
+            "Assert key tables exist: roles, documents, threads, messages, health_runs, health_results",
+            "Return details: { tableCount, latencyMs, expectedTablesPresent: boolean, missingTables: string[] }"
+          ],
+          "acceptance": [
+            "Returns failure when a key table is missing",
+            "Returns success with details.tableCount > 0 when healthy"
+          ]
+        },
+        {
+          "id": "T3.2",
+          "title": "src/backend/ai/health.ts (Workers AI native)",
+          "depends_on": ["T1.1"],
+          "files": ["src/backend/ai/health.ts"],
+          "actions": [
+            "Sub-check 1: env.AI.run(env.DEFAULT_MODEL_EMBEDDING, { text: ['health'] }) — assert result.data is number[][] and data[0].length > 0",
+            "Sub-check 2: env.AI.run('@cf/meta/llama-3.1-8b-instruct', { messages: [{role:'user', content:'Reply with the word Pong.'}], max_tokens: 10 }) — assert response is non-empty string",
+            "Run sub-checks via Promise.all + safeRun"
+          ],
+          "acceptance": [
+            "Empty embeddings array → failure",
+            "Empty chat response → failure",
+            "Healthy response on both → success with details containing both sub-check latencies"
+          ]
+        },
+        {
+          "id": "T3.3",
+          "title": "src/backend/ai/providers/health.ts (multi-provider via AI Gateway)",
+          "depends_on": ["T1.1"],
+          "files": ["src/backend/ai/providers/health.ts"],
+          "actions": [
+            "Verify AI_GATEWAY_ACCOUNT_ID and AI_GATEWAY_GATEWAY_ID present at top — fail fast if missing",
+            "Probe workers-ai (always), openai/anthropic/google when their key is configured (else SKIPPED)",
+            "Each: generateText({ prompt: 'Reply with exactly the word: Pong', maxTokens: 10 }) — reject empty/non-string responses",
+            "Use the existing src/backend/ai/providers/index.ts createModel factory"
+          ],
+          "acceptance": [
+            "Missing gateway IDs → failure with explicit message",
+            "Unconfigured providers report SKIPPED with reason, not FAILURE",
+            "details exposes per-provider response, latency, provider"
+          ]
+        },
+        {
+          "id": "T3.4",
+          "title": "src/backend/ai/tools/google/health.ts (REPLACE existing — Drive + Docs lifecycle)",
+          "depends_on": ["T1.1", "T2.1"],
+          "files": [
+            "src/backend/ai/tools/google/health.ts",
+            "src/backend/ai/tools/google/drive.ts"
+          ],
+          "actions": [
+            "Add GoogleDriveClient.copyFile(sourceFileId, name, parentFolderId) — POST /drive/v3/files/{id}/copy with {name, parents}",
+            "List PARENT_DRIVE_FOLDER_ID and HEALTH_CHECK_DRIVE_FOLDER_ID",
+            "Order children of HEALTH_CHECK_DRIVE_FOLDER_ID by modifiedTime desc; retain the most recent run's set; delete only older docs",
+            "Create doc from HTML via existing createDocFromHtml + renderDocumentTemplate('resume', ...)",
+            "Create doc from template via copyFile(env.RESUME_TEMPLATE_DOC_ID, ...)",
+            "Append marker via GoogleDocsClient.appendText, then getDocument and assert body contains the marker",
+            "Return details: { createdDocIds, createdDocUrls, folderUrls: { parent, health }, retainedPriorRunIds, deletedCount }"
+          ],
+          "acceptance": [
+            "Fresh second run deletes the first run's docs but keeps its own",
+            "createdDocUrls present in details and clickable from the frontend",
+            "appendText + getDocument round-trip confirms write persisted"
+          ]
+        },
+        {
+          "id": "T3.5",
+          "title": "Per-agent health.ts rewrite (4 agents)",
+          "depends_on": ["T1.1"],
+          "files": [
+            "src/backend/ai/agents/orchestrator/health.ts",
+            "src/backend/ai/agents/notebooklm/health.ts",
+            "src/backend/ai/agents/notebooklm-mcp/health.ts",
+            "src/backend/ai/agents/transcription/health.ts"
+          ],
+          "actions": [
+            "Each file exports BOTH `healthProbe(agent, env)` (deep work, called from inside the @callable) AND `checkHealth(env)` (coordinator-side bridge using getAgentByName + stub.healthProbe())",
+            "checkHealth bridge MUST capture probeMs by timing the stub.healthProbe() call",
+            "checkHealth bridge MUST validate `typeof report?.status === 'string'` before returning",
+            "Orchestrator healthProbe: existing count(roles) + read agent.state.pendingTasks/roleId + this.schedule no-op + cancelSchedule",
+            "NotebookLM + NotebookLM-MCP healthProbe: existing creds check + ping + assert consultNotebook returns NON-EMPTY answer (currently doesn't)",
+            "Transcription healthProbe: existing R2/SANDBOX check + Python ping + R2 round-trip (write/read/delete a tiny test object)",
+            "Delete the legacy checkOrchestratorAgentRPC / checkNotebookLMAgentRPC / etc. exports — those move into checkHealth(env)"
+          ],
+          "acceptance": [
+            "All 4 health.ts files export both healthProbe and checkHealth with the documented signatures",
+            "checkHealth bridges populate details.probeMs and validate response shape",
+            "consultNotebook empty-response test now causes failure"
+          ]
+        },
+        {
+          "id": "T3.6",
+          "title": "Add @callable() to all 4 agent classes; rename method to healthProbe",
+          "depends_on": ["T3.5"],
+          "files": [
+            "src/backend/ai/agents/orchestrator/index.ts",
+            "src/backend/ai/agents/notebooklm/index.ts",
+            "src/backend/ai/agents/notebooklm-mcp/index.ts",
+            "src/backend/ai/agents/transcription/index.ts"
+          ],
+          "actions": [
+            "Each class: replace `@callable() async checkHealth() { return checkHealth(this, this.env) }` with `@callable() async healthProbe() { return healthProbe(this, this.env) }`",
+            "NotebookLMMcpAgent specifically: ADD @callable() — currently missing",
+            "Update imports: `import { healthProbe } from './health'`"
+          ],
+          "acceptance": [
+            "All 4 agents expose @callable() async healthProbe()",
+            "NotebookLMMcpAgent now has @callable() (it didn't before)",
+            "No agent class still has a checkHealth method"
+          ]
+        },
+        {
+          "id": "T3.7",
+          "title": "src/backend/api/health.ts (route shape validation via loopback)",
+          "depends_on": ["T1.1"],
+          "files": ["src/backend/api/health.ts"],
+          "actions": [
+            "Loopback fetch /openapi.json — assert openapi==='3.1.0' and paths non-empty",
+            "Loopback fetch /api/ping — assert Content-Type application/json and body { status: 'ok', timestamp: number }",
+            "Loopback fetch /api/health/latest — assert NEW { run, results } shape (catches Phase 6 cleanup regressions)"
+          ],
+          "acceptance": [
+            "All 3 loopback probes pass against the dev server",
+            "Wrong Content-Type or wrong shape causes failure with descriptive details"
+          ]
+        },
+        {
+          "id": "T3.8",
+          "title": "src/backend/api/middleware/health.ts (auth round-trip)",
+          "depends_on": ["T1.1"],
+          "files": ["src/backend/api/middleware/health.ts"],
+          "actions": [
+            "Loopback fetch the auth-protected route WITHOUT Authorization header — assert 401",
+            "Same WITH `Authorization: Bearer ${env.WORKER_API_KEY.get()}` — assert 200",
+            "Both must pass for status: success"
+          ],
+          "acceptance": [
+            "Missing-key scenario produces a 401",
+            "Valid-key scenario produces a 200",
+            "Failure of either produces a clear `details.scenario` indicator"
+          ]
+        },
+        {
+          "id": "T3.9",
+          "title": "src/backend/health/checks/bindings.ts (5 sub-checks in parallel)",
+          "depends_on": ["T1.1"],
+          "files": ["src/backend/health/checks/bindings.ts"],
+          "actions": [
+            "BROWSER: puppeteer.launch(env.BROWSER) → navigate data:text/html,<h1>Health</h1> → screenshot → assert PNG bytes > 100 → close. SKIPPED if missing.",
+            "R2_AUDIO_BUCKET: put('__health_check', new Uint8Array([1,2,3])) → get → assert bytes match → delete",
+            "EMAIL_OUT: assert binding exists; construct + serialize MIMEMessage. NEVER actually send mail.",
+            "SESSIONS KV: put('__health_check','1', {expirationTtl:60}) → get → assert === '1' → delete",
+            "SANDBOX standalone: provisionSandbox(env, 'binding-health-check') → exec('echo ready') → assert stdout includes 'ready' → destroy"
+          ],
+          "acceptance": [
+            "5 sub-checks reported in details, each with status + latency",
+            "Disabling any binding (commented out in wrangler.jsonc) yields a single targeted failure"
+          ]
+        },
+        {
+          "id": "T3.10",
+          "title": "src/backend/health/checks/d1-table-scan.ts",
+          "depends_on": ["T1.1"],
+          "files": ["src/backend/health/checks/d1-table-scan.ts"],
+          "actions": [
+            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
+            "For each table: SELECT COUNT(*)",
+            "Return success with details.warnings: [...] when expected-non-empty tables (roles, documents) are empty"
+          ],
+          "acceptance": [
+            "Always returns status:success unless the scan itself errors",
+            "details.warnings array present and informative when tables are unexpectedly empty"
+          ]
+        },
+        {
+          "id": "T3.11",
+          "title": "Move secrets / env-vars / notebooklm-credentials / tts / stt into modular files",
+          "depends_on": ["T1.1"],
+          "files": [
+            "src/backend/health/checks/secrets.ts",
+            "src/backend/health/checks/env-vars.ts",
+            "src/backend/health/checks/notebooklm-credentials.ts",
+            "src/backend/health/checks/tts.ts",
+            "src/backend/health/checks/stt.ts"
+          ],
+          "actions": [
+            "Move logic from src/backend/services/health.ts:125-228, 383-475 into the corresponding files",
+            "TTS: read first chunk of returned ReadableStream, assert byte count > 0",
+            "STT: assert result.text !== undefined (key must exist; empty string is OK for silence)"
+          ],
+          "acceptance": [
+            "TTS no longer accepts a truthy-but-empty stream as success",
+            "STT now distinguishes contract drift (missing text key) from quiet input (empty text)"
+          ]
+        }
+      ],
+      "verification": [
+        "pnpm exec tsc --noEmit → 0 errors after all P3 tasks complete",
+        "pnpm run dev boots without runtime errors"
+      ]
+    },
+    {
+      "id": "P4",
+      "name": "Coordinator + Hono routes + scheduled handler",
+      "tasks": [
+        {
+          "id": "T4.1",
+          "title": "Create src/health/coordinator.ts",
+          "depends_on": [
+            "T3.1",
+            "T3.2",
+            "T3.3",
+            "T3.4",
+            "T3.5",
+            "T3.6",
+            "T3.7",
+            "T3.8",
+            "T3.9",
+            "T3.10",
+            "T3.11"
+          ],
+          "files": ["src/health/coordinator.ts"],
+          "actions": [
+            "Class HealthCoordinator(env). Methods: runAllChecks(trigger), getLatestRun()",
+            "Use cloudflare-jedi references/health-system.md lines 374-504 as the template",
+            "PER_CHECK_TIMEOUT_MS=8000, batch health_results inserts at 9 rows/stmt",
+            "Imports use tsconfig aliases (@/, @db/, @ai/) — no relative paths",
+            "CHECKS array registers all checks from P3 — see PRD §8 for the full import list"
+          ],
+          "acceptance": [
+            "runAllChecks returns { runId, status, results, durationMs }",
+            "Each check is wrapped with the 8s timeout race",
+            "D1 inserts batch correctly (no >100 param errors with full result set)"
+          ]
+        },
+        {
+          "id": "T4.2",
+          "title": "Refactor src/backend/api/routes/health.ts to use HealthCoordinator",
+          "depends_on": ["T4.1"],
+          "files": ["src/backend/api/routes/health.ts"],
+          "actions": [
+            "Replace runFullScreening / saveScreeningToD1 / getLatestScreening imports with HealthCoordinator",
+            "Three routes (paths unchanged): GET /, GET /latest, POST /run",
+            "Response shape: { run, results } — uses selectHealthRunSchema and z.array(selectHealthResultSchema) from drizzle-zod"
+          ],
+          "acceptance": [
+            "All 3 routes return { run, results } shape",
+            "OpenAPI spec at /openapi.json reflects new shape automatically (no hardcoded schemas)"
+          ]
+        },
+        {
+          "id": "T4.3",
+          "title": "Update src/_worker.ts scheduled handler",
+          "depends_on": ["T4.1"],
+          "files": ["src/_worker.ts"],
+          "actions": [
+            "Replace runFullScreening + saveScreeningToD1 with `new HealthCoordinator(env).runAllChecks('scheduled')` wrapped in ctx.waitUntil"
+          ],
+          "acceptance": [
+            "curl http://localhost:8787/__scheduled?cron=0+*%2F4+*+*+* triggers a new health_runs row with trigger='scheduled'"
+          ]
+        }
+      ],
+      "verification": [
+        "curl -X POST http://localhost:8787/api/health/run returns { run, results } with every registered check present",
+        "wrangler d1 execute core-resumes --local --command \"SELECT * FROM health_runs ORDER BY created_at DESC LIMIT 1\" returns the latest run",
+        "wrangler d1 execute --command \"SELECT name, status, duration_ms FROM health_results WHERE run_id = (SELECT id FROM health_runs ORDER BY created_at DESC LIMIT 1)\" returns one row per registered check"
+      ]
+    },
+    {
+      "id": "P5",
+      "name": "Frontend updates",
+      "tasks": [
+        {
+          "id": "T5.1",
+          "title": "HealthDashboard response-shape migration",
+          "depends_on": ["T4.2"],
+          "files": ["src/frontend/components/HealthDashboard.tsx"],
+          "actions": [
+            "Update fetch types to consume { run, results } not { screening: { resultsJson } }",
+            "Group results by category (api/database/ai/providers/agents/google/binding/auth/custom)",
+            "For Google Drive results: render details.createdDocUrls AND details.folderUrls as clickable links — this is how the user manually verifies styling/rendering",
+            "Keep existing skeleton-during-run, copy-to-clipboard, age display, localStorage 'health_screening_complete' event behaviors"
+          ],
+          "acceptance": [
+            "Dashboard renders the latest run from /api/health/latest on load",
+            "Run Now button posts to /api/health/run, shows skeleton, then renders fresh results",
+            "Google Drive section shows clickable links to created docs and folders",
+            "User can click a Drive doc URL → opens the actual rendered resume in Drive"
+          ]
+        },
+        {
+          "id": "T5.2",
+          "title": "HealthBadge status enum migration",
+          "depends_on": ["T4.2"],
+          "files": ["src/frontend/components/HealthBadge.tsx"],
+          "actions": [
+            "Read data.run.status (was data.screening.status)",
+            "Status enum: healthy | degraded | unhealthy | unknown (was ok | degraded | down | unknown)",
+            "Update color map accordingly — emerald / yellow / red / gray"
+          ],
+          "acceptance": [
+            "Badge color reflects latest run status across all states",
+            "Click-through navigates to /health"
+          ]
+        }
+      ],
+      "verification": [
+        "Load /health locally — page shows results, badge pulses correctly, Drive URLs are clickable",
+        "Click a Drive URL — opens a real Doc in Drive that renders the resume template"
+      ]
+    },
+    {
+      "id": "P6",
+      "name": "Cleanup",
+      "tasks": [
+        {
+          "id": "T6.1",
+          "title": "Remove legacy health-screenings schema + table",
+          "depends_on": ["T5.1", "T5.2"],
+          "delete": [
+            "src/backend/db/schemas/health-screenings.ts",
+            "src/backend/services/health.ts"
+          ],
+          "files": ["src/backend/db/schema.ts"],
+          "actions": [
+            "Delete src/backend/services/health.ts (logic now lives in modular files + coordinator)",
+            "Delete src/backend/db/schemas/health-screenings.ts",
+            "Remove the corresponding `export *` from src/backend/db/schema.ts",
+            "pnpm run db:generate → produces migration that drops health_screenings table",
+            "pnpm run db:migrate:local → confirm migration applies"
+          ],
+          "acceptance": [
+            "tsc --noEmit clean — no consumers reference the deleted module",
+            "health_screenings table removed from local D1",
+            "Latest health run still works end-to-end after cleanup"
+          ]
+        },
+        {
+          "id": "T6.2",
+          "title": "Remove ModuleResult shim",
+          "depends_on": ["T6.1"],
+          "files": ["src/health/types.ts"],
+          "actions": ["Remove `export type ModuleResult = HealthStepResult` shim added in T1.1"],
+          "acceptance": ["tsc --noEmit clean"]
+        }
+      ],
+      "verification": [
+        "pnpm exec tsc --noEmit → 0 errors",
+        "pnpm run dev boots; full health run still passes",
+        "wrangler d1 execute --command \"SELECT name FROM sqlite_master WHERE type='table'\" no longer lists health_screenings"
+      ]
+    },
+    {
+      "id": "P7",
+      "name": "End-to-end verification",
+      "tasks": [
+        {
+          "id": "T7.1",
+          "title": "Run full verification checklist (PRD §14)",
+          "depends_on": ["T6.2"],
+          "actions": [
+            "Step through PRD §14 verification list 1-15",
+            "Document any failure with the exact health_results.details payload",
+            "Confirm Drive doc retention (run twice, only most recent docs remain)",
+            "Confirm failure injection works (comment out a binding, only that binding fails)",
+            "Confirm details.probeMs populated for all 4 agent results"
+          ],
+          "acceptance": [
+            "All 15 verification steps pass",
+            "Production deploy via pnpm run deploy succeeds",
+            "Production /api/health/latest returns the new { run, results } shape"
+          ]
+        }
+      ],
+      "verification": [
+        "Production health page shows healthy status across all categories with optional providers SKIPPED, not failed"
+      ]
+    }
+  ]
+}

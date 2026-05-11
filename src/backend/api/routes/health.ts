@@ -1,98 +1,143 @@
 /**
- * @fileoverview Health monitoring API routes
+ * @fileoverview Health check API routes for the Career Orchestrator Worker.
+ *
+ * Provides three endpoints:
+ *  - `GET  /api/health`        — Quick liveness check (returns latest run from D1)
+ *  - `GET  /api/health/latest` — Fetch the most recent run with all results
+ *  - `POST /api/health/run`    — Run a full diagnostic, persist to D1, return results
+ *
+ * Uses the new `HealthCoordinator` and relational D1 schema (`health_runs` + `health_results`).
  */
 
-import { Hono } from 'hono';
-import { drizzle } from 'drizzle-orm/d1';
-import { desc, eq } from 'drizzle-orm';
-import { healthChecks } from '../../db/schema';
-import type { Bindings } from '../index';
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
-const healthRouter = new Hono<{ Bindings: Bindings }>();
+import { HealthCoordinator } from "@/health";
 
-// GET /api/health
-healthRouter.get('/', async (c) => {
-  const db = drizzle(c.env.DB);
-  const startTime = Date.now();
+// ---------------------------------------------------------------------------
+// Schemas
+// ---------------------------------------------------------------------------
 
-  try {
-    // Test database connection
-    await db.select().from(healthChecks).limit(1);
-    const dbResponseTime = Date.now() - startTime;
+const checkStatusEnum = z.enum(["ok", "warn", "fail", "skipped", "timeout"]);
+const healthStatusEnum = z.enum(["healthy", "degraded", "unhealthy", "unknown"]);
+const triggerEnum = z.enum(["manual", "scheduled", "agent"]);
+const categoryEnum = z.enum([
+  "database",
+  "ai",
+  "providers",
+  "agents",
+  "google",
+  "binding",
+  "auth",
+  "api",
+  "custom",
+]);
 
-    // Get latest health check for each service
-    const allChecks = await db
-      .select()
-      .from(healthChecks)
-      .orderBy(desc(healthChecks.timestamp))
-      .limit(100);
+const healthResultSchema = z.object({
+  id: z.string(),
+  runId: z.string(),
+  category: categoryEnum,
+  name: z.string(),
+  status: checkStatusEnum,
+  message: z.string().optional(),
+  details: z.record(z.string(), z.unknown()).optional(),
+  durationMs: z.number(),
+  aiSuggestion: z.string().optional(),
+  timestamp: z.string(),
+});
 
-    const latestChecks = allChecks.reduce((acc, check) => {
-      if (!acc[check.serviceName]) {
-        acc[check.serviceName] = check;
-      }
-      return acc;
-    }, {} as Record<string, typeof allChecks[0]>);
+const healthRunSchema = z.object({
+  id: z.string(),
+  status: healthStatusEnum,
+  trigger: triggerEnum,
+  durationMs: z.number(),
+  createdAt: z.string(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+});
 
-    // Determine overall status
-    const statuses = Object.values(latestChecks).map((c) => c.status);
-    let overallStatus = 'healthy';
+const healthResponseSchema = z.object({
+  run: healthRunSchema,
+  results: z.array(healthResultSchema),
+});
 
-    if (statuses.includes('down')) {
-      overallStatus = 'down';
-    } else if (statuses.includes('degraded')) {
-      overallStatus = 'degraded';
-    }
+const latestResponseSchema = z.object({
+  run: healthRunSchema.nullable(),
+  results: z.array(healthResultSchema),
+});
 
-    // Record this health check
-    await db.insert(healthChecks).values({
-      serviceName: 'api',
-      status: 'healthy',
-      responseTime: dbResponseTime,
-      timestamp: new Date(),
-    });
+// ---------------------------------------------------------------------------
+// Router
+// ---------------------------------------------------------------------------
 
-    return c.json({
-      status: overallStatus,
-      timestamp: new Date().toISOString(),
-      services: latestChecks,
-      responseTime: Date.now() - startTime,
-    });
-  } catch (error) {
-    console.error('Health check error:', error);
-    return c.json(
-      {
-        status: 'down',
-        timestamp: new Date().toISOString(),
-        error: 'Health check failed',
+export const healthRouter = new OpenAPIHono<{ Bindings: Env }>();
+
+/**
+ * GET /api/health — Quick liveness / latest run.
+ *
+ * Returns the latest persisted run from D1 without re-running checks.
+ * If no run exists yet, returns { run: null, results: [] }.
+ */
+healthRouter.openapi(
+  createRoute({
+    method: "get",
+    path: "/",
+    operationId: "healthCheck",
+    responses: {
+      200: {
+        description: "Latest health run from D1 (no re-run)",
+        content: { "application/json": { schema: latestResponseSchema } },
       },
-      503
-    );
-  }
-});
+    },
+  }),
+  async (c) => {
+    const coordinator = new HealthCoordinator(c.env);
+    const latest = await coordinator.getLatestRun();
+    return c.json({ run: latest?.run ?? null, results: latest?.results ?? [] }, 200);
+  },
+);
 
-// GET /api/health/history
-healthRouter.get('/history', async (c) => {
-  const db = drizzle(c.env.DB);
-  const service = c.req.query('service');
-  const limit = parseInt(c.req.query('limit') || '100');
+/**
+ * GET /api/health/latest — Same as GET / (explicit alias).
+ */
+healthRouter.openapi(
+  createRoute({
+    method: "get",
+    path: "/latest",
+    operationId: "getLatestHealthCheck",
+    responses: {
+      200: {
+        description: "Most recent health run from D1",
+        content: { "application/json": { schema: latestResponseSchema } },
+      },
+    },
+  }),
+  async (c) => {
+    const coordinator = new HealthCoordinator(c.env);
+    const latest = await coordinator.getLatestRun();
+    return c.json({ run: latest?.run ?? null, results: latest?.results ?? [] }, 200);
+  },
+);
 
-  try {
-    let query = db.select().from(healthChecks);
-
-    if (service) {
-      query = query.where(eq(healthChecks.serviceName, service));
-    }
-
-    const history = await query
-      .orderBy(desc(healthChecks.timestamp))
-      .limit(limit);
-
-    return c.json({ history });
-  } catch (error) {
-    console.error('Error fetching health history:', error);
-    return c.json({ error: 'Failed to fetch health history' }, 500);
-  }
-});
-
-export { healthRouter };
+/**
+ * POST /api/health/run — Explicit manual screening trigger.
+ *
+ * Runs all health checks in parallel, persists run + results to D1,
+ * and returns the full payload.
+ */
+healthRouter.openapi(
+  createRoute({
+    method: "post",
+    path: "/run",
+    operationId: "runHealthCheck",
+    responses: {
+      200: {
+        description: "On-demand health diagnostic results",
+        content: { "application/json": { schema: healthResponseSchema } },
+      },
+    },
+  }),
+  async (c) => {
+    const coordinator = new HealthCoordinator(c.env);
+    const { run, results } = await coordinator.runAllChecks("manual");
+    return c.json({ run, results }, 200);
+  },
+);

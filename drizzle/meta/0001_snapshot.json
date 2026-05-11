@@ -1,57 +1,113 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "2377c1a0-dae8-484f-926e-d968a3e1b46c",
-  "prevId": "1d8ce30a-4d3c-40d4-a5bf-53ba14f7fffb",
+  "id": "a53c4329-d1cf-4953-aaec-20607d94e6cb",
+  "prevId": "1910241b-1b13-4586-8c71-43063905aee9",
   "tables": {
-    "dashboard_metrics": {
-      "name": "dashboard_metrics",
+    "roles": {
+      "name": "roles",
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
-        "metric_name": {
-          "name": "metric_name",
+        "company_name": {
+          "name": "company_name",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "metric_value": {
-          "name": "metric_value",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "metric_type": {
-          "name": "metric_type",
+        "job_title": {
+          "name": "job_title",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "category": {
-          "name": "category",
+        "job_url": {
+          "name": "job_url",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
-        "timestamp": {
-          "name": "timestamp",
+        "salary_min": {
+          "name": "salary_min",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "salary_max": {
+          "name": "salary_max",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "salary_currency": {
+          "name": "salary_currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'USD'"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "(unixepoch())"
+          "default": "'preparing'"
+        },
+        "drive_folder_id": {
+          "name": "drive_folder_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "role_instructions": {
+          "name": "role_instructions",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "roles_status_idx": {
+          "name": "roles_status_idx",
+          "columns": ["status"],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
@@ -61,27 +117,42 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "integer",
-          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "title": {
-          "name": "title",
+        "gdoc_id": {
+          "name": "gdoc_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "content": {
-          "name": "content",
+        "role_id": {
+          "name": "role_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "name": {
+          "name": "name",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -92,30 +163,23 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch())"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch())"
+          "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "documents_role_id_idx": {
+          "name": "documents_role_id_idx",
+          "columns": ["role_id"],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
-        "documents_user_id_users_id_fk": {
-          "name": "documents_user_id_users_id_fk",
+        "documents_role_id_roles_id_fk": {
+          "name": "documents_role_id_roles_id_fk",
           "tableFrom": "documents",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "tableTo": "roles",
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -123,55 +187,50 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "health_checks": {
-      "name": "health_checks",
+    "threads": {
+      "name": "threads",
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
-        "service_name": {
-          "name": "service_name",
+        "title": {
+          "name": "title",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "response_time": {
-          "name": "response_time",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "error_message": {
-          "name": "error_message",
+        "role_id": {
+          "name": "role_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "timestamp": {
-          "name": "timestamp",
+        "created_at": {
+          "name": "created_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch())"
+          "autoincrement": false
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "threads_role_id_roles_id_fk": {
+          "name": "threads_role_id_roles_id_fk",
+          "tableFrom": "threads",
+          "tableTo": "roles",
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -180,20 +239,27 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
         "thread_id": {
           "name": "thread_id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "role": {
-          "name": "role",
+        "role_id": {
+          "name": "role_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "author": {
+          "name": "author",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -213,27 +279,37 @@
           "notNull": false,
           "autoincrement": false
         },
-        "created_at": {
-          "name": "created_at",
+        "timestamp": {
+          "name": "timestamp",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch())"
+          "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "messages_thread_id_idx": {
+          "name": "messages_thread_id_idx",
+          "columns": ["thread_id"],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "messages_thread_id_threads_id_fk": {
           "name": "messages_thread_id_threads_id_fk",
           "tableFrom": "messages",
           "tableTo": "threads",
-          "columnsFrom": [
-            "thread_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["thread_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "messages_role_id_roles_id_fk": {
+          "name": "messages_role_id_roles_id_fk",
+          "tableFrom": "messages",
+          "tableTo": "roles",
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -241,233 +317,137 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "notifications": {
-      "name": "notifications",
+    "emails": {
+      "name": "emails",
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
           "autoincrement": false
         },
-        "type": {
-          "name": "type",
+        "role_id": {
+          "name": "role_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "subject": {
+          "name": "subject",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "title": {
-          "name": "title",
+        "body": {
+          "name": "body",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "message": {
-          "name": "message",
+        "sender": {
+          "name": "sender",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "is_read": {
-          "name": "is_read",
-          "type": "integer",
+        "raw_content": {
+          "name": "raw_content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "processed_status": {
+          "name": "processed_status",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": false
+          "default": "'pending'"
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch())"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "notifications_user_id_users_id_fk": {
-          "name": "notifications_user_id_users_id_fk",
-          "tableFrom": "notifications",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "sessions": {
-      "name": "sessions",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "user_id": {
-          "name": "user_id",
+        "received_at": {
+          "name": "received_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
-        },
-        "token": {
-          "name": "token",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch())"
         }
       },
       "indexes": {
-        "sessions_token_unique": {
-          "name": "sessions_token_unique",
-          "columns": [
-            "token"
-          ],
-          "isUnique": true
+        "emails_processed_status_idx": {
+          "name": "emails_processed_status_idx",
+          "columns": ["processed_status"],
+          "isUnique": false
         }
       },
       "foreignKeys": {
-        "sessions_user_id_users_id_fk": {
-          "name": "sessions_user_id_users_id_fk",
-          "tableFrom": "sessions",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
+        "emails_role_id_roles_id_fk": {
+          "name": "emails_role_id_roles_id_fk",
+          "tableFrom": "emails",
+          "tableTo": "roles",
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "threads": {
-      "name": "threads",
+    "global_config": {
+      "name": "global_config",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
+        "key": {
+          "name": "key",
+          "type": "text",
           "primaryKey": true,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "integer",
-          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "title": {
-          "name": "title",
+        "value": {
+          "name": "value",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch())"
         },
         "updated_at": {
           "name": "updated_at",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch())"
+          "autoincrement": false
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "threads_user_id_users_id_fk": {
-          "name": "threads_user_id_users_id_fk",
-          "tableFrom": "threads",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "users": {
-      "name": "users",
+    "job_failures": {
+      "name": "job_failures",
       "columns": {
         "id": {
           "name": "id",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": true
+          "autoincrement": false
         },
-        "email": {
-          "name": "email",
+        "job_url": {
+          "name": "job_url",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "password_hash": {
-          "name": "password_hash",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "name": {
-          "name": "name",
+        "error_message": {
+          "name": "error_message",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -478,27 +458,10 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch())"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch())"
+          "autoincrement": false
         }
       },
-      "indexes": {
-        "users_email_unique": {
-          "name": "users_email_unique",
-          "columns": [
-            "email"
-          ],
-          "isUnique": true
-        }
-      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}

@@ -1,0 +1,34 @@
+---
+import { eq } from "drizzle-orm";
+import { getDb } from "@/backend/db";
+import { companies, roles } from "@/backend/db/schema";
+import { Sidebar } from "@/components/Sidebar";
+import { CompanyViewport } from "@/components/company/CompanyViewport";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+if (!Astro.cookies.has("cr_session")) {
+  return Astro.redirect("/login");
+}
+
+const { id } = Astro.params;
+const db = getDb(Astro.locals.runtime.env);
+const [company] = await db.select().from(companies).where(eq(companies.id, id!)).limit(1);
+
+if (!company) {
+  return new Response("Company not found", { status: 404 });
+}
+
+// Fetch roles for this company to pass into the viewport
+const companyRoles = await db.select().from(roles).where(eq(roles.companyId, id!));
+---
+
+<BaseLayout title={`${company.name} | Analytics`} description="Company analytics and brand management">
+  <div class="flex flex-1">
+    <Sidebar client:load />
+    <section class="min-w-0 flex-1">
+      <div class="mx-auto grid w-full max-w-screen-2xl gap-5 px-4 py-5 lg:px-8">
+        <CompanyViewport company={company} roles={companyRoles} client:load />
+      </div>
+    </section>
+  </div>
+</BaseLayout>

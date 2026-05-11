@@ -1,0 +1,30 @@
+---
+import { IntakeModal } from "@/components/intake/IntakeModal";
+import { RoleActions } from "@/components/role/RoleActions";
+import { RolesTable } from "@/components/role/RolesTable";
+import { Sidebar } from "@/components/Sidebar";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+if (!Astro.cookies.has("cr_session")) {
+  return Astro.redirect("/login");
+}
+---
+
+<BaseLayout title="Roles | Career Orchestrator" description="Tracked job roles and statuses.">
+  <div class="flex flex-1">
+    <Sidebar client:load />
+    <section class="min-w-0 flex-1">
+      <div class="mx-auto grid w-full max-w-screen-2xl gap-5 px-4 py-5 lg:px-8">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 class="text-2xl font-semibold tracking-tight">Roles</h1>
+            <p class="mt-1 text-sm text-muted-foreground">Sort and filter every tracked application.</p>
+          </div>
+          <RoleActions client:load />
+        </div>
+        <RolesTable client:load />
+        <IntakeModal client:load />
+      </div>
+    </section>
+  </div>
+</BaseLayout>

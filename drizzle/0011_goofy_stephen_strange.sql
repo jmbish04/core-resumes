@@ -1,0 +1,1 @@
+ALTER TABLE `roles` ADD `job_posting_pdf_url` text;

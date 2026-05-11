@@ -6,6 +6,8 @@
 
 @import "@fontsource-variable/inter";
 
+@plugin "@tailwindcss/typography";
+
 @custom-variant dark (&:is(.dark *));
 @custom-variant fixed (&:is(.layout-fixed *));
 
@@ -186,5 +188,69 @@
 @utility extend-touch-target {
   @media (pointer: coarse) {
     @apply relative touch-manipulation after:absolute after:-inset-2;
+  }
+}
+
+/* Intake submission overlay — success pop animation */
+@keyframes intake-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes vibrate {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+@utility animate-vibrate {
+  animation: vibrate 0.3s linear infinite;
+}
+
+/* Print styles — clean white output for analysis page */
+@media print {
+  :root,
+  .dark {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --muted-foreground: oklch(0.4 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --border: oklch(0.85 0 0);
+  }
+
+  /* Hide non-essential UI during print */
+  nav,
+  footer,
+  .assistant-modal,
+  button,
+  [data-slot="tabs-list"],
+  [data-slot="dialog-overlay"] {
+    display: none !important;
+  }
+
+  /* Force-expand all collapsibles */
+  [data-state="closed"] > [data-slot="collapsible-content"] {
+    display: block !important;
+    height: auto !important;
+  }
+
+  /* Prevent chart page-breaks */
+  .recharts-wrapper {
+    page-break-inside: avoid;
+  }
+
+  /* Ensure cards don't split across pages */
+  [data-slot="card"] {
+    page-break-inside: avoid;
   }
 }
