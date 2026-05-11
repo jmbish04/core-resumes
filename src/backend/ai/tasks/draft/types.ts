@@ -1,10 +1,13 @@
 export type DraftDocType = "resume" | "cover_letter" | "email_reply";
 
 export type DraftPhase =
+  | "planning"
   | "consulting"
   | "drafting"
   | "accuracy_review"
   | "strategic_review"
+  | "evaluating"
+  | "improving"
   | "creating_doc"
   | "complete"
   | "error";

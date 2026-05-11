@@ -1,6 +1,6 @@
 # Document Generation
 
-Last updated: May 6, 2026
+Last updated: May 11, 2026
 
 The `core-resumes` architecture provides two distinct paths for generating Google Docs (Resumes and Cover Letters): a non-deterministic LLM pipeline driven by NotebookLM, and a deterministic Script-Backed pipeline. Both paths utilize the `GoogleDriveClient` wrapper for robust, cached multipart uploads to Google Drive.
 
@@ -10,11 +10,19 @@ This is a multi-phase AI workflow orchestrated by the Colby (`OrchestratorAgent`
 
 - **Trigger:** Chat interactions or orchestration pipeline tasks (`OrchestratorAgent.draft_resume()`).
 - **Phases:** 
+  0. Draft Planning (Workers AI selects focus areas + keyword targets).
   1. Pre-Draft Consultation (NotebookLM locates evidence).
   2. AI Draft (Workers AI synthesizes).
   3. Review (NotebookLM verifies facts/strategy).
-  4. Google Doc Creation.
-- **File:** `src/backend/ai/tasks/draft-with-notebook.ts`
+  4. Evaluate + Improve (Workers AI scores + iterates until threshold).
+  5. Google Doc Creation.
+- **File:** `src/backend/ai/tasks/draft/notebook.ts`
+
+### Evaluation Loop Notes
+
+- The evaluation loop uses a hybrid signal (programmatic keyword coverage + embedding similarity + LLM rubric scoring) to produce an `overall` score and actionable issues.
+- Evaluation snapshots are stored to Career Memory (`source=draft_review`, category `resume_draft` / `cover_letter`).
+- A short rolling history is also persisted to `roles.metadata.draftEvaluation` for UI trend display.
 
 ## 2. Deterministic Generation (Script-Backed)
 
