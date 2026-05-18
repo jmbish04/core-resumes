@@ -365,6 +365,13 @@ function formatStageLabel(stage: string) {
   return stage.replaceAll("_", " ").replaceAll("-", " ").trim();
 }
 
+/**
+ * Computes the progress percentage for a given task stage.
+ * Only applies to resume and cover letter drafting tasks that have defined stages.
+ * Task types match backend definitions in orchestrator/types.ts:
+ * - "resume_review" for resume drafting
+ * - "cover_letter_draft" for cover letter drafting
+ */
 function computeStagePercent(taskType: string, stage: string): number | undefined {
   if (taskType !== "resume_review" && taskType !== "cover_letter_draft") return undefined;
 

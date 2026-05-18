@@ -8,6 +8,30 @@ import { getModelRegistry } from "../../models";
 import { getProvider } from "../../providers";
 import { extractText } from "../../utils/extract-text";
 
+interface ATSTags {
+  programmingLanguagesAndFrameworks?: string[];
+  testingAndQuality?: string[];
+  engineeringPractices?: string[];
+  businessDomain?: string[];
+  infrastructureAndDevOps?: string[];
+  impliedSkills?: string[];
+}
+
+interface RoleMetadata {
+  requiredSkills?: unknown;
+  preferredSkills?: unknown;
+  requiredQualifications?: unknown;
+  preferredQualifications?: unknown;
+  responsibilities?: unknown;
+  atsTags?: ATSTags;
+}
+
+/**
+ * Default score returned when no keywords are defined for a role.
+ * This assumes a baseline quality when there are no specific requirements to evaluate against.
+ */
+const DEFAULT_SCORE_NO_KEYWORDS = 75;
+
 const ScoresSchema = z.object({
   keyword_coverage: z.number().min(0).max(100),
   relevance: z.number().min(0).max(100),
@@ -30,10 +54,12 @@ export type DraftEval = z.infer<typeof DraftEvalSchema> & {
 };
 
 function cosineSimilarity(a: number[], b: number[]) {
+  if (a.length === 0 || a.length !== b.length) return 0;
+
   let dot = 0;
   let normA = 0;
   let normB = 0;
-  for (let i = 0; i < Math.min(a.length, b.length); i++) {
+  for (let i = 0; i < a.length; i++) {
     dot += a[i]! * b[i]!;
     normA += a[i]! * a[i]!;
     normB += b[i]! * b[i]!;
@@ -43,7 +69,7 @@ function cosineSimilarity(a: number[], b: number[]) {
 }
 
 function extractRoleKeywords(role: Role): string[] {
-  const meta = (role.metadata as Record<string, unknown> | undefined) ?? {};
+  const meta = (role.metadata as RoleMetadata | undefined) ?? {};
 
   const rawBuckets: unknown[] = [
     meta.requiredSkills,
@@ -51,12 +77,12 @@ function extractRoleKeywords(role: Role): string[] {
     meta.requiredQualifications,
     meta.preferredQualifications,
     meta.responsibilities,
-    (meta.atsTags as any)?.programmingLanguagesAndFrameworks,
-    (meta.atsTags as any)?.testingAndQuality,
-    (meta.atsTags as any)?.engineeringPractices,
-    (meta.atsTags as any)?.businessDomain,
-    (meta.atsTags as any)?.infrastructureAndDevOps,
-    (meta.atsTags as any)?.impliedSkills,
+    meta.atsTags?.programmingLanguagesAndFrameworks,
+    meta.atsTags?.testingAndQuality,
+    meta.atsTags?.engineeringPractices,
+    meta.atsTags?.businessDomain,
+    meta.atsTags?.infrastructureAndDevOps,
+    meta.atsTags?.impliedSkills,
   ];
 
   const keywords = rawBuckets
@@ -79,7 +105,7 @@ function extractRoleKeywords(role: Role): string[] {
 }
 
 function computeKeywordCoverage(text: string, keywords: string[]) {
-  if (keywords.length === 0) return { score: 75, missing: [] as string[] };
+  if (keywords.length === 0) return { score: DEFAULT_SCORE_NO_KEYWORDS, missing: [] as string[] };
 
   const lower = text.toLowerCase();
   const missing: string[] = [];

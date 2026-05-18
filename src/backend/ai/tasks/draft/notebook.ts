@@ -377,7 +377,10 @@ ${draftContent}`,
       max_tokens: 8096,
     });
 
-    draftContent = extractText(improvementResult);
+    const improvedContent = extractText(improvementResult);
+    if (improvedContent.trim()) {
+      draftContent = improvedContent;
+    }
   }
 
   // Persist evaluation history (best-effort) so the UI can display trends per role.
