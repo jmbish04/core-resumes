@@ -67,7 +67,8 @@ export class OrchestratorAgent extends Agent<Env, OrchestratorState> {
         },
         {
           name: "generate_docs_from_script",
-          description: "Generate a deterministic Resume or Cover Letter from structured script inputs",
+          description:
+            "Generate a deterministic Resume or Cover Letter from structured script inputs",
           params: 'data: any, type: "resume" | "cover_letter"',
           returns: "Document metadata (ID and URL)",
         },
@@ -81,16 +82,22 @@ export class OrchestratorAgent extends Agent<Env, OrchestratorState> {
     pendingTasks: [],
   };
 
-  onConnect(connection: Connection) {
-    this.getLogger().then(logger => logger.info(`[OrchestratorAgent][${this.name}] WebSocket connected.`));
+  onConnect(_connection: Connection) {
+    this.getLogger().then((logger) =>
+      logger.info(`[OrchestratorAgent][${this.name}] WebSocket connected.`),
+    );
   }
 
-  onClose(connection: Connection) {
-    this.getLogger().then(logger => logger.info(`[OrchestratorAgent][${this.name}] WebSocket disconnected.`));
+  onClose(_connection: Connection) {
+    this.getLogger().then((logger) =>
+      logger.info(`[OrchestratorAgent][${this.name}] WebSocket disconnected.`),
+    );
   }
 
   onError(error: unknown) {
-    this.getLogger().then(logger => logger.error(`[OrchestratorAgent][${this.name}] Server Error`, { error: String(error) }));
+    this.getLogger().then((logger) =>
+      logger.error(`[OrchestratorAgent][${this.name}] Server Error`, { error: String(error) }),
+    );
   }
 
   private async getLogger() {
@@ -98,17 +105,18 @@ export class OrchestratorAgent extends Agent<Env, OrchestratorState> {
     return new Logger(this.env);
   }
 
-
   // Callable RPC method invoked by the Workflow
-  async handleWorkflowProgress(payload: { roleId: string, status: string, percent: number }) {
+  async handleWorkflowProgress(payload: { roleId: string; status: string; percent: number }) {
     // Broadcast progress to all connected frontend clients
-    this.broadcast(JSON.stringify({
-      type: 'WORKFLOW_PROGRESS',
-      payload
-    }));
-  }  
+    this.broadcast(
+      JSON.stringify({
+        type: "WORKFLOW_PROGRESS",
+        payload,
+      }),
+    );
+  }
 
-// Triggered via HTTP or internal logic to kick off the pipeline
+  // Triggered via HTTP or internal logic to kick off the pipeline
   async analyzeRole(roleId: string) {
     // Pass our instance name so the Workflow can reach us via getAgentByName
     const orchestratorAgentName = this.name;
@@ -118,12 +126,13 @@ export class OrchestratorAgent extends Agent<Env, OrchestratorState> {
       params: { roleId, orchestratorAgentName },
     });
 
-    this.broadcast(JSON.stringify({
-      type: "WORKFLOW_STARTED",
-      payload: { roleId, status: "started", percent: 0 },
-    }));
+    this.broadcast(
+      JSON.stringify({
+        type: "WORKFLOW_STARTED",
+        payload: { roleId, status: "started", percent: 0 },
+      }),
+    );
   }
-
 
   /** In-memory guard to prevent concurrent processPendingTasks loops */
   private _processing = false;
@@ -180,7 +189,7 @@ export class OrchestratorAgent extends Agent<Env, OrchestratorState> {
         roleId ?? "global",
         "I've received your message and added it to the thread context.",
       );
-    } catch (e) {
+    } catch {
       connection.send(JSON.stringify({ type: "error", message: "Invalid chat payload" }));
     }
   }
@@ -234,7 +243,8 @@ export class OrchestratorAgent extends Agent<Env, OrchestratorState> {
   async retryTask(taskId: string) {
     const task = this.state.pendingTasks.find((t) => t.id === taskId);
     if (!task) throw new Error(`Task not found: ${taskId}`);
-    if (task.status !== "failed") throw new Error(`Task ${taskId} is not failed (status: ${task.status})`);
+    if (task.status !== "failed")
+      throw new Error(`Task ${taskId} is not failed (status: ${task.status})`);
 
     // Reset to pending and re-process
     this.updateTask(taskId, { status: "pending", error: undefined });
@@ -257,7 +267,11 @@ export class OrchestratorAgent extends Agent<Env, OrchestratorState> {
     if (this.state.roleId && this.state.roleId !== "global") {
       try {
         const db = getDb(this.env);
-        const [role] = await db.select().from(roles).where(eq(roles.id, this.state.roleId)).limit(1);
+        const [role] = await db
+          .select()
+          .from(roles)
+          .where(eq(roles.id, this.state.roleId))
+          .limit(1);
         if (role) {
           const meta = (role.metadata as Record<string, unknown>) ?? {};
           delete meta.processingErrors;
@@ -419,7 +433,8 @@ export class OrchestratorAgent extends Agent<Env, OrchestratorState> {
    */
   @callable()
   async generate_docs_from_script(data: any, type: "resume" | "cover_letter") {
-    const { generateResumeHtml, generateCoverLetterHtml } = await import("@/services/docs-generator");
+    const { generateResumeHtml, generateCoverLetterHtml } =
+      await import("@/services/docs-generator");
     const { GoogleDriveClient } = await import("@/ai/tools/google/drive");
     const { getDb } = await import("@/db");
     const { documents, roles } = await import("@/db/schema");
@@ -438,10 +453,13 @@ export class OrchestratorAgent extends Agent<Env, OrchestratorState> {
         } else {
           const folder = await driveClient.createFolder(
             `${role.companyName} - ${role.jobTitle}`,
-            this.env.PARENT_DRIVE_FOLDER_ID
+            this.env.PARENT_DRIVE_FOLDER_ID,
           );
           folderId = folder.id;
-          await db.update(roles).set({ driveFolderId: folderId, updatedAt: new Date() }).where(eq(roles.id, role.id));
+          await db
+            .update(roles)
+            .set({ driveFolderId: folderId, updatedAt: new Date() })
+            .where(eq(roles.id, role.id));
         }
       }
     }
@@ -450,10 +468,14 @@ export class OrchestratorAgent extends Agent<Env, OrchestratorState> {
       const htmlContent = generateResumeHtml(data);
       const docName = `Resume - ${data.targetRole} - Justin Bishop`;
       const createdDoc = await driveClient.createDocFromHtml(docName, htmlContent, folderId);
-      
+
       if (data.roleId && db) {
-        const existingDocs = await db.select().from(documents).where(eq(documents.roleId, data.roleId)).orderBy(desc(documents.version));
-        const resumeDocs = existingDocs.filter(d => d.type === "resume");
+        const existingDocs = await db
+          .select()
+          .from(documents)
+          .where(eq(documents.roleId, data.roleId))
+          .orderBy(desc(documents.version));
+        const resumeDocs = existingDocs.filter((d) => d.type === "resume");
         const nextVersion = resumeDocs.length > 0 ? resumeDocs[0].version + 1 : 1;
 
         await db.insert(documents).values({
@@ -465,15 +487,24 @@ export class OrchestratorAgent extends Agent<Env, OrchestratorState> {
           version: nextVersion,
         });
       }
-      return { success: true, documentId: createdDoc.id, documentUrl: createdDoc.webViewLink || `https://docs.google.com/document/d/${createdDoc.id}/edit` };
+      return {
+        success: true,
+        documentId: createdDoc.id,
+        documentUrl:
+          createdDoc.webViewLink || `https://docs.google.com/document/d/${createdDoc.id}/edit`,
+      };
     } else {
       const htmlContent = generateCoverLetterHtml(data);
       const docName = `Cover Letter - ${data.companyName} - ${data.targetRole}`;
       const createdDoc = await driveClient.createDocFromHtml(docName, htmlContent, folderId);
-      
+
       if (data.roleId && db) {
-        const existingDocs = await db.select().from(documents).where(eq(documents.roleId, data.roleId)).orderBy(desc(documents.version));
-        const clDocs = existingDocs.filter(d => d.type === "cover_letter");
+        const existingDocs = await db
+          .select()
+          .from(documents)
+          .where(eq(documents.roleId, data.roleId))
+          .orderBy(desc(documents.version));
+        const clDocs = existingDocs.filter((d) => d.type === "cover_letter");
         const nextVersion = clDocs.length > 0 ? clDocs[0].version + 1 : 1;
 
         await db.insert(documents).values({
@@ -485,7 +516,12 @@ export class OrchestratorAgent extends Agent<Env, OrchestratorState> {
           version: nextVersion,
         });
       }
-      return { success: true, documentId: createdDoc.id, documentUrl: createdDoc.webViewLink || `https://docs.google.com/document/d/${createdDoc.id}/edit` };
+      return {
+        success: true,
+        documentId: createdDoc.id,
+        documentUrl:
+          createdDoc.webViewLink || `https://docs.google.com/document/d/${createdDoc.id}/edit`,
+      };
     }
   }
 
@@ -560,10 +596,6 @@ export async function enqueueOrchestratorTask(
   roleId: string | "global",
   task: Omit<OrchestratorTask, "id" | "status">,
 ) {
-  const stub = await getAgentByName<Env, OrchestratorAgent>(
-    env.ORCHESTRATOR_AGENT as any,
-    roleId,
-  );
-
+  const stub = await getAgentByName(env.ORCHESTRATOR_AGENT, roleId);
   return stub.enqueueTask(task);
 }

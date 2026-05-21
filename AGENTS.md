@@ -11,6 +11,7 @@ This repo builds a single Cloudflare Worker for managing job applications, resum
 - AI: `env.AI.run()` binding through AI Gateway. One provider per file, one model per file, and one task per file under `src/backend/ai/`.
 - Agent: `OrchestratorAgent` in `src/backend/ai/agents/orchestrator.ts`, exported by `src/_worker.ts`.
 - Email: Worker `email()` delegates to `src/backend/email/handler.ts`.
+- Real-time Broadcasting: `SyncBroadcastAgent` in `src/backend/ai/agents/sync-broadcast/index.ts` — dedicated single-concern Agent DO for fanning out sync-progress WebSocket events to the Pipeline dashboard.
 
 ## Golden Rules
 
@@ -22,6 +23,7 @@ This repo builds a single Cloudflare Worker for managing job applications, resum
 - Deploy with `pnpm run deploy`, never direct `wrangler deploy`.
 
 ## Intelligent Email-to-Role Routing & Global Inbox
+
 - **AI Matching Engine:** Inbound emails are routed through `src/backend/ai/tasks/classify/email-role.ts`. The AI analyzes the email context (Subject, Body, Sender) against all active roles to compute an `aiRoleMatchConfidence` score and `aiRoleMatchRationale`, which are persisted to D1.
 - **Auto-Generated Capabilities:** Based on the classification `nextAction`, the backend agent can automatically trigger actions such as drafting reply messages for scheduling, auto-updating role status upon a rejection letter, or drafting emails for negotiating compensation/thank you notes.
 - **Global Inbox UI:** The `/emails` global inbox uses a `sidebar-09` inspired layout to prominently display the AI's role association, rationale, and confidence score. Unmatched emails flag a manual override alert.
@@ -208,3 +210,161 @@ NotebookLM uses the [notebooklm-sdk](https://github.com/agmmnn/notebooklm-sdk) w
 - Build queue: `docs/0001_init/TASKS.json`
 - Local agent rules: `.agent/rules/*`
 - Local workflow: `.agent/workflows/implement-feature.md`
+
+## Aggregator Sync & WebSocket Broadcasting
+
+The aggregator sync pipeline connects a GitHub Action script to the Pipeline dashboard via a dedicated Cloudflare Agents SDK Durable Object.
+
+### Flow
+
+```
+GitHub Action (sync-upstream.py)
+  → POST /api/pipeline/api-companies/sync-progress  (Hono, api-companies.ts)
+    → getAgentByBinding(env, "SYNC_BROADCAST_AGENT", "global")
+      → agent.reportProgress(body)                   (Worker → Agent DO RPC, typed)
+        → this.broadcast()                           → all open WebSocket clients
+
+Pipeline dashboard (PipelineOperations.tsx)
+  → useAgent({ agent: "SyncBroadcastAgent", name: "global" })
+    → routeAgentRequest in _worker.ts handles WS upgrade at
+      /agents/SyncBroadcastAgent/global
+```
+
+### `SyncBroadcastAgent`
+
+- **Location:** `src/backend/ai/agents/sync-broadcast/index.ts`
+- **Binding:** `SYNC_BROADCAST_AGENT` (wrangler.jsonc `durable_objects.bindings`)
+- **Migration:** `v5` (`new_sqlite_classes: ["SyncBroadcastAgent"]`)
+- **Export:** Named export in `src/_worker.ts` — required for the runtime to instantiate the DO class.
+- **Instance name:** Always `"global"` (singleton — one per deployment).
+- **Purpose:** Single-concern — holds WebSocket connections open and calls `this.broadcast()` to fan-out events. No AI, no database writes, no business logic.
+
+#### RPC protocol — Worker → Agent (DO RPC)
+
+Calling an agent **from the same Worker** uses Durable Object RPC via `getAgentByName`
+from the Agents SDK. Modern `wrangler types` emits the namespace generic referencing the
+agent class (e.g. `DurableObjectNamespace<import("./dist/_worker.js/index").SyncBroadcastAgent>`),
+so the returned stub is fully typed at the callsite with no casts and no explicit generics.
+No `@callable()` decorator is needed on the agent method when the caller is inside the
+same Worker.
+
+```ts
+import { getAgentByName } from "agents";
+
+// In the Hono route:
+const agent = await getAgentByName(c.env.SYNC_BROADCAST_AGENT, "global");
+await agent.reportProgress(body); // typed against reportProgress signature
+```
+
+**Prerequisite:** the Env binding type must carry the agent class generic. That happens
+automatically when you run `pnpm run cf-typegen` after each `wrangler.jsonc` change. The
+generated import points to `dist/_worker.js/index`, so the build output must exist for
+the type to fully resolve — `pnpm run build` once, and the types are in place.
+
+`@callable()` is **only** for WebSocket RPC from external clients (browsers/mobile).
+See [Callable methods docs](https://developers.cloudflare.com/agents/api-reference/callable-methods/) — specifically the "Why the distinction" table.
+
+#### Anti-patterns — never do these
+
+```ts
+// ❌ Wrong: scattered casts that pre-date the typed Env generic
+const agent = await getAgentByName<Env, SyncBroadcastAgent>(
+  env.SYNC_BROADCAST_AGENT as unknown as DurableObjectNamespace<SyncBroadcastAgent>,
+  "global",
+);
+
+// ❌ Wrong: raw DO stub.fetch to a /rpc/ path
+const stub = c.env.SYNC_BROADCAST_AGENT.get(id);
+await stub.fetch(new Request("https://agent/rpc/reportProgress", ...));
+
+// ❌ Wrong: as any cast — hides real type errors
+await getAgentByName<Env, SyncBroadcastAgent>(env.SYNC_BROADCAST_AGENT as any, "global");
+
+// ❌ Wrong: (stub as any).method() — silently fails at runtime
+(stub as any).reportProgress(body);
+```
+
+#### WebSocket client (frontend)
+
+The dashboard connects using the Agents SDK React hook:
+
+```tsx
+const agent = useAgent({
+  agent: "SyncBroadcastAgent", // must match the class name
+  name: "global", // must match idFromName() on the server
+  onMessage: (message) => {
+    /* handle { type: "sync_progress", payload } */
+  },
+});
+```
+
+`routeAgentRequest` in `_worker.ts` automatically handles the WebSocket upgrade — no custom HTTP handler needed.
+
+#### Adding new broadcast events
+
+1. Add the event shape to `SyncProgressPayload` in `src/backend/ai/agents/sync-broadcast/index.ts`.
+2. If the Python script sends a different schema, update `syncProgressBody` in `src/backend/api/routes/pipeline/types.ts`.
+3. Update the `onMessage` handler in `PipelineOperations.tsx` to handle the new event type.
+4. No wrangler.jsonc changes are needed — the agent is already registered.
+
+---
+
+## Maintenance Instructions for Greenhouse Agents
+
+The `JobScannerAgent`, `JobAnalysisAgent`, and `SyncBroadcastAgent` manage the automated job discovery, analysis, and real-time pipeline observability. All are Cloudflare Durable Objects mapped to the `Agent<Env, State>` class from the Cloudflare Agents SDK.
+
+### `JobScannerAgent`
+
+- **Location:** `src/backend/ai/agents/job/scanner/`
+- **State:** Tracks active runs by token and maintains a processing queue of `AnalyzeJob` objects.
+- **Maintenance:**
+  - When updating the scraping logic, modify `methods/scan-board.ts`.
+  - Ensure the WebSocket progress broadcasting (`agent.broadcastProgress`) is preserved so the frontend `PipelineProgress` component stays in sync.
+  - The scheduled triage batcher lives in `methods/triage-batch.ts`. If batch sizes or analysis routing logic changes, update it here.
+
+### `JobAnalysisAgent`
+
+- **Location:** `src/backend/ai/agents/job/analysis/`
+- **State:** Tracks the current phase (`consult-notebook`, `deep-analyze`, `persist`, `archive`, `embed`, `done`) of in-flight snapshot analyses.
+- **Maintenance:**
+  - The analysis pipeline executes sequentially via `runPipeline`. Each phase is isolated in its own file under `methods/` for maintainability.
+  - If a new analysis step is required (e.g., scoring a new dimension), add it to `types.ts` as a new `Phase`, create a corresponding method file, and inject it into the `runPipeline` sequence.
+  - Failures are caught globally per snapshot. If you need phase-specific retry logic, wrap the specific handle method call in `runPipeline`.
+
+### `SyncBroadcastAgent`
+
+- **Location:** `src/backend/ai/agents/sync-broadcast/index.ts` (single file — no `methods/` subdirectory, intentional)
+- **State:** Stateless (`Record<string, never>`) — this agent holds no persistent state. Its only job is to hold WebSocket connections and broadcast messages.
+- **Binding:** `SYNC_BROADCAST_AGENT` → `wrangler.jsonc` durable_objects.bindings
+- **Migration tag:** `v5`
+- **Maintenance:**
+  - **Do not add business logic here.** If you find yourself writing D1 queries, AI calls, or complex state in this file, that logic belongs in a different agent or service.
+  - `reportProgress(payload)` is a plain public method (NOT `@callable`). It is invoked Worker → Agent via the typed `getAgentByBinding(env, "SYNC_BROADCAST_AGENT", "global")` helper, then calls `this.broadcast()` to fan the message out.
+  - `onConnect` / `onClose` are lifecycle hooks only. They log connection events; do not add stateful side-effects.
+  - The broadcast message envelope is always `{ type: "sync_progress", payload: SyncProgressPayload }`. If the frontend needs new event types, add them as additional public methods (e.g., `reportError`, `reportComplete`) rather than overloading the payload shape.
+  - If you add or rename a binding, run `pnpm run cf-typegen`, then add the new entry to `AgentBindingMap` in `src/backend/ai/agents/registry.ts`.
+
+### Adding New Agent Methods
+
+For `JobScannerAgent` and `JobAnalysisAgent` (modular `methods/` pattern):
+
+1. Create a standalone function in `methods/<method-name>.ts`.
+2. Export it from `methods/index.ts`.
+3. Wrap it in a `@callable()` method on the corresponding agent class in `index.ts`.
+4. Update `docsMetadata` to include the new method name and parameters for live documentation generation.
+
+For `SyncBroadcastAgent` (single-file pattern):
+
+1. Add the new public method directly to `index.ts` (no `@callable()` — Worker → Agent only).
+2. Update `SyncProgressPayload` if the payload shape changes.
+3. Update `docsMetadata.methods` array.
+4. Update the `onMessage` handler in `PipelineOperations.tsx` to handle the new message type.
+
+### Adding a new Agent class
+
+1. Add the binding + migration in `wrangler.jsonc` (`durable_objects.bindings` + `migrations.new_sqlite_classes`).
+2. Implement the class. For Cloudflare Agents SDK agents use `class MyAgent extends Agent<Env, State>` from `"agents"`; for chat use `extends AIChatAgent<Env>` from `"@cloudflare/ai-chat"`.
+3. Re-export the class from `src/_worker.ts` (named export — required at runtime).
+4. Run `pnpm run cf-typegen` to regenerate `worker-configuration.d.ts` with the new typed namespace binding.
+5. `pnpm run build` once so `dist/_worker.js/index.js` exists for the generated import path to resolve.
+6. `pnpm run types` to confirm zero errors.
