@@ -12,6 +12,15 @@ import { getGithubToken } from "@/backend/utils/secrets";
 
 import { syncApiCompaniesBody, syncProgressBody } from "./types";
 
+/**
+ * GitHub repository the worker dispatches sync runs to.
+ *
+ * Centralised here so swapping the upstream (e.g. fork, staging, contributor
+ * branch) is a one-line change. When this needs to differ per environment,
+ * promote to an `env.GITHUB_DISPATCH_REPO` var in `wrangler.jsonc`.
+ */
+const GITHUB_DISPATCH_REPO = "jmbish04/core-resumes";
+
 export const apiCompaniesRouter = new OpenAPIHono<{ Bindings: Env }>();
 
 /**
@@ -167,7 +176,12 @@ apiCompaniesRouter.openapi(
       {
         stats: stats.map((s) => ({
           ...s,
-          runTimestamp: s.runTimestamp.toISOString(),
+          // Drizzle's timestamp mode normally returns a Date, but some D1
+          // driver paths can return a string/number. Be defensive.
+          runTimestamp:
+            s.runTimestamp instanceof Date
+              ? s.runTimestamp.toISOString()
+              : String(s.runTimestamp),
         })),
       },
       200,
@@ -242,7 +256,7 @@ apiCompaniesRouter.openapi(
     }
 
     // Call GitHub API to trigger repository dispatch
-    const res = await fetch("https://api.github.com/repos/jmbish04/core-resumes/dispatches", {
+    const res = await fetch(`https://api.github.com/repos/${GITHUB_DISPATCH_REPO}/dispatches`, {
       method: "POST",
       headers: {
         Accept: "application/vnd.github.v3+json",
