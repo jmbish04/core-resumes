@@ -1,11 +1,10 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { desc, eq } from "drizzle-orm";
 import { getAgentByName } from "agents";
+import { eq } from "drizzle-orm";
 
-import type { OrchestratorAgent } from "../../ai/agents/orchestrator";
 import { enqueueOrchestratorTask } from "../../ai/agents/orchestrator";
 import { getDb } from "../../db";
-import { insertRoleSchema, roleLogs, roles, roleStatusLog, selectRoleSchema, statuses } from "../../db/schema";
+import { insertRoleSchema, roles, selectRoleSchema } from "../../db/schema";
 import { RoleLogService } from "../../services/role-log-service";
 import { RoleStatusService } from "../../services/role-status-service";
 
@@ -185,9 +184,11 @@ rolesRouter.openapi(
       body: {
         content: {
           "application/json": {
-            schema: z.object({
-              taskId: z.string().optional(),
-            }).optional(),
+            schema: z
+              .object({
+                taskId: z.string().optional(),
+              })
+              .optional(),
           },
         },
       },
@@ -217,10 +218,9 @@ rolesRouter.openapi(
       return c.json({ error: "Role not found" }, 404);
     }
 
-    const stub = await getAgentByName<Env, OrchestratorAgent>(
-      c.env.ORCHESTRATOR_AGENT as any,
-      id,
-    );
+    // Worker → Agent DO RPC. The namespace generic from `wrangler types`
+    // gives us a typed stub — no cast, no explicit generics needed.
+    const stub = await getAgentByName(c.env.ORCHESTRATOR_AGENT, id);
 
     let body: { taskId?: string } = {};
     try {
@@ -272,10 +272,9 @@ rolesRouter.openapi(
   }),
   async (c) => {
     const { id } = c.req.valid("param");
-    const stub = await getAgentByName<Env, OrchestratorAgent>(
-      c.env.ORCHESTRATOR_AGENT as any,
-      id,
-    );
+    // Worker → Agent DO RPC. The namespace generic from `wrangler types`
+    // gives us a typed stub — no cast, no explicit generics needed.
+    const stub = await getAgentByName(c.env.ORCHESTRATOR_AGENT, id);
 
     const status = await stub.getProcessingStatus();
     return c.json(status);

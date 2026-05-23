@@ -54,10 +54,7 @@ export async function checkHealth(agent: TranscriptionAgent, env: Env) {
 export async function checkTranscriptionAgentRPC(env: Env): Promise<ModuleResult> {
   const start = Date.now();
   try {
-    const stub = await getAgentByName<Env, TranscriptionAgent>(
-      env.TRANSCRIPTION_AGENT as any,
-      "global",
-    );
+    const stub = await getAgentByName(env.TRANSCRIPTION_AGENT, "global");
     const result = await stub.healthProbe();
     if (!result || typeof result !== "object" || !("status" in result)) {
       throw new Error("Invalid response from agent");
