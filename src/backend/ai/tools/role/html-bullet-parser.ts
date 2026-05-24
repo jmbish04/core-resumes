@@ -17,7 +17,7 @@
  * + Pass H for new code.
  */
 
-import type { RoleBulletType } from "../../../db/schemas/role-bullets";
+import type { RoleBulletType } from "../../../db/schemas/applications/role-bullets";
 import type { ScrapeResult, ScrapeResultItem } from "../browser-rendering";
 
 // ---------------------------------------------------------------------------

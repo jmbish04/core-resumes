@@ -71,7 +71,7 @@ All checks run in parallel with per-check timeout limits. Results are persisted 
 | `intake_pipeline`     | 30s     | Fetches a known Greenhouse job URL using Browser Rendering, extracts markdown, and validates the extraction contains expected content. Tests the scrape layer of the role intake pipeline.                                                                                      | `src/backend/health/checks/intake-pipeline.ts`     |
 | `extraction_fidelity` | 60s     | Multi-tier extraction test: runs Workers AI structured extraction, `/json` endpoint extraction, and HTML sidecar script extraction on a Greenhouse job. Compares bullet accuracy across all three tiers by matching structured bullets against raw `<li>` elements in the HTML. | `src/backend/health/checks/extraction-fidelity.ts` |
 | `notebooklm_query`    | 30s/45s | **Dual-mode check.** Scheduled (cron): passive credential validation (cookie presence, structure, age). Manual/Agent: live test query through the full `consultNotebook()` pipeline. See [Trigger Modes](#trigger-modes).                                                       | `src/backend/health/checks/notebooklm-query.ts`    |
-| `openroute_commute`   | 90s     | Geocodes a test address via HeiGIT, fetches driving directions (falls back to Google Maps Routes API on timeout), and runs the AI location insight analysis. Validates the full OpenRoute → Google Maps → LLM pipeline.                                                            | `src/backend/health/checks/openroute.ts`           |
+| `openroute_commute`   | 90s     | Geocodes a test address via HeiGIT, fetches driving directions (falls back to Google Maps Routes API on timeout), and runs the AI location insight analysis. Validates the full OpenRoute → Google Maps → LLM pipeline.                                                         | `src/backend/health/checks/openroute.ts`           |
 
 ## Architecture
 
@@ -113,10 +113,11 @@ Every screening creates:
 
 ## API Endpoints
 
-| Method | Path                 | Description                                              |
-| ------ | -------------------- | -------------------------------------------------------- |
-| `POST` | `/api/health/run`    | Trigger a manual health screening. Returns full results. |
-| `GET`  | `/api/health/latest` | Retrieve the most recent screening results.              |
+| Method | Path                   | Description                                                                  |
+| ------ | ---------------------- | ---------------------------------------------------------------------------- |
+| `POST` | `/api/health/run`      | Trigger a manual health screening. Returns full results.                     |
+| `GET`  | `/api/health/latest`   | Retrieve the most recent screening results.                                  |
+| `POST` | `/api/pipeline/health` | Run only the [Greenhouse pipeline](/docs/greenhouse-pipeline) health checks. |
 
 ## Frontend
 

@@ -25,6 +25,7 @@ export type HealthCategory =
   | "binding"
   | "auth"
   | "api"
+  | "greenhouse"
   | "custom";
 
 /** How the health run was triggered. */

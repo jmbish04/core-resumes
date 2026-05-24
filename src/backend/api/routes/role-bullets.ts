@@ -83,12 +83,23 @@ roleBulletsRouter.get("/:roleId/bullets", async (c) => {
 
   // Fetch bullet fidelity data from role metadata
   const { roles } = await import("../../db/schema");
-  const [role] = await db.select({ metadata: roles.metadata }).from(roles).where(eq(roles.id, roleId)).limit(1);
+  const [role] = await db
+    .select({ metadata: roles.metadata })
+    .from(roles)
+    .where(eq(roles.id, roleId))
+    .limit(1);
   const meta = (role?.metadata ?? {}) as Record<string, unknown>;
-  const fidelity = meta.bulletFidelity as {
-    truncatedBullets?: Array<{ field: string; domBullet: string; aiBullet?: string; status: string }>;
-    missingBullets?: Array<{ field: string; domBullet: string; status: string }>;
-  } | undefined;
+  const fidelity = meta.bulletFidelity as
+    | {
+        truncatedBullets?: Array<{
+          field: string;
+          domBullet: string;
+          aiBullet?: string;
+          status: string;
+        }>;
+        missingBullets?: Array<{ field: string; domBullet: string; status: string }>;
+      }
+    | undefined;
 
   // Build a set of bullet contents that were auto-corrected or dom-only
   const correctedContents = new Map<string, "auto_corrected" | "dom_only">();

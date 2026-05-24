@@ -9,11 +9,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { and, desc, eq } from "drizzle-orm";
 
 import { getDb } from "../../db";
-import {
-  insertInterviewNoteSchema,
-  interviewNotes,
-  selectInterviewNoteSchema,
-} from "../../db/schema";
+import { interviewNotes, selectInterviewNoteSchema } from "../../db/schema";
 
 const roleIdParam = z.object({ roleId: z.string() });
 const noteIdParam = z.object({ roleId: z.string(), noteId: z.string() });

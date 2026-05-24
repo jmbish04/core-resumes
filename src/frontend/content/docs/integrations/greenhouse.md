@@ -26,6 +26,7 @@ The **`companies`** table (`src/backend/db/schemas/companies.ts`) stores an opti
 
 ## Related documentation
 
+- **[Greenhouse Pipeline](/docs/greenhouse-pipeline)** — Comprehensive pipeline documentation with live widgets, analytics, and configuration
 - [OrchestratorAgent](/docs/agents/orchestrator) — Scrape and role pipeline entry points
 - [Database Schema](/docs/database) — `companies` table column descriptions
 - [Greenhouse Job Board API](https://developers.greenhouse.io/job-board.html) — Official Harvest documentation

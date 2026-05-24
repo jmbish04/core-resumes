@@ -15,22 +15,12 @@
  * Rendered as `client:load` in every page layout.
  */
 
+import * as LucideIcons from "lucide-react";
 import {
-  Activity,
-  BarChart3,
-  BookOpen,
-  Brain,
-  BriefcaseBusiness,
-  Building2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  FileAudio,
-  FileJson,
-  LayoutDashboard,
-  Mail,
   ScrollText,
-  Settings,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -38,23 +28,25 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { apiGet } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
+import { siteConfig } from "@/lib/config";
 
 // ---------------------------------------------------------------------------
 // Navigation data
 // ---------------------------------------------------------------------------
 
-/** Top-level application pages. */
-const mainLinks = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/companies", label: "Companies", icon: Building2 },
-  { href: "/roles", label: "Roles", icon: BriefcaseBusiness },
-  { href: "/emails", label: "Emails", icon: Mail, badgeKey: "emails" as const },
-  { href: "/notebook", label: "Notebook", icon: BookOpen },
-  { href: "/memory", label: "Memory", icon: Brain },
-  { href: "/transcriptions", label: "Transcriptions", icon: FileAudio },
-  { href: "/config", label: "Config", icon: Settings },
-  { href: "/health", label: "Health", icon: Activity },
-];
+/** Top-level application pages dynamically populated from siteConfig.navItems. */
+const mainLinks = siteConfig.navItems
+  .filter(
+    (item) =>
+      !item.href.startsWith("/docs") &&
+      !["/openapi.json", "/scalar", "/swagger"].includes(item.href)
+  )
+  .map((item) => ({
+    href: item.href,
+    label: item.label,
+    icon: (LucideIcons as any)[item.icon || "BookOpen"] || LucideIcons.BookOpen,
+    badgeKey: item.href === "/emails" ? ("emails" as const) : undefined,
+  }));
 
 /**
  * Grouped sub-navigation items rendered inside the collapsible "Docs" section.
@@ -86,6 +78,7 @@ const docsSublinks = [
     links: [
       { href: "/docs/role-intake", label: "Role Intake" },
       { href: "/docs/role-insights", label: "Role Insights" },
+      { href: "/docs/greenhouse-pipeline", label: "Greenhouse Pipeline" },
     ],
   },
   {
@@ -108,10 +101,13 @@ const docsSublinks = [
 ];
 
 /** External tool links displayed at the bottom of the sidebar. */
-const bottomLinks = [
-  { href: "/openapi.json", label: "OpenAPI", icon: FileJson },
-  { href: "/scalar", label: "Scalar", icon: BarChart3 },
-];
+const bottomLinks = siteConfig.navItems
+  .filter((item) => ["/openapi.json", "/scalar", "/swagger"].includes(item.href))
+  .map((item) => ({
+    href: item.href,
+    label: item.label,
+    icon: (LucideIcons as any)[item.icon || "FileJson"] || LucideIcons.FileJson,
+  }));
 
 // ---------------------------------------------------------------------------
 // Component

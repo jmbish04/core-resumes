@@ -8,7 +8,7 @@ import {
   Loader2Icon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+
 import {
   Accordion,
   AccordionContent,
@@ -16,6 +16,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -192,7 +193,7 @@ export function AlignmentBreakdown({ roleId, analysisId }: AlignmentBreakdownPro
           ? `/api/roles/${roleId}/analysis/${analysisId}`
           : `/api/roles/${roleId}/analysis/alignment`;
         const res = await fetch(url);
-        
+
         if (res.ok) {
           const data = (await res.json()) as any;
           if (data.groups && data.groups.length > 0) {
@@ -214,7 +215,7 @@ export function AlignmentBreakdown({ roleId, analysisId }: AlignmentBreakdownPro
             setGroups([]);
           }
         } else {
-            setFetchError(true);
+          setFetchError(true);
         }
       } catch {
         setFetchError(true);
@@ -240,11 +241,9 @@ export function AlignmentBreakdown({ roleId, analysisId }: AlignmentBreakdownPro
       <Card>
         <CardContent className="flex items-center justify-center py-8">
           <div className="flex flex-col items-center gap-2">
-            <p className="text-muted-foreground text-sm">
-              No alignment data available.
-            </p>
+            <p className="text-muted-foreground text-sm">No alignment data available.</p>
             <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
-               Refresh Data
+              Refresh Data
             </Button>
           </div>
         </CardContent>

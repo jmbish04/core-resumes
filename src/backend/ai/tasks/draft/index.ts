@@ -5,14 +5,13 @@ import type { DraftDocType } from "./types";
 import { getDb } from "../../../db";
 import { resumeBullets, type ResumeBullet } from "../../../db/schema";
 import { getModelRegistry } from "../../models";
-import { getProvider } from "../../providers";
+import { AiProvider } from "../../providers";
 import { extractText } from "../../utils/extract-text";
 import { enforceTokenLimit } from "../../utils/token-estimator";
 import { draftEmailReply } from "./email-reply";
 import { draftWithNotebook } from "./notebook";
 
-
-export {draftEmailReply, draftWithNotebook}
+export { draftEmailReply, draftWithNotebook };
 export * from "./types";
 export * from "./health";
 
@@ -31,7 +30,7 @@ export async function draft(
     cacheTtl?: number;
   },
 ): Promise<string> {
-  const provider = await getProvider(env);
+  const provider = new AiProvider(env);
   const model = getModelRegistry(env).draft;
   const context =
     typeof opts.context === "string" ? opts.context : JSON.stringify(opts.context, null, 2);

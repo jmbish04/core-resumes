@@ -14,11 +14,13 @@
  *  3. Persist to role_analyses (version++) + role_alignment_scores (per-type summaries)
  */
 
-import { desc, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import type { RoleBulletType } from "@/db/schemas/role-bullets";
-
+import { kimi_k2_5 } from "@/backend/ai/models/kimi-k2.5";
+import { AiProvider } from "@/backend/ai/providers";
+import { getActiveBullets } from "@/backend/ai/tasks/draft";
+import { consultNotebook } from "@/backend/ai/tools/notebooklm/notebooklm";
 import { getDb } from "@/db";
 import {
   globalConfig,
@@ -29,11 +31,6 @@ import {
   ROLE_BULLET_TYPES,
   roles,
 } from "@/db/schema";
-import { generateStructuredOutput } from "@/backend/ai/providers";
-import { kimi_k2_5 } from "@/backend/ai/models/kimi-k2.5";
-import { consultNotebook } from "@/backend/ai/tools/notebooklm/notebooklm";
-import { getActiveBullets } from "@/backend/ai/tasks/draft";
-
 
 // ---------------------------------------------------------------------------
 // Type labels for human-readable prompt sections
@@ -91,7 +88,9 @@ const HolisticAnalysisSchema = z.object({
   future_promotion_path: z
     .number()
     .int()
-    .describe("Estimated compensation for the next promotion level, computed as roughly 15-20% above the advertised max. Output as raw number (e.g., 280000)."),
+    .describe(
+      "Estimated compensation for the next promotion level, computed as roughly 15-20% above the advertised max. Output as raw number (e.g., 280000).",
+    ),
   the_hook: z
     .string()
     .describe(
@@ -222,7 +221,7 @@ export async function analyzeRole(env: Env, roleId: string): Promise<string> {
       : "(No resume bullets available)";
 
   // Score each bullet individually
-  const bulletScoring = await generateStructuredOutput(env, {
+  const bulletScoring = await new AiProvider(env).generateStructuredOutput({
     messages: [
       {
         role: "system",
@@ -280,9 +279,7 @@ export async function analyzeRole(env: Env, roleId: string): Promise<string> {
   if (bulletAnalysisRows.length > 0) {
     // D1 does not support multi-row INSERT with NULL autoincrement PKs.
     // Batch individual inserts instead.
-    const stmts = bulletAnalysisRows.map((row) =>
-      db.insert(roleBulletAnalyses).values(row),
-    );
+    const stmts = bulletAnalysisRows.map((row) => db.insert(roleBulletAnalyses).values(row));
     type Stmt = (typeof stmts)[number];
     await db.batch(stmts as unknown as [Stmt, ...Stmt[]]);
   }
@@ -303,7 +300,7 @@ export async function analyzeRole(env: Env, roleId: string): Promise<string> {
     };
   });
 
-  const holisticAnalysis = await generateStructuredOutput(env, {
+  const holisticAnalysis = await new AiProvider(env).generateStructuredOutput({
     messages: [
       {
         role: "system",

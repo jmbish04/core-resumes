@@ -21,6 +21,8 @@ export const API_COMPANIES_COLUMN_DESCRIPTIONS: Record<string, string> = {
   timestamp_added: "When this company was first discovered.",
   timestamp_inactive: "When this company was last detected as removed from the upstream list.",
   is_active: "True if the company was present in the last upstream sync.",
+  is_recommended: "True if the company is recommended for promotion based on matching job titles and location.",
+  recommendation_reason: "Reason for the recommendation (e.g. found matching job 'Frontend Engineer' in San Francisco).",
 };
 
 // ---------------------------------------------------------------------------
@@ -40,10 +42,13 @@ export const apiCompanies = sqliteTable(
       .$defaultFn(() => new Date()),
     timestampInactive: integer("timestamp_inactive", { mode: "timestamp" }),
     isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    isRecommended: integer("is_recommended", { mode: "boolean" }).notNull().default(false),
+    recommendationReason: text("recommendation_reason"),
   },
   (table) => ({
     tokenSystemIdx: index("api_companies_token_system_idx").on(table.jobBoardToken, table.system),
     activeIdx: index("api_companies_active_idx").on(table.isActive),
+    recommendedIdx: index("api_companies_recommended_idx").on(table.isRecommended),
   }),
 );
 

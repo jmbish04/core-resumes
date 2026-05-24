@@ -403,7 +403,6 @@ export default function TranscriptionJobsList() {
   }
 
   const activeJobs = jobs.filter((j) => ACTIVE_STATUSES.has(j.status));
-  const completedJobs = jobs.filter((j) => !ACTIVE_STATUSES.has(j.status));
 
   return (
     <div className="space-y-3">

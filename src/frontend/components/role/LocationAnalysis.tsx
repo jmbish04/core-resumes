@@ -1,15 +1,23 @@
 "use client";
 
-import { MapPinIcon, RefreshCcwIcon, Loader2Icon, ChevronDownIcon, TrendingUpIcon } from "lucide-react";
+import {
+  MapPinIcon,
+  RefreshCcwIcon,
+  Loader2Icon,
+  ChevronDownIcon,
+  TrendingUpIcon,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { apiGet, apiPost, toast } from "@/lib/api-client";
-import { ScoreRadialChart } from "./ScoreRadialChart";
+
 import { CommuteModal } from "./CommuteModal";
+import { CommuteRouteMap } from "./CommuteRouteMap";
+import { ScoreRadialChart } from "./ScoreRadialChart";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -125,64 +133,95 @@ export function LocationAnalysis({ roleId }: { roleId: string }) {
 
   return (
     <Card className="flex flex-col">
-      <div className="flex flex-col md:flex-row items-start p-6 gap-6">
-        <div className="flex-1 w-full md:w-auto self-center">
-          <ScoreRadialChart score={insight.score} label={getScoreLabel(insight.score)} color={color} />
+      <div className="p-6 w-full flex-col flex">
+        {/* Map Hero */}
+        <div className="w-full mb-8">
+          <CommuteRouteMap roleId={roleId} />
         </div>
 
-        <div className="flex-[2] flex flex-col gap-4 w-full">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2">
-              <MapPinIcon className="h-5 w-5 text-muted-foreground" />
-              <CardTitle className="text-xl">Location Analysis</CardTitle>
+        <div className="flex flex-col md:flex-row items-start gap-6 w-full">
+          {/* Left Column: Radial Chart & Metadata */}
+          <div className="flex flex-col w-full md:w-64 gap-6 shrink-0 border rounded-xl p-4 bg-muted/10">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <MapPinIcon className="h-5 w-5 text-muted-foreground" />
+                <CardTitle className="text-lg">Location</CardTitle>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-[10px]">
+                  v{insight.version}
+                </Badge>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  disabled={analyzing}
+                  onClick={() => void analyze()}
+                >
+                  {analyzing ? (
+                    <Loader2Icon className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCcwIcon className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs">
-                v{insight.version}
-              </Badge>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                disabled={analyzing}
-                onClick={() => void analyze()}
-              >
-                {analyzing ? (
-                  <Loader2Icon className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCcwIcon className="h-4 w-4" />
+
+            <div className="flex justify-center">
+              <ScoreRadialChart
+                score={insight.score}
+                label={getScoreLabel(insight.score)}
+                color={color}
+              />
+            </div>
+
+            {/* Location metadata badges */}
+            {payload && (
+              <div className="flex flex-col gap-3 mt-2">
+                <div className="flex flex-col gap-2">
+                  {payload.location && (
+                    <Badge variant="outline" className="w-fit">
+                      {payload.location}
+                    </Badge>
+                  )}
+                  {payload.workplaceType && (
+                    <Badge variant="outline" className="w-fit">
+                      {payload.workplaceType}
+                    </Badge>
+                  )}
+                </div>
+                {payload.rtoPolicy && (
+                  <div className="rounded-md border border-border/60 bg-background px-3 py-2.5 text-sm text-muted-foreground leading-relaxed">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-foreground block mb-1">
+                      RTO Policy
+                    </span>
+                    {payload.rtoPolicy}
+                  </div>
                 )}
-              </Button>
-            </div>
+              </div>
+            )}
           </div>
 
-          {/* Location metadata badges */}
-          {payload && (
-            <div className="flex flex-col gap-2 w-full">
-              <div className="flex flex-wrap gap-2">
-                {payload.location && <Badge variant="outline">{payload.location}</Badge>}
-                {payload.workplaceType && <Badge variant="outline">{payload.workplaceType}</Badge>}
+          {/* Right Column: Commute Metrics */}
+          <div className="flex-1 flex flex-col gap-4 w-full min-w-0">
+            {/* Commute modal & summary */}
+            {payload?.commuteTable && payload.commuteTable.length > 0 ? (
+              <div className="w-full">
+                <CommuteModal
+                  commuteData={payload.commuteTable.map((row) => ({
+                    departureTime: row.departureTime,
+                    mode: row.mode,
+                    durationMinutes: row.durationMinutes,
+                    monthlyCost: row.monthlyCost,
+                  }))}
+                />
               </div>
-              {payload.rtoPolicy && (
-                <div className="rounded-md border border-border/60 bg-muted/10 px-3 py-2.5 text-sm text-muted-foreground leading-relaxed">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-foreground block mb-1">RTO Policy</span>
-                  {payload.rtoPolicy}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Commute modal & summary */}
-          {payload?.commuteTable && payload.commuteTable.length > 0 && (
-            <div className="mt-2 w-full">
-              <CommuteModal commuteData={payload.commuteTable.map(row => ({
-                departureTime: row.departureTime,
-                mode: row.mode,
-                durationMinutes: row.durationMinutes,
-                monthlyCost: row.monthlyCost
-              }))} />
-            </div>
-          )}
+            ) : (
+              <div className="flex items-center justify-center h-48 border rounded-lg bg-muted/10">
+                <p className="text-sm text-muted-foreground">No commute table available</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -192,7 +231,9 @@ export function LocationAnalysis({ roleId }: { roleId: string }) {
             <div className="flex items-center gap-2">
               AI Insight <TrendingUpIcon className="h-4 w-4 text-primary" />
             </div>
-            <ChevronDownIcon className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+            <ChevronDownIcon
+              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+            />
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3">
             <div className="leading-relaxed text-muted-foreground text-sm text-left">

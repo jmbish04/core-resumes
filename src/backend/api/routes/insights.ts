@@ -12,7 +12,7 @@
 import { Hono } from "hono";
 
 import type { AppBindings } from "..";
-import type { RoleInsightType } from "../../db/schemas/role-insights";
+import type { RoleInsightType } from "../../db/schemas/applications/role-insights";
 
 import { RoleInsightsService } from "../../services/role-insights";
 

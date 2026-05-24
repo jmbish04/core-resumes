@@ -12,14 +12,13 @@
  * Called from `_worker.ts` via the Worker `email()` handler.
  */
 
-import { desc, eq, inArray, like, or } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import PostalMime, { type Address } from "postal-mime";
 
 import { enqueueOrchestratorTask } from "../ai/agents/orchestrator";
 import { classifyEmailStatus, matchEmailToRole } from "../ai/tasks";
 import { getDb } from "../db";
 import {
-  companies,
   emailAttachments,
   emailParties,
   emails,
@@ -32,8 +31,6 @@ import {
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-
-
 
 // ---------------------------------------------------------------------------
 // Main handler
@@ -132,7 +129,7 @@ export async function handleInboundEmail(
       subject,
       body,
       senderDomain,
-      activeRoles
+      activeRoles,
     );
   } catch (error) {
     const { Logger } = await import("@/backend/lib/logger");
@@ -419,7 +416,6 @@ async function decomposeThreadIfForwarded(
     // Try to extract metadata from the forwarded header
     const fromMatch = segment.match(/From:\s*(.+?)(?:\n|<br)/i);
     const subjectMatch = segment.match(/Subject:\s*(.+?)(?:\n|<br)/i);
-    const dateMatch = segment.match(/(?:Date|Sent):\s*(.+?)(?:\n|<br)/i);
 
     const subSender = fromMatch?.[1]?.trim() || "unknown";
     const subSubject = subjectMatch?.[1]?.trim() || "(forwarded message)";
@@ -473,8 +469,6 @@ function extractEmailAddress(text: string): string | undefined {
   const match = text.match(/<?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>?/);
   return match?.[1]?.toLowerCase();
 }
-
-
 
 // ---------------------------------------------------------------------------
 // Thread management
@@ -553,15 +547,6 @@ function stripHtml(html: string): string {
     .replace(/<\/p>/gi, "\n")
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
-    .trim();
-}
-
-
-
-function normalize(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
     .trim();
 }
 

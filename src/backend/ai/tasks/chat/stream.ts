@@ -5,7 +5,7 @@
 
 import type { ChatMessage } from "../types";
 
-import { streamChat as rawStreamChat } from "../../providers";
+import { AiProvider } from "../../providers";
 
 /**
  * Stream chat tokens from the model, wrapped in SSE `data:` frames.
@@ -20,7 +20,7 @@ export async function streamChat(
     cacheTtl?: number;
   },
 ): Promise<ReadableStream<Uint8Array>> {
-  const source = await rawStreamChat(env, {
+  const source = await new AiProvider(env).streamChat({
     messages: opts.messages,
     temperature: 0.3,
     cacheTtl: opts.cacheTtl,

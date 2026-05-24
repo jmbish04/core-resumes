@@ -182,7 +182,8 @@ function extractSessionId(html: string): string {
 function parseCookiesForBrowser(
   cookieStr: string,
 ): Array<{ name: string; value: string; url: string; domain: string; path: string }> {
-  const cookies: Array<{ name: string; value: string; url: string; domain: string; path: string }> = [];
+  const cookies: Array<{ name: string; value: string; url: string; domain: string; path: string }> =
+    [];
 
   for (const part of cookieStr.split(/;\s*/)) {
     const idx = part.indexOf("=");

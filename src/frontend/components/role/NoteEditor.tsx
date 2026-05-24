@@ -11,7 +11,6 @@ import {
   BasicMarksPlugin,
   BoldPlugin,
   CodePlugin,
-  HeadingPlugin,
   ItalicPlugin,
   StrikethroughPlugin,
   UnderlinePlugin,
@@ -26,7 +25,7 @@ import {
   Strikethrough,
   Underline,
 } from "lucide-react";
-import { Plate, PlateContent, PlateLeaf, usePlateEditor } from "platejs/react";
+import { Plate, PlateContent, usePlateEditor } from "platejs/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";

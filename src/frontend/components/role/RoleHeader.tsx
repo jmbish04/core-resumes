@@ -38,9 +38,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Stepper, StepperItem } from "@/components/ui/stepper";
-import { apiDelete, apiGet, apiPatch, toast } from "@/lib/api-client";
+import { apiDelete, apiPatch, toast } from "@/lib/api-client";
 
 import type { RoleRow } from "../dashboard/types";
+
 import { RoleActionsDialog } from "./RoleActionsDialog";
 import { StatusTransitionModal } from "./StatusTransitionModal";
 
@@ -136,22 +137,11 @@ const STATUS_META: Record<string, StatusMeta> = {
   },
 };
 
-const ACTIVE_STATUSES = Object.entries(STATUS_META).filter(
-  ([, m]) => m.group === "active",
-);
-const TERMINAL_STATUSES = Object.entries(STATUS_META).filter(
-  ([, m]) => m.group === "terminal",
-);
+const ACTIVE_STATUSES = Object.entries(STATUS_META).filter(([, m]) => m.group === "active");
+const TERMINAL_STATUSES = Object.entries(STATUS_META).filter(([, m]) => m.group === "terminal");
 
 // Stepper progression (happy path)
-const STEPPER_STEPS = [
-  "preparing",
-  "applied",
-  "interviewing",
-  "offer",
-  "negotiating",
-  "accepted",
-];
+const STEPPER_STEPS = ["preparing", "applied", "interviewing", "offer", "negotiating", "accepted"];
 
 // Statuses that require notes prompt
 const NOTES_REQUIRED_STATUSES = new Set([
@@ -173,7 +163,7 @@ function getScoreTextColor(score: number): string {
   return "text-red-400";
 }
 
-function formatCompactSalary(min: number | null, max: number | null, currency = "USD"): string {
+function formatCompactSalary(min: number | null, max: number | null, _currency = "USD"): string {
   if (min === null && max === null) return "—";
 
   const format = (n: number) => {
@@ -351,9 +341,7 @@ export function RoleHeader({ role }: { role: RoleRow }) {
             variant="outline"
             size="sm"
             className="gap-1.5"
-            onClick={() =>
-              (window.location.href = `/roles/${current.id}/report`)
-            }
+            onClick={() => (window.location.href = `/roles/${current.id}/report`)}
           >
             <FileText className="size-4" />
             <span className="hidden sm:inline">Report</span>
@@ -363,12 +351,7 @@ export function RoleHeader({ role }: { role: RoleRow }) {
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  disabled={isUpdating}
-                >
+                <Button variant="outline" size="sm" className="gap-1.5" disabled={isUpdating}>
                   <StatusIcon className={`size-4 ${meta.color}`} />
                   {isUpdating ? "Updating…" : meta.label}
                   <ChevronDown className="size-3.5 opacity-50" />
@@ -387,9 +370,7 @@ export function RoleHeader({ role }: { role: RoleRow }) {
                     <Icon className={`size-4 ${m.color}`} />
                     {m.label}
                     {current.status === key && (
-                      <span className="ml-auto text-xs text-muted-foreground">
-                        Current
-                      </span>
+                      <span className="ml-auto text-xs text-muted-foreground">Current</span>
                     )}
                   </DropdownMenuItem>
                 );
@@ -406,9 +387,7 @@ export function RoleHeader({ role }: { role: RoleRow }) {
                     <Icon className={`size-4 ${m.color}`} />
                     {m.label}
                     {current.status === key && (
-                      <span className="ml-auto text-xs text-muted-foreground">
-                        Current
-                      </span>
+                      <span className="ml-auto text-xs text-muted-foreground">Current</span>
                     )}
                   </DropdownMenuItem>
                 );
@@ -526,9 +505,7 @@ function StatBlock({
     <div className="flex flex-col items-center justify-center px-3">
       <div className="flex items-center gap-1">
         {icon}
-        <span className={`text-2xl font-bold tabular-nums ${colorClass}`}>
-          {value}
-        </span>
+        <span className={`text-2xl font-bold tabular-nums ${colorClass}`}>{value}</span>
       </div>
       <span className="mt-0.5 whitespace-nowrap text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
         {label}

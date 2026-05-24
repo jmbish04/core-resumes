@@ -113,9 +113,7 @@ src/
   "browser": { "binding": "BROWSER" },
   "send_email": [{ "name": "EMAIL_OUT" }],
   "durable_objects": {
-    "bindings": [
-      { "name": "ORCHESTRATOR_AGENT", "class_name": "OrchestratorAgent" },
-    ],
+    "bindings": [{ "name": "ORCHESTRATOR_AGENT", "class_name": "OrchestratorAgent" }],
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["OrchestratorAgent"] }],
   "vars": {
@@ -194,22 +192,12 @@ export const roles = sqliteTable(
     salaryMax: integer("salary_max"),
     salaryCurrency: text("salary_currency").default("USD"),
     status: text("status", {
-      enum: [
-        "preparing",
-        "applied",
-        "interviewing",
-        "offer",
-        "rejected",
-        "withdrawn",
-        "archived",
-      ],
+      enum: ["preparing", "applied", "interviewing", "offer", "rejected", "withdrawn", "archived"],
     })
       .notNull()
       .default("preparing"),
     driveFolderId: text("drive_folder_id"),
-    metadata: text("metadata", { mode: "json" }).$type<
-      Record<string, unknown>
-    >(),
+    metadata: text("metadata", { mode: "json" }).$type<Record<string, unknown>>(),
     roleInstructions: text("role_instructions"),
     createdAt: integer("created_at", { mode: "timestamp" })
       .notNull()

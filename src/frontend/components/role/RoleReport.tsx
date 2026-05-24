@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
 import { Printer, Copy, Loader2, ExternalLink, ArrowLeft, FileJson } from "lucide-react";
+import { useState, useEffect } from "react";
+
 import { Button } from "@/components/ui/button";
 import { generateRoleReportMarkdown } from "@/lib/report-markdown";
 
@@ -9,14 +10,23 @@ export function RoleReport({ payload }: { payload: any }) {
   const [copied, setCopied] = useState(false);
   const [copiedJson, setCopiedJson] = useState(false);
 
-  const { role, analysis, alignmentScores, bullets, bulletAnalyses, mockInterviews, careerMemory, documents } = payload;
+  const {
+    role,
+    analysis,
+    alignmentScores,
+    bullets,
+    bulletAnalyses,
+    mockInterviews,
+    careerMemory,
+    documents,
+  } = payload;
 
   useEffect(() => {
     async function fetchDocs() {
       if (!documents || documents.length === 0) return;
       setIsFetchingDocs(true);
       const docsData: Record<string, string> = {};
-      
+
       for (const doc of documents) {
         if (doc.gdocId) {
           try {
@@ -26,7 +36,7 @@ export function RoleReport({ payload }: { payload: any }) {
             } else {
               docsData[doc.id] = `> Error fetching document: ${res.statusText}`;
             }
-          } catch (e) {
+          } catch {
             docsData[doc.id] = `> Failed to fetch document content`;
           }
         }
@@ -34,7 +44,7 @@ export function RoleReport({ payload }: { payload: any }) {
       setFetchedDocs(docsData);
       setIsFetchingDocs(false);
     }
-    
+
     fetchDocs();
   }, [documents]);
 
@@ -55,7 +65,7 @@ export function RoleReport({ payload }: { payload: any }) {
         ...b,
         revisions: (payload.bulletAnalyses || [])
           .filter((rev: any) => rev.bulletId === b.id)
-          .sort((x: any, y: any) => x.revisionNumber - y.revisionNumber)
+          .sort((x: any, y: any) => x.revisionNumber - y.revisionNumber),
       })),
       mockInterviews: payload.mockInterviews,
       careerMemory: payload.careerMemory,
@@ -107,15 +117,24 @@ export function RoleReport({ payload }: { payload: any }) {
         <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
           {role.salaryMin || role.salaryMax ? (
             <div>
-              <span className="font-semibold text-foreground">Compensation:</span> {role.salaryMin || role.salaryMax ? `${role.salaryMin ? new Intl.NumberFormat('en-US', { style: 'currency', currency: role.salaryCurrency || 'USD', maximumFractionDigits: 0 }).format(role.salaryMin) : "Not disclosed"} - ${role.salaryMax ? new Intl.NumberFormat('en-US', { style: 'currency', currency: role.salaryCurrency || 'USD', maximumFractionDigits: 0 }).format(role.salaryMax) : "Not disclosed"}` : "Not disclosed"}
+              <span className="font-semibold text-foreground">Compensation:</span>{" "}
+              {role.salaryMin || role.salaryMax
+                ? `${role.salaryMin ? new Intl.NumberFormat("en-US", { style: "currency", currency: role.salaryCurrency || "USD", maximumFractionDigits: 0 }).format(role.salaryMin) : "Not disclosed"} - ${role.salaryMax ? new Intl.NumberFormat("en-US", { style: "currency", currency: role.salaryCurrency || "USD", maximumFractionDigits: 0 }).format(role.salaryMax) : "Not disclosed"}`
+                : "Not disclosed"}
             </div>
           ) : null}
           <div>
-            <span className="font-semibold text-foreground">Status:</span> <span className="capitalize">{role.status}</span>
+            <span className="font-semibold text-foreground">Status:</span>{" "}
+            <span className="capitalize">{role.status}</span>
           </div>
           {role.jobUrl && (
             <div>
-              <a href={role.jobUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-blue-500 hover:underline">
+              <a
+                href={role.jobUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1 text-blue-500 hover:underline"
+              >
                 Job Posting <ExternalLink className="size-3" />
               </a>
             </div>
@@ -134,16 +153,22 @@ export function RoleReport({ payload }: { payload: any }) {
             </div>
             <div className="rounded-lg border p-4 bg-card">
               <div className="text-sm font-semibold text-emerald-500 mb-2">The Hook</div>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{analysis.theHook || "N/A"}</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                {analysis.theHook || "N/A"}
+              </p>
             </div>
             <div className="rounded-lg border p-4 bg-card">
               <div className="text-sm font-semibold text-amber-500 mb-2">Counter Positioning</div>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{analysis.counterPositioning || "N/A"}</p>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                {analysis.counterPositioning || "N/A"}
+              </p>
             </div>
           </div>
           <div className="rounded-lg border p-4 bg-card">
             <h4 className="font-semibold mb-2">Strategic Recommendation</h4>
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{analysis.strategicRecommendation || "N/A"}</p>
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+              {analysis.strategicRecommendation || "N/A"}
+            </p>
           </div>
         </section>
       )}
@@ -154,12 +179,19 @@ export function RoleReport({ payload }: { payload: any }) {
           <h3 className="text-xl font-semibold mb-4 border-b pb-2">Alignment Breakdown</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {alignmentScores.map((score: any) => (
-              <div key={score.id} className="rounded-lg border p-4 bg-card print:p-2 print:border-gray-200 print:shadow-none print:break-inside-avoid">
+              <div
+                key={score.id}
+                className="rounded-lg border p-4 bg-card print:p-2 print:border-gray-200 print:shadow-none print:break-inside-avoid"
+              >
                 <div className="flex items-center justify-between mb-2 print:mb-1">
-                  <span className="font-medium capitalize print:text-sm">{score.type ? score.type.replace(/_/g, ' ').toLowerCase() : 'Unknown'}</span>
+                  <span className="font-medium capitalize print:text-sm">
+                    {score.type ? score.type.replace(/_/g, " ").toLowerCase() : "Unknown"}
+                  </span>
                   <span className="font-bold print:text-sm">{score.score}/100</span>
                 </div>
-                <p className="text-sm text-muted-foreground print:text-xs print:leading-tight">{score.rationale}</p>
+                <p className="text-sm text-muted-foreground print:text-xs print:leading-tight">
+                  {score.rationale}
+                </p>
               </div>
             ))}
           </div>
@@ -176,12 +208,21 @@ export function RoleReport({ payload }: { payload: any }) {
               revisions.sort((a: any, b: any) => a.revisionNumber - b.revisionNumber);
 
               return (
-                <div key={bullet.id} className="rounded-lg border p-4 bg-card print-avoid-break print:p-2 print:border-gray-200">
+                <div
+                  key={bullet.id}
+                  className="rounded-lg border p-4 bg-card print-avoid-break print:p-2 print:border-gray-200"
+                >
                   <div className="mb-4 print:mb-2">
                     <p className="font-medium print:text-sm">"{bullet.content}"</p>
                     <div className="flex gap-2 mt-2 text-xs">
-                      <span className="px-2 py-1 bg-muted rounded-md capitalize print:bg-gray-100">{bullet.type ? bullet.type.replace(/_/g, ' ').toLowerCase() : 'Unknown'}</span>
-                      {bullet.isCritical && <span className="px-2 py-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-md print:bg-red-50 print:border print:border-red-200">Critical</span>}
+                      <span className="px-2 py-1 bg-muted rounded-md capitalize print:bg-gray-100">
+                        {bullet.type ? bullet.type.replace(/_/g, " ").toLowerCase() : "Unknown"}
+                      </span>
+                      {bullet.isCritical && (
+                        <span className="px-2 py-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-md print:bg-red-50 print:border print:border-red-200">
+                          Critical
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -190,16 +231,28 @@ export function RoleReport({ payload }: { payload: any }) {
                       {revisions.map((rev: any, index: number) => (
                         <div key={rev.id}>
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-semibold print:text-xs">Revision {rev.revisionNumber}</span>
-                            <span className="text-xs px-2 py-0.5 bg-muted rounded-full print:bg-gray-100">Score: {rev.aiScore}</span>
-                            {index === revisions.length - 1 && <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full print:bg-blue-50 print:border print:border-blue-200">Latest</span>}
+                            <span className="text-sm font-semibold print:text-xs">
+                              Revision {rev.revisionNumber}
+                            </span>
+                            <span className="text-xs px-2 py-0.5 bg-muted rounded-full print:bg-gray-100">
+                              Score: {rev.aiScore}
+                            </span>
+                            {index === revisions.length - 1 && (
+                              <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full print:bg-blue-50 print:border print:border-blue-200">
+                                Latest
+                              </span>
+                            )}
                           </div>
-                          <p className="text-sm text-muted-foreground whitespace-pre-wrap print:text-xs print:leading-tight">{rev.aiRationale}</p>
+                          <p className="text-sm text-muted-foreground whitespace-pre-wrap print:text-xs print:leading-tight">
+                            {rev.aiRationale}
+                          </p>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground italic">No analysis performed yet.</p>
+                    <p className="text-sm text-muted-foreground italic">
+                      No analysis performed yet.
+                    </p>
                   )}
                 </div>
               );
@@ -215,23 +268,41 @@ export function RoleReport({ payload }: { payload: any }) {
           <div className="space-y-8">
             {mockInterviews.map((interview: any) => (
               <div key={interview.id} className="space-y-6">
-                <h4 className="text-lg font-medium text-muted-foreground">Version {interview.version}</h4>
-                {Array.isArray(interview.qaPairs) && interview.qaPairs.map((qa: any, idx: number) => (
-                  <div key={idx} className="rounded-lg border p-4 bg-card print-avoid-break print:p-2 print:border-gray-200">
-                    <div className="mb-4 print:mb-2">
-                      <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider mb-1 block print:text-[10px]">Interviewer (Q{idx + 1})</span>
-                      <p className="font-medium print:text-sm print:leading-tight">{qa.interviewer}</p>
+                <h4 className="text-lg font-medium text-muted-foreground">
+                  Version {interview.version}
+                </h4>
+                {Array.isArray(interview.qaPairs) &&
+                  interview.qaPairs.map((qa: any, idx: number) => (
+                    <div
+                      key={idx}
+                      className="rounded-lg border p-4 bg-card print-avoid-break print:p-2 print:border-gray-200"
+                    >
+                      <div className="mb-4 print:mb-2">
+                        <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider mb-1 block print:text-[10px]">
+                          Interviewer (Q{idx + 1})
+                        </span>
+                        <p className="font-medium print:text-sm print:leading-tight">
+                          {qa.interviewer}
+                        </p>
+                      </div>
+                      <div className="mb-4 pl-4 border-l-2 border-blue-500/30 print:mb-2 print:pl-2">
+                        <span className="text-xs font-semibold uppercase text-blue-500 tracking-wider mb-1 block print:text-[10px]">
+                          Candidate
+                        </span>
+                        <p className="text-sm leading-relaxed print:text-xs print:leading-tight">
+                          {qa.candidate}
+                        </p>
+                      </div>
+                      <div className="pl-4 border-l-2 border-amber-500/30 print:pl-2">
+                        <span className="text-xs font-semibold uppercase text-amber-500 tracking-wider mb-1 block print:text-[10px]">
+                          Coach's Insight
+                        </span>
+                        <p className="text-sm italic text-muted-foreground print:text-xs print:leading-tight">
+                          {qa.insight}
+                        </p>
+                      </div>
                     </div>
-                    <div className="mb-4 pl-4 border-l-2 border-blue-500/30 print:mb-2 print:pl-2">
-                      <span className="text-xs font-semibold uppercase text-blue-500 tracking-wider mb-1 block print:text-[10px]">Candidate</span>
-                      <p className="text-sm leading-relaxed print:text-xs print:leading-tight">{qa.candidate}</p>
-                    </div>
-                    <div className="pl-4 border-l-2 border-amber-500/30 print:pl-2">
-                      <span className="text-xs font-semibold uppercase text-amber-500 tracking-wider mb-1 block print:text-[10px]">Coach's Insight</span>
-                      <p className="text-sm italic text-muted-foreground print:text-xs print:leading-tight">{qa.insight}</p>
-                    </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             ))}
           </div>
@@ -243,27 +314,43 @@ export function RoleReport({ payload }: { payload: any }) {
         <section className="mt-6 print-page-break-before">
           <div className="mb-4 border-b pb-2">
             <h3 className="text-xl font-semibold">Career Memory & Drafts</h3>
-            <p className="text-sm text-muted-foreground mt-1">Contextual memories retrieved from the knowledge base based on the job role posting content.</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Contextual memories retrieved from the knowledge base based on the job role posting
+              content.
+            </p>
           </div>
           <div className="space-y-4">
-            {careerMemory.filter((m: any) => m.isActive).map((mem: any) => (
-              <div key={mem.id} className="rounded-lg border p-4 bg-card print-avoid-break print:p-2 print:border-gray-200">
-                <div className="flex gap-2 mb-3 print:mb-1">
-                  <span className="text-xs px-2 py-1 bg-muted rounded-md uppercase tracking-wide print:bg-gray-100">{mem.category}</span>
-                  <span className="text-xs px-2 py-1 bg-muted rounded-md uppercase tracking-wide print:bg-gray-100">{mem.source}</span>
-                </div>
-                <div className="mb-3 print:mb-1">
-                  <span className="text-xs font-semibold text-muted-foreground block mb-1 print:text-[10px] print:mb-0">Query</span>
-                  <p className="text-sm font-medium print:text-xs">{mem.query}</p>
-                </div>
-                <div>
-                  <span className="text-xs font-semibold text-muted-foreground block mb-1 print:text-[10px] print:mb-0">Response</span>
-                  <div className="text-sm whitespace-pre-wrap text-muted-foreground prose prose-sm dark:prose-invert max-w-none print:text-xs print:leading-tight">
-                    {mem.answer}
+            {careerMemory
+              .filter((m: any) => m.isActive)
+              .map((mem: any) => (
+                <div
+                  key={mem.id}
+                  className="rounded-lg border p-4 bg-card print-avoid-break print:p-2 print:border-gray-200"
+                >
+                  <div className="flex gap-2 mb-3 print:mb-1">
+                    <span className="text-xs px-2 py-1 bg-muted rounded-md uppercase tracking-wide print:bg-gray-100">
+                      {mem.category}
+                    </span>
+                    <span className="text-xs px-2 py-1 bg-muted rounded-md uppercase tracking-wide print:bg-gray-100">
+                      {mem.source}
+                    </span>
+                  </div>
+                  <div className="mb-3 print:mb-1">
+                    <span className="text-xs font-semibold text-muted-foreground block mb-1 print:text-[10px] print:mb-0">
+                      Query
+                    </span>
+                    <p className="text-sm font-medium print:text-xs">{mem.query}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold text-muted-foreground block mb-1 print:text-[10px] print:mb-0">
+                      Response
+                    </span>
+                    <div className="text-sm whitespace-pre-wrap text-muted-foreground prose prose-sm dark:prose-invert max-w-none print:text-xs print:leading-tight">
+                      {mem.answer}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </section>
       )}
@@ -277,7 +364,10 @@ export function RoleReport({ payload }: { payload: any }) {
           </h3>
           <div className="space-y-6">
             {documents.map((doc: any) => (
-              <div key={doc.id} className="rounded-lg border bg-card print-avoid-break overflow-hidden print:border-gray-200">
+              <div
+                key={doc.id}
+                className="rounded-lg border bg-card print-avoid-break overflow-hidden print:border-gray-200"
+              >
                 <div className="p-4 border-b bg-muted/30 flex items-center justify-between print:p-2 print:bg-gray-50">
                   <div>
                     <h4 className="font-semibold print:text-sm">{doc.name}</h4>
@@ -287,7 +377,16 @@ export function RoleReport({ payload }: { payload: any }) {
                       <span>Version {doc.version}</span>
                     </div>
                   </div>
-                  <a href={(doc.type === "resume" || doc.type === "cover_letter") ? `https://docs.google.com/document/d/${doc.gdocId}/edit` : `https://drive.google.com/file/d/${doc.gdocId}/view`} target="_blank" rel="noreferrer" className="print:hidden">
+                  <a
+                    href={
+                      doc.type === "resume" || doc.type === "cover_letter"
+                        ? `https://docs.google.com/document/d/${doc.gdocId}/edit`
+                        : `https://drive.google.com/file/d/${doc.gdocId}/view`
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                    className="print:hidden"
+                  >
                     <Button variant="outline" size="sm" className="gap-2">
                       Open <ExternalLink className="size-3" />
                     </Button>
@@ -295,7 +394,7 @@ export function RoleReport({ payload }: { payload: any }) {
                 </div>
                 {fetchedDocs[doc.id] && (
                   <div className="p-6 prose prose-sm dark:prose-invert max-w-none text-sm print:p-2 print:text-xs">
-                    {/* Render markdown using a pre tag or basic formatting for now, 
+                    {/* Render markdown using a pre tag or basic formatting for now,
                         or just raw text. To properly render markdown we'd need react-markdown. 
                         Since we want it printable, a white-space pre-wrap works well enough if we don't have react-markdown. */}
                     <div className="whitespace-pre-wrap font-mono text-xs leading-relaxed bg-muted/10 p-4 rounded border print:p-2 print:border-none print:text-[10px] print:leading-normal">

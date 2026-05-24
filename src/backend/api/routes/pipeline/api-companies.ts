@@ -63,7 +63,8 @@ apiCompaniesRouter.openapi(
 
     // D1 caps bound parameters at 100 per query — diff in memory and update by id
     // in chunks instead of passing the full token list into inArray/notInArray.
-    const CHUNK = 100;
+    // Setting CHUNK to 15 keeps maximum parameters at 75 (15 * 5) for inserts and 17 (15 + 2) for updates.
+    const CHUNK = 15;
     const upstreamSet = new Set(upstreamTokens.map((t) => t.token));
 
     try {
@@ -118,11 +119,28 @@ apiCompaniesRouter.openapi(
               source: t.source,
               isActive: true,
               timestampAdded: now,
+              isRecommended: t.isRecommended ?? false,
+              recommendationReason: t.recommendationReason ?? null,
             })),
           )
           .onConflictDoNothing()
           .returning({ id: apiCompanies.id });
         insertedCount += insertedRows.length;
+      }
+
+      // Update recommendation status for recommended companies in the sync payload
+      const recommendedTokens = upstreamTokens.filter((t) => t.isRecommended);
+      for (let i = 0; i < recommendedTokens.length; i += CHUNK) {
+        const chunk = recommendedTokens.slice(i, i + CHUNK);
+        for (const t of chunk) {
+          await db
+            .update(apiCompanies)
+            .set({
+              isRecommended: true,
+              recommendationReason: t.recommendationReason || null,
+            })
+            .where(eq(apiCompanies.jobBoardToken, t.token));
+        }
       }
 
       await db.insert(apiCompanySyncStats).values({
@@ -256,6 +274,8 @@ apiCompaniesRouter.openapi(
                   jobBoardToken: z.string(),
                   system: z.string(),
                   isActive: z.boolean(),
+                  isRecommended: z.boolean(),
+                  recommendationReason: z.string().nullable(),
                 }),
               ),
             }),
@@ -273,6 +293,8 @@ apiCompaniesRouter.openapi(
         jobBoardToken: apiCompanies.jobBoardToken,
         system: apiCompanies.system,
         isActive: apiCompanies.isActive,
+        isRecommended: apiCompanies.isRecommended,
+        recommendationReason: apiCompanies.recommendationReason,
       })
       .from(apiCompanies)
       .where(eq(apiCompanies.isActive, true))
@@ -487,6 +509,128 @@ apiCompaniesRouter.openapi(
       },
       200,
     );
+  },
+);
+
+/**
+ * GET /api-companies/search-terms — Expose keywords for title and location matching
+ */
+apiCompaniesRouter.openapi(
+  createRoute({
+    method: "get",
+    path: "/api-companies/search-terms",
+    operationId: "getApiCompaniesSearchTerms",
+    responses: {
+      200: {
+        description: "Sync discovery search terms",
+        content: {
+          "application/json": {
+            schema: z.object({
+              titles: z.array(z.string()),
+              locations: z.array(z.string()),
+            }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    return c.json(
+      {
+        titles: [
+          "software engineer",
+          "software developer",
+          "frontend",
+          "backend",
+          "fullstack",
+          "full stack",
+          "engineer",
+          "developer",
+          "platform",
+          "infrastructure",
+          "devops",
+        ],
+        locations: [
+          "remote",
+          "san francisco",
+          "sf",
+          "bay area",
+          "california",
+          "united states",
+          "us",
+          "usa",
+        ],
+      },
+      200,
+    );
+  },
+);
+
+/**
+ * POST /api-companies/reject-all — Dismiss all unpromoted aggregator recommendations
+ */
+apiCompaniesRouter.openapi(
+  createRoute({
+    method: "post",
+    path: "/api-companies/reject-all",
+    operationId: "rejectAllRecommendations",
+    responses: {
+      200: {
+        description: "Successfully rejected all recommendations",
+        content: {
+          "application/json": {
+            schema: z.object({
+              success: z.boolean(),
+            }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    const db = getDb(c.env);
+    await db.update(apiCompanies).set({ isRecommended: false, recommendationReason: null });
+    return c.json({ success: true }, 200);
+  },
+);
+
+/**
+ * POST /api-companies/{id}/reject — Dismiss single company recommendation
+ */
+apiCompaniesRouter.openapi(
+  createRoute({
+    method: "post",
+    path: "/api-companies/{id}/reject",
+    operationId: "rejectRecommendation",
+    request: {
+      params: z.object({
+        id: z.string().openapi({ description: "Company ID" }),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Successfully rejected recommendation",
+        content: {
+          "application/json": {
+            schema: z.object({
+              success: z.boolean(),
+            }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    const db = getDb(c.env);
+    const { id } = c.req.valid("param");
+    const numericId = parseInt(id, 10);
+    if (!isNaN(numericId)) {
+      await db
+        .update(apiCompanies)
+        .set({ isRecommended: false, recommendationReason: null })
+        .where(eq(apiCompanies.id, numericId));
+    }
+    return c.json({ success: true }, 200);
   },
 );
 

@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -150,7 +150,7 @@ export function MockInterview({ roleId }: MockInterviewProps) {
     );
   }
 
-  const { interview, totalRevisions } = data;
+  const { interview } = data;
   const qaPairs = interview.qaPairs as QAPair[];
 
   return (
@@ -166,12 +166,7 @@ export function MockInterview({ roleId }: MockInterviewProps) {
             {qaPairs.length} questions
           </Badge>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={triggerGeneration}
-          disabled={generating}
-        >
+        <Button variant="outline" size="sm" onClick={triggerGeneration} disabled={generating}>
           {generating ? (
             <Loader2Icon className="size-4 animate-spin mr-1.5" />
           ) : (
@@ -182,18 +177,9 @@ export function MockInterview({ roleId }: MockInterviewProps) {
       </div>
 
       {/* Q&A Pairs */}
-      <Accordion
-        type="single"
-        collapsible
-        defaultValue="q-0"
-        className="space-y-2"
-      >
+      <Accordion type="single" collapsible defaultValue="q-0" className="space-y-2">
         {qaPairs.map((pair, i) => (
-          <AccordionItem
-            key={i}
-            value={`q-${i}`}
-            className="border rounded-lg bg-card px-1"
-          >
+          <AccordionItem key={i} value={`q-${i}`} className="border rounded-lg bg-card px-1">
             <AccordionTrigger className="hover:no-underline py-3 px-3">
               <div className="flex items-center gap-3 text-left">
                 <Badge
@@ -202,9 +188,7 @@ export function MockInterview({ roleId }: MockInterviewProps) {
                 >
                   Q{i + 1}
                 </Badge>
-                <span className="text-sm font-medium line-clamp-2">
-                  {pair.interviewer}
-                </span>
+                <span className="text-sm font-medium line-clamp-2">{pair.interviewer}</span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-3 pb-4 space-y-4">
@@ -216,9 +200,7 @@ export function MockInterview({ roleId }: MockInterviewProps) {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-muted-foreground mb-1">
-                    Interviewer
-                  </p>
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">Interviewer</p>
                   <p className="text-sm text-foreground leading-relaxed italic">
                     &ldquo;{pair.interviewer}&rdquo;
                   </p>
@@ -233,9 +215,7 @@ export function MockInterview({ roleId }: MockInterviewProps) {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-chart-1 mb-1">
-                    Justin
-                  </p>
+                  <p className="text-xs font-semibold text-chart-1 mb-1">Justin</p>
                   <div className="text-sm text-foreground leading-relaxed bg-muted/50 rounded-lg p-3 border border-border/50">
                     {pair.candidate}
                   </div>
@@ -246,12 +226,8 @@ export function MockInterview({ roleId }: MockInterviewProps) {
               <div className="flex gap-3 bg-chart-1/5 border border-chart-1/10 rounded-lg p-3">
                 <SparklesIcon className="size-4 text-chart-1 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs font-semibold text-chart-1 mb-1">
-                    Strategy Insight
-                  </p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {pair.insight}
-                  </p>
+                  <p className="text-xs font-semibold text-chart-1 mb-1">Strategy Insight</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{pair.insight}</p>
                 </div>
               </div>
             </AccordionContent>

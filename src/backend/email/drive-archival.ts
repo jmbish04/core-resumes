@@ -106,13 +106,15 @@ export async function archiveEmailToDrive(
     if (pdfBytes) {
       const dateStr = formatDate(email.receivedAt);
       const pdfName = `${sanitizedSubject}_${dateStr}.pdf`;
-      const uploaded = await drive.uploadFile(pdfName, subjectFolderId, pdfBytes, "application/pdf");
+      const uploaded = await drive.uploadFile(
+        pdfName,
+        subjectFolderId,
+        pdfBytes,
+        "application/pdf",
+      );
       result.drivePdfFileId = uploaded.id;
 
-      await db
-        .update(emails)
-        .set({ drivePdfFileId: uploaded.id })
-        .where(eq(emails.id, emailId));
+      await db.update(emails).set({ drivePdfFileId: uploaded.id }).where(eq(emails.id, emailId));
     }
   } catch (err) {
     result.errors.push(`PDF rendering/upload failed (non-fatal): ${err}`);
@@ -165,10 +167,7 @@ export async function archiveEmailToDrive(
 /**
  * Use Cloudflare Browser Rendering API to convert email HTML to an Outlook-styled PDF.
  */
-async function renderEmailPdf(
-  env: Env,
-  email: any,
-): Promise<Uint8Array | null> {
+async function renderEmailPdf(env: Env, email: any): Promise<Uint8Array | null> {
   const { subject, body, receivedAt, from, to } = email;
 
   // Wrap the email body in an Outlook-styled HTML document
@@ -231,13 +230,13 @@ async function renderEmailPdf(
 </head>
 <body>
   <div class="outlook-header">
-    ${from ? `<div class="header-row"><div class="header-label">From:</div><div class="header-value">${escapeHtml(String(from))}</div></div>` : ''}
-    ${receivedAt ? `<div class="header-row"><div class="header-label">Sent:</div><div class="header-value">${formatDateOutlook(receivedAt)}</div></div>` : ''}
-    ${to ? `<div class="header-row"><div class="header-label">To:</div><div class="header-value">${escapeHtml(String(to))}</div></div>` : ''}
+    ${from ? `<div class="header-row"><div class="header-label">From:</div><div class="header-value">${escapeHtml(String(from))}</div></div>` : ""}
+    ${receivedAt ? `<div class="header-row"><div class="header-label">Sent:</div><div class="header-value">${formatDateOutlook(receivedAt)}</div></div>` : ""}
+    ${to ? `<div class="header-row"><div class="header-label">To:</div><div class="header-value">${escapeHtml(String(to))}</div></div>` : ""}
     <div class="header-row"><div class="header-label">Subject:</div><div class="header-value">${escapeHtml(subject || "")}</div></div>
   </div>
   <div class="email-body">
-    ${body?.includes("<") ? body : `<pre>${escapeHtml(body || '')}</pre>`}
+    ${body?.includes("<") ? body : `<pre>${escapeHtml(body || "")}</pre>`}
   </div>
 </body>
 </html>`;
@@ -247,7 +246,9 @@ async function renderEmailPdf(
     const apiToken = await getCloudflareApiToken(env);
 
     if (!accountId || !apiToken) {
-      console.warn("[email-drive] Missing CLOUDFLARE_ACCOUNT_ID or CLOUDFLARE_WRANGLER_API_TOKEN — skipping PDF render");
+      console.warn(
+        "[email-drive] Missing CLOUDFLARE_ACCOUNT_ID or CLOUDFLARE_WRANGLER_API_TOKEN — skipping PDF render",
+      );
       return null;
     }
 
@@ -256,9 +257,9 @@ async function renderEmailPdf(
       `https://api.cloudflare.com/client/v4/accounts/${accountId}/browser-rendering/pdf`,
       {
         method: "POST",
-        headers: { 
-          "Authorization": `Bearer ${apiToken}`,
-          "Content-Type": "application/json" 
+        headers: {
+          Authorization: `Bearer ${apiToken}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           html,
@@ -269,19 +270,19 @@ async function renderEmailPdf(
             // Include dynamic placeholders such as current date or title
             headerTemplate: `<div style="width: 100%; font-size: 10px; padding: 10px 30px; text-align: left; font-family: 'Calibri', sans-serif;"><span class="title"></span></div>`,
             footerTemplate: `<div style="width: 100%; font-size: 10px; padding: 10px 30px; text-align: center; font-family: 'Calibri', sans-serif; color: #666; border-top: 1px solid #ddd;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>`,
-            margin: { 
-              top: "1in", 
-              bottom: "1in", 
-              left: "1in", 
-              right: "1in" 
+            margin: {
+              top: "1in",
+              bottom: "1in",
+              left: "1in",
+              right: "1in",
             },
             timeout: 45000,
           },
           gotoOptions: {
-            waitUntil: "networkidle2"
-          }
+            waitUntil: "networkidle2",
+          },
         }),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -319,15 +320,15 @@ function formatDateOutlook(dateVal: Date | string): string {
   if (!dateVal) return "";
   const dateObj = new Date(dateVal);
   if (isNaN(dateObj.getTime())) return String(dateVal);
-  
-  return dateObj.toLocaleString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
+
+  return dateObj.toLocaleString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
   });
 }
 

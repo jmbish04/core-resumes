@@ -10,7 +10,7 @@
 
 import { z } from "zod";
 
-import { generateStructuredOutput } from "../../providers";
+import { AiProvider } from "../../providers";
 
 // ---------------------------------------------------------------------------
 // Writing rules constant — shared with respond-to-comments.ts
@@ -68,9 +68,7 @@ export const ResumeIdeationSchema = z.object({
       interview_tip: z
         .string()
         .nullable()
-        .describe(
-          "Optional coaching tip for discussing this bullet in an interview context.",
-        ),
+        .describe("Optional coaching tip for discussing this bullet in an interview context."),
       category: z
         .string()
         .describe(
@@ -84,9 +82,7 @@ export const ResumeIdeationSchema = z.object({
         ),
       mapped_role_bullet_ids: z
         .array(z.number())
-        .describe(
-          "Database IDs of the role_bullets this resume bullet addresses.",
-        ),
+        .describe("Database IDs of the role_bullets this resume bullet addresses."),
     }),
   ),
 });
@@ -134,7 +130,7 @@ export async function generateResumeBulletsTask(
   env: Env,
   context: string,
 ): Promise<ResumeIdeation> {
-  return generateStructuredOutput(env, {
+  return new AiProvider(env).generateStructuredOutput({
     messages: [
       {
         role: "system",

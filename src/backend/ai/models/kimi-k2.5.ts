@@ -147,9 +147,10 @@ export const kimi_k2_5 = defineModel({
     // env.AI.run returns the full response object directly
     if (typeof raw === "object" && raw !== null) {
       // If wrapped in { result: ... }, unwrap
-      const result = "result" in (raw as Record<string, unknown>)
-        ? (raw as Record<string, unknown>).result
-        : raw;
+      const result =
+        "result" in (raw as Record<string, unknown>)
+          ? (raw as Record<string, unknown>).result
+          : raw;
       return KimiK25Output.parse(result);
     }
     throw new Error(`Unexpected Kimi K2.5 response type: ${typeof raw}`);

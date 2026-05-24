@@ -9,16 +9,12 @@
  * automatically for every request — no additional tracing configuration needed.
  */
 
-import OpenAI from "openai";
-import {
-  OpenAIChatCompletionsModel,
-  setTracingDisabled,
-} from "@openai/agents";
 import type { ModelProvider } from "@openai/agents";
-import {
-  getCloudflareAiGatewayUrl,
-  getCloudflareAiGatewayToken,
-} from "../../utils/secrets";
+
+import { OpenAIChatCompletionsModel, setTracingDisabled } from "@openai/agents";
+import OpenAI from "openai";
+
+import { getCloudflareAiGatewayUrl, getCloudflareAiGatewayToken } from "../../utils/secrets";
 
 // Disable the SDK's built-in trace exporter — it would try to POST spans to
 // api.openai.com/v1/traces with our Cloudflare token, resulting in 401s.

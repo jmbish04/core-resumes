@@ -16,12 +16,12 @@ This happens despite verbatim extraction prompts because LLMs have inherent summ
 
 The current pipeline produces **4 parallel data sources** during scrape:
 
-| Source | Method | Trust Level |
-|--------|--------|-------------|
-| **Workers AI extraction** | Markdown → `generateStructuredAnalysis` | Medium (summarizes) |
-| **BR /json extraction** | Browser model cascade | Medium (summarizes) |
-| **BR `/scrape` HTML elements** | `scrapeElements("ul > li")` → DOM text | **High (verbatim)** |
-| **HTML bullet parser** | `classifyScrapedElements()` → typed groups | **High (classified)** |
+| Source                         | Method                                     | Trust Level           |
+| ------------------------------ | ------------------------------------------ | --------------------- |
+| **Workers AI extraction**      | Markdown → `generateStructuredAnalysis`    | Medium (summarizes)   |
+| **BR /json extraction**        | Browser model cascade                      | Medium (summarizes)   |
+| **BR `/scrape` HTML elements** | `scrapeElements("ul > li")` → DOM text     | **High (verbatim)**   |
+| **HTML bullet parser**         | `classifyScrapedElements()` → typed groups | **High (classified)** |
 
 Today, `reconcileJobExtractions()` picks between AI sources 1 and 2, using DOM source 3 only for match counting. **The fix is to use the DOM elements as the authoritative source when they're available, and flag truncation when detected.**
 
@@ -41,6 +41,7 @@ Upgrade `reconcileJobExtractions()`:
 4. **Flag truncated bullets** — track which bullets were replaced/added as `fidelityFlags` metadata on the extraction result, so the frontend can highlight them
 
 New return shape from reconciliation:
+
 ```typescript
 {
   ...extractedFields,
@@ -58,6 +59,7 @@ New return shape from reconciliation:
 #### [MODIFY] [tasks.ts](file:///Volumes/Projects/workers/core-resumes/src/backend/ai/agents/orchestrator/methods/core/tasks.ts)
 
 When persisting bullets during `job_extract`, carry the `_fidelityMeta` through to the role's metadata so the frontend can read it:
+
 - `metadata.bulletFidelity.truncatedBullets` — array of `{ type, bulletContent, aiBullet }`
 - `metadata.bulletFidelity.missingBullets` — array of `{ type, bulletContent }`
 
@@ -66,6 +68,7 @@ When persisting bullets during `job_extract`, carry the `_fidelityMeta` through 
 #### [MODIFY] [role-bullets.ts](file:///Volumes/Projects/workers/core-resumes/src/backend/api/routes/role-bullets.ts)
 
 Enrich the `GET /:roleId/bullets` response to include fidelity status:
+
 - Read `bulletFidelity` from role metadata
 - For each bullet, check if its content appears in the `truncatedBullets` array (was auto-corrected from a truncation) or was a `missingBullet` (added from DOM only)
 - Return a new `fidelityStatus` field: `"verified"` | `"auto_corrected"` | `"dom_only"` | `null`
@@ -107,10 +110,12 @@ For each bullet array field (responsibilities, requiredQualifications, etc.):
 ## Verification Plan
 
 ### Automated Tests
+
 1. `pnpm run types` — TypeScript clean
 2. `pnpm run build` — Build succeeds
 
 ### Manual Verification
+
 1. Submit a job with long bullet points and verify:
    - Truncated bullets are auto-corrected from DOM
    - Frontend shows amber indicators on auto-corrected bullets

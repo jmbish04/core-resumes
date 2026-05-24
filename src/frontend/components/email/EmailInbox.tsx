@@ -28,13 +28,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -52,17 +47,52 @@ import type { EmailClassification, EmailRow, RoleRow } from "../dashboard/types"
 // ---------------------------------------------------------------------------
 
 const INTENT_META: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  interview_scheduling: { label: "Interview", color: "text-blue-400 bg-blue-400/10", icon: <Calendar className="size-3" /> },
-  rejection: { label: "Rejection", color: "text-red-400 bg-red-400/10", icon: <X className="size-3" /> },
-  offer: { label: "Offer", color: "text-emerald-400 bg-emerald-400/10", icon: <Sparkles className="size-3" /> },
-  status_update: { label: "Update", color: "text-amber-400 bg-amber-400/10", icon: <Mail className="size-3" /> },
-  general: { label: "General", color: "text-muted-foreground bg-muted", icon: <Mail className="size-3" /> },
-  unknown: { label: "Unknown", color: "text-muted-foreground bg-muted", icon: <Mail className="size-3" /> },
+  interview_scheduling: {
+    label: "Interview",
+    color: "text-blue-400 bg-blue-400/10",
+    icon: <Calendar className="size-3" />,
+  },
+  rejection: {
+    label: "Rejection",
+    color: "text-red-400 bg-red-400/10",
+    icon: <X className="size-3" />,
+  },
+  offer: {
+    label: "Offer",
+    color: "text-emerald-400 bg-emerald-400/10",
+    icon: <Sparkles className="size-3" />,
+  },
+  status_update: {
+    label: "Update",
+    color: "text-amber-400 bg-amber-400/10",
+    icon: <Mail className="size-3" />,
+  },
+  general: {
+    label: "General",
+    color: "text-muted-foreground bg-muted",
+    icon: <Mail className="size-3" />,
+  },
+  unknown: {
+    label: "Unknown",
+    color: "text-muted-foreground bg-muted",
+    icon: <Mail className="size-3" />,
+  },
 };
 
-const STATUS_META: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode }> = {
+const STATUS_META: Record<
+  string,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+    icon: React.ReactNode;
+  }
+> = {
   pending: { label: "Pending", variant: "default", icon: <Mail className="size-3" /> },
-  unmatched: { label: "Unmatched", variant: "destructive", icon: <AlertTriangle className="size-3" /> },
+  unmatched: {
+    label: "Unmatched",
+    variant: "destructive",
+    icon: <AlertTriangle className="size-3" />,
+  },
   associated: { label: "Associated", variant: "secondary", icon: <Link2 className="size-3" /> },
   responded: { label: "Responded", variant: "outline", icon: <MailOpen className="size-3" /> },
   ignored: { label: "Ignored", variant: "outline", icon: <Mail className="size-3 opacity-40" /> },
@@ -156,7 +186,7 @@ export function EmailInbox({
     );
   }, [emails, searchQuery]);
 
-  const selectedEmail = selectedId ? filtered.find((e) => e.id === selectedId) ?? null : null;
+  const selectedEmail = selectedId ? (filtered.find((e) => e.id === selectedId) ?? null) : null;
 
   // Copy email address
   function handleCopy() {
@@ -171,12 +201,19 @@ export function EmailInbox({
     setAssocLoading(true);
     try {
       await apiPost(`/api/emails/${associating.id}/associate`, { roleId: assocRoleId });
-      toast({ title: "Email associated", description: "Email linked to role — AI workflow triggered." });
+      toast({
+        title: "Email associated",
+        description: "Email linked to role — AI workflow triggered.",
+      });
       setAssociating(null);
       setAssocRoleId("");
       await fetchData();
     } catch (err) {
-      toast({ title: "Association failed", description: err instanceof Error ? err.message : "Unknown error", variant: "destructive" });
+      toast({
+        title: "Association failed",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive",
+      });
     } finally {
       setAssocLoading(false);
     }
@@ -201,7 +238,11 @@ export function EmailInbox({
             <code className="text-xs font-mono text-muted-foreground break-all">{workerEmail}</code>
           </div>
           <Button variant="ghost" size="sm" className="shrink-0 gap-1 text-xs" onClick={handleCopy}>
-            {copied ? <Check className="size-3 text-emerald-400" /> : <ClipboardCopy className="size-3" />}
+            {copied ? (
+              <Check className="size-3 text-emerald-400" />
+            ) : (
+              <ClipboardCopy className="size-3" />
+            )}
             {copied ? "Copied" : "Copy"}
           </Button>
         </div>
@@ -209,10 +250,7 @@ export function EmailInbox({
 
       {/* Main inbox card */}
       <Card className="rounded-lg overflow-hidden">
-        <div
-          className="flex"
-          style={{ height: maxHeight }}
-        >
+        <div className="flex" style={{ height: maxHeight }}>
           {/* Mail list (left) */}
           <div
             className={`flex flex-col border-r border-border/60 ${
@@ -252,7 +290,7 @@ export function EmailInbox({
                 filtered.map((email) => {
                   const classification = email.classificationJson;
                   const intentMeta = classification
-                    ? INTENT_META[classification.intent] ?? INTENT_META.unknown
+                    ? (INTENT_META[classification.intent] ?? INTENT_META.unknown)
                     : null;
                   const statusMeta = STATUS_META[email.processedStatus] ?? STATUS_META.pending;
                   const isActive = selectedId === email.id;
@@ -274,25 +312,31 @@ export function EmailInbox({
                           {formatDate(email.receivedAt)}
                         </span>
                       </div>
-                      <span className="truncate w-full font-medium text-sm">
-                        {email.subject}
-                      </span>
+                      <span className="truncate w-full font-medium text-sm">{email.subject}</span>
                       <span className="line-clamp-2 w-full text-xs text-muted-foreground">
                         {email.body?.slice(0, 150) || "No preview available."}
                       </span>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <Badge variant={statusMeta.variant} className="gap-0.5 text-[10px] px-1.5 py-0">
+                        <Badge
+                          variant={statusMeta.variant}
+                          className="gap-0.5 text-[10px] px-1.5 py-0"
+                        >
                           {statusMeta.icon}
                           {statusMeta.label}
                         </Badge>
                         {intentMeta && (
-                          <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0 text-[10px] font-medium ${intentMeta.color}`}>
+                          <span
+                            className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0 text-[10px] font-medium ${intentMeta.color}`}
+                          >
                             {intentMeta.icon}
                             {intentMeta.label}
                           </span>
                         )}
                         {email.draftReply && (
-                          <Badge variant="outline" className="gap-0.5 text-[10px] px-1.5 py-0 text-blue-400">
+                          <Badge
+                            variant="outline"
+                            className="gap-0.5 text-[10px] px-1.5 py-0 text-blue-400"
+                          >
                             <MessageSquare className="size-2.5" />
                             Draft
                           </Badge>
@@ -319,12 +363,18 @@ export function EmailInbox({
                   >
                     <ArrowLeft className="size-4" />
                   </Button>
-                  <h3 className="text-base font-semibold flex-1 truncate">{selectedEmail.subject}</h3>
+                  <h3 className="text-base font-semibold flex-1 truncate">
+                    {selectedEmail.subject}
+                  </h3>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                  <span>From: <strong className="text-foreground">{selectedEmail.sender}</strong></span>
+                  <span>
+                    From: <strong className="text-foreground">{selectedEmail.sender}</strong>
+                  </span>
                   <span className="text-xs">·</span>
-                  <span className="text-xs">{new Date(selectedEmail.receivedAt).toLocaleString()}</span>
+                  <span className="text-xs">
+                    {new Date(selectedEmail.receivedAt).toLocaleString()}
+                  </span>
                 </div>
               </div>
 
@@ -339,7 +389,8 @@ export function EmailInbox({
                         href={`/roles/${selectedEmail.roleId}`}
                         className="font-medium text-blue-400 hover:underline inline-flex items-center gap-1"
                       >
-                        {roleMap.get(selectedEmail.roleId)!.companyName} — {roleMap.get(selectedEmail.roleId)!.jobTitle}
+                        {roleMap.get(selectedEmail.roleId)!.companyName} —{" "}
+                        {roleMap.get(selectedEmail.roleId)!.jobTitle}
                         <ArrowUpRight className="size-3" />
                       </a>
                       {selectedEmail.aiRoleMatchConfidence != null && (
@@ -477,7 +528,9 @@ export function EmailInbox({
               )}
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium">Select Role</label>
+              <label htmlFor="assoc-role-select" className="mb-1.5 block text-sm font-medium">
+                Select Role
+              </label>
               <Select value={assocRoleId} onValueChange={(val) => setAssocRoleId(val ?? "")}>
                 <SelectTrigger>
                   <SelectValue placeholder="Choose a role…" />
@@ -520,7 +573,9 @@ function ClassificationMeta({ classification }: { classification: EmailClassific
   return (
     <div className="grid gap-2">
       <div className="flex flex-wrap items-center gap-3 text-xs">
-        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ${intentMeta.color}`}>
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ${intentMeta.color}`}
+        >
           {intentMeta.icon}
           {intentMeta.label}
         </span>
@@ -545,9 +600,7 @@ function ClassificationMeta({ classification }: { classification: EmailClassific
         )}
       </div>
       {classification.reasoning && (
-        <p className="text-xs text-muted-foreground/80 italic">
-          {classification.reasoning}
-        </p>
+        <p className="text-xs text-muted-foreground/80 italic">{classification.reasoning}</p>
       )}
     </div>
   );

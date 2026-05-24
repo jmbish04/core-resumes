@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { getCloudflareAiGatewayUrl, getSecret } from "../../utils/secrets";
+
 import type { AIProvider, InvokeOpts, ModelDescriptor } from "../providers/base";
+
+import { getCloudflareAiGatewayUrl, getSecret } from "../../utils/secrets";
 
 /**
  * Initialize the Anthropic official SDK.
@@ -42,7 +44,7 @@ export class AnthropicProvider implements AIProvider {
   async invokeModel<TInput, TOutput>(
     model: ModelDescriptor<TInput, TOutput>,
     input: TInput,
-    opts: InvokeOpts = {}
+    opts: InvokeOpts = {},
   ): Promise<TOutput> {
     const parsed = model.input.parse(input);
     const serialized = model.serialize(parsed) as any;
@@ -56,7 +58,7 @@ export class AnthropicProvider implements AIProvider {
         temperature: serialized.temperature ?? 0,
         max_tokens: serialized.max_tokens ?? 4096,
       },
-      { signal: opts.signal }
+      { signal: opts.signal },
     );
 
     const contentBlock = response.content.find((c: any) => c.type === "text");
@@ -72,7 +74,7 @@ export class AnthropicProvider implements AIProvider {
   async invokeStructured<TInput, TOutput>(
     model: ModelDescriptor<TInput, TOutput>,
     input: TInput,
-    opts: InvokeOpts = {}
+    opts: InvokeOpts = {},
   ): Promise<unknown> {
     const parsed = model.input.parse(input);
     const serialized = model.serialize(parsed) as any;
@@ -99,7 +101,7 @@ export class AnthropicProvider implements AIProvider {
           : undefined,
         tool_choice: jsonSchema ? { type: "tool", name: schemaName } : undefined,
       },
-      { signal: opts.signal }
+      { signal: opts.signal },
     );
 
     const toolUse = response.content.find((c: any) => c.type === "tool_use");
@@ -113,7 +115,7 @@ export class AnthropicProvider implements AIProvider {
   async streamModel<TInput, TOutput>(
     model: ModelDescriptor<TInput, TOutput>,
     input: TInput,
-    opts: InvokeOpts = {}
+    opts: InvokeOpts = {},
   ): Promise<ReadableStream<Uint8Array>> {
     const parsed = model.input.parse(input);
     const serialized = model.serialize(parsed) as any;
@@ -128,17 +130,14 @@ export class AnthropicProvider implements AIProvider {
         max_tokens: serialized.max_tokens ?? 4096,
         stream: true,
       },
-      { signal: opts.signal }
+      { signal: opts.signal },
     );
 
     const encoder = new TextEncoder();
     return new ReadableStream({
       async start(controller) {
         for await (const chunk of stream) {
-          if (
-            chunk.type === "content_block_delta" &&
-            chunk.delta.type === "text_delta"
-          ) {
+          if (chunk.type === "content_block_delta" && chunk.delta.type === "text_delta") {
             // Emulate OpenAI SSE shape
             const sseEvent = {
               choices: [{ delta: { content: chunk.delta.text } }],

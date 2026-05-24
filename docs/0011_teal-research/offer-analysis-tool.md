@@ -112,7 +112,8 @@ Example questions can range from comparing your compensation against industry st
 
 ---
 
-#   
+#
+
 Have feedback or further questions? Something missing here that we can do a better job covering?
 
 Please reach out to [membersupport@tealhq.com](mailto:membersupport@tealhq.com)!

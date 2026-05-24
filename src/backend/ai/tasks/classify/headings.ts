@@ -22,8 +22,7 @@ import { z } from "zod";
 
 import type { HeadingGroup } from "../../tools/role/html-bullet-parser";
 
-
-import { generateStructuredAnalysis } from "../../providers";
+import { AiProvider } from "../../providers";
 
 // ---------------------------------------------------------------------------
 // Field enum + Zod schema
@@ -89,7 +88,8 @@ export function formatHeadingsForPassH(groups: HeadingGroup[]): string {
     let line = `[${g.idx}] ${g.heading}`;
     if (g.items.length > 0) {
       const first = g.items[0];
-      const preview = first.length > PREVIEW_TRUNCATE ? `${first.slice(0, PREVIEW_TRUNCATE)}…` : first;
+      const preview =
+        first.length > PREVIEW_TRUNCATE ? `${first.slice(0, PREVIEW_TRUNCATE)}…` : first;
       line += `\n     ↳ first item: ${preview}`;
       line += `\n     ↳ (${g.items.length} list item${g.items.length !== 1 ? "s" : ""} total)`;
     } else {
@@ -122,7 +122,7 @@ export async function classifyHeadingsByIndex(
 
   const userMessage = formatHeadingsForPassH(groups);
 
-  const result = await generateStructuredAnalysis(env, {
+  const result = await new AiProvider(env).generateStructuredAnalysis({
     messages: [
       { role: "system", content: PASS_H_HEADING_SYSTEM_PROMPT },
       { role: "user", content: userMessage },

@@ -84,3 +84,17 @@ Scoring rubrics define the criteria used by the **Role Insights Engine** to scor
 Click **Seed Defaults** to populate the system with a baseline rubric set. The seed operation is idempotent — it only creates rubrics that don't already exist. Default rubrics cover common scenarios like "Fully remote (no commute)", "Hybrid 2 days/week", and "TC exceeds Google baseline".
 
 See [Role Insights](/docs/role-insights) for details on how rubrics influence analysis scores.
+
+## Pipeline Configuration
+
+The **Config → Pipeline** tab manages which company Greenhouse job boards are monitored by the automated scanner pipeline. Each board token maps to a public Greenhouse job board API endpoint.
+
+### Board Token Fields
+
+- **Board Token** — The Greenhouse board slug (e.g., `cloudflare` from `boards.greenhouse.io/cloudflare`)
+- **Company Name** — Display name for dashboards and reports
+- **Website** — Company website URL
+- **Email Domain** — Used for automatic email-to-role routing
+- **Active** — Toggle to include/exclude a company from pipeline runs
+
+See [Greenhouse Pipeline](/docs/greenhouse-pipeline) for details on how the pipeline operates and how to interpret analytics.

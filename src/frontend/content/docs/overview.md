@@ -27,6 +27,7 @@ The Career Orchestrator manages the full lifecycle of a job search:
 - [Role Intake](/docs/role-intake) — Multi-pass scrape, AI extraction, DOM sidecar, reconciliation, and confirmation
 - [Role Viewport](/docs/role-viewport) — Role workspace layout, tabs, and role-scoped assistant modal
 - [Role Insights](/docs/role-insights) — Location, compensation, and combined value analysis with scoring rubrics
+- [Greenhouse Pipeline](/docs/greenhouse-pipeline) — Automated job scanning, snapshotting, trend analysis, and pipeline configuration
 - [Configuration](/docs/configuration) — Customize behavior via wrangler.jsonc, secrets, and the Config page
 - [Database Schema](/docs/database) — All D1 tables with live schema viewer
 - [Agents Overview](/docs/agents) — How OrchestratorAgent, NotebookLMAgent, and NotebookLMMcpAgent work together

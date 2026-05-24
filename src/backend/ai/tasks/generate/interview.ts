@@ -15,13 +15,8 @@ import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { getDb } from "../../../db";
-import {
-  mockInterviews,
-  roleAnalyses,
-  roleBullets,
-  roles,
-} from "../../../db/schema";
-import { generateStructuredOutput } from "../../providers";
+import { mockInterviews, roleAnalyses, roleBullets, roles } from "../../../db/schema";
+import { AiProvider } from "../../providers";
 import { consultNotebook } from "../../tools/notebooklm/notebooklm";
 import { getActiveBullets } from "../draft";
 
@@ -30,24 +25,23 @@ import { getActiveBullets } from "../draft";
 // ---------------------------------------------------------------------------
 
 const MockInterviewSchema = z.object({
-  qa_pairs: z
-    .array(
-      z.object({
-        interviewer: z
-          .string()
-          .describe("A tough, specific interview question tailored to this role's JD requirements"),
-        candidate: z
-          .string()
-          .describe(
-            "The candidate's answer using the '0-to-1 Builder' narrative, weaving in specific Google metrics ($16M saved, 300% adoption, 70% reduction)",
-          ),
-        insight: z
-          .string()
-          .describe(
-            "Coaching note explaining why this response works strategically — what hiring signal it sends and which JD requirement it directly addresses",
-          ),
-      }),
-    ),
+  qa_pairs: z.array(
+    z.object({
+      interviewer: z
+        .string()
+        .describe("A tough, specific interview question tailored to this role's JD requirements"),
+      candidate: z
+        .string()
+        .describe(
+          "The candidate's answer using the '0-to-1 Builder' narrative, weaving in specific Google metrics ($16M saved, 300% adoption, 70% reduction)",
+        ),
+      insight: z
+        .string()
+        .describe(
+          "Coaching note explaining why this response works strategically — what hiring signal it sends and which JD requirement it directly addresses",
+        ),
+    }),
+  ),
 });
 
 export type MockInterviewResult = z.infer<typeof MockInterviewSchema>;
@@ -139,7 +133,7 @@ export async function generateInterview(env: Env, roleId: string): Promise<strin
   // an empty array.
   let result: MockInterviewResult;
   try {
-    result = await generateStructuredOutput(env, {
+    result = await new AiProvider(env).generateStructuredOutput({
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
@@ -152,7 +146,7 @@ export async function generateInterview(env: Env, roleId: string): Promise<strin
   } catch (firstErr) {
     // If the first attempt fails with a Zod error, retry with a simpler prompt
     console.error("[mock_interview] First attempt failed, retrying:", firstErr);
-    result = await generateStructuredOutput(env, {
+    result = await new AiProvider(env).generateStructuredOutput({
       messages: [
         {
           role: "system",
@@ -261,11 +255,7 @@ function buildInterviewUserPrompt(
     const grouped = groupBy(bullets, (b) => b.type);
     sections.push("", "## Job Requirements from JD");
     for (const [type, items] of Object.entries(grouped)) {
-      sections.push(
-        "",
-        `### ${TYPE_LABELS[type] ?? type}`,
-        ...items.map((b) => `- ${b.content}`),
-      );
+      sections.push("", `### ${TYPE_LABELS[type] ?? type}`, ...items.map((b) => `- ${b.content}`));
     }
   }
 

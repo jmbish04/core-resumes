@@ -40,26 +40,16 @@ _Stop sending the same resume to every job. Here's how to customize yours in min
 
 ## In This Article
 
--   [📋 Before You Start: Build Your Foundation](#h_b1362c0ede)
-    
--   [💾 Step 1: Save the Job Description](#h_aaea2e9215)
-    
--   [📊 Step 2: Check Your Match Score](#h_3c69f24942)
-    
--   [✅ Step 3: Toggle On Relevant Experience](#h_be550e718a)
-    
--   [🔧 Step 4: Address the Gaps](#h_b7e8c44432)
-    
--   [📈 Step 5: Reorder for Impact](#h_64b01bff46)
-    
--   [📤 Step 6: Review and Export](#h_5eb8b2a8c5)
-    
--   [⏱️ How Long Should This Take?](#h_feef8f3a9f)
-    
--   [📝 Quick Recap](#h_a8186faaa5)
-    
--   [📚 Related Articles](#h_80688aee1c)
-    
+- [📋 Before You Start: Build Your Foundation](#h_b1362c0ede)
+- [💾 Step 1: Save the Job Description](#h_aaea2e9215)
+- [📊 Step 2: Check Your Match Score](#h_3c69f24942)
+- [✅ Step 3: Toggle On Relevant Experience](#h_be550e718a)
+- [🔧 Step 4: Address the Gaps](#h_b7e8c44432)
+- [📈 Step 5: Reorder for Impact](#h_64b01bff46)
+- [📤 Step 6: Review and Export](#h_5eb8b2a8c5)
+- [⏱️ How Long Should This Take?](#h_feef8f3a9f)
+- [📝 Quick Recap](#h_a8186faaa5)
+- [📚 Related Articles](#h_80688aee1c)
 
 ---
 
@@ -84,12 +74,9 @@ Before you do anything else, save the full job description somewhere permanent.
 **How to do it:**  
 ​
 
--   Use the Teal Chrome Extension to bookmark the job with one click
-    
--   Or copy/paste the job into your Job Tracker manually
-    
+- Use the Teal Chrome Extension to bookmark the job with one click
+- Or copy/paste the job into your Job Tracker manually
 
-  
 The job description is now saved in your account forever, even if the company removes the posting.
 
 👉 **Need the extension?** Read: [How to Save Jobs From Any Website](#)
@@ -107,14 +94,10 @@ This isn't just a number. It's a breakdown of exactly what's in the job descript
 **The color coding:**  
 ​
 
--   🟢 **Green** = This keyword is on your current resume. You're good.
-    
--   🟡 **Yellow** = This keyword exists in your master resume but isn't toggled on. Easy fix.
-    
--   🔴 **Red** = This keyword doesn't appear anywhere in your resume. You'll need to add it.
-    
+- 🟢 **Green** = This keyword is on your current resume. You're good.
+- 🟡 **Yellow** = This keyword exists in your master resume but isn't toggled on. Easy fix.
+- 🔴 **Red** = This keyword doesn't appear anywhere in your resume. You'll need to add it.
 
-  
 ​**Don't panic about reds.** You don't need to match every single keyword. Focus on the ones that are actually relevant to your experience. If a job asks for "Salesforce" and you've never used Salesforce, don't pretend you have.
 
 👉 **Want to understand this better?** Read: [Understanding Your Match Score](#)
@@ -163,14 +146,10 @@ The top third of your resume gets the most attention. Make sure your most releva
 **Quick wins:**  
 ​
 
--   Move your most relevant job to the top of your experience section (if you have multiple positions)
-    
--   Lead each position with bullets that match the job description
-    
--   Put your strongest, most relevant skills first in your skills section
-    
+- Move your most relevant job to the top of your experience section (if you have multiple positions)
+- Lead each position with bullets that match the job description
+- Put your strongest, most relevant skills first in your skills section
 
-  
 You're not changing what you've done. You're just putting the most relevant stuff where it can't be missed.
 
 ---
@@ -180,16 +159,11 @@ You're not changing what you've done. You're just putting the most relevant stuf
 Before you export:  
 ​
 
--   ✅ Re-check your Match Score. Did it improve?
-    
--   ✅ Read through the resume once. Does it flow? Does it make sense for this specific role?
-    
--   ✅ Check for typos (AI helps but isn't perfect)
-    
--   ✅ Make sure your contact info is correct
-    
+- ✅ Re-check your Match Score. Did it improve?
+- ✅ Read through the resume once. Does it flow? Does it make sense for this specific role?
+- ✅ Check for typos (AI helps but isn't perfect)
+- ✅ Make sure your contact info is correct
 
-  
 When you're ready, export as PDF. Name the file something professional like `YourName_CompanyName_Resume.pdf`.
 
 ---
@@ -201,43 +175,30 @@ When you're ready, export as PDF. Name the file something professional like `You
 Once your master resume is built:  
 ​
 
--   **First few times:** 15-20 minutes per application
-    
--   **Once you're in a rhythm:** 5-10 minutes per application
-    
+- **First few times:** 15-20 minutes per application
+- **Once you're in a rhythm:** 5-10 minutes per application
 
-  
 Compare that to the hours people spend rewriting resumes from scratch. That's the power of building your foundation first.
 
 ---
 
 ## Quick Recap
 
--   **Save the job** so you don't lose the description
-    
--   **Check your Match Score** to see where you stand
-    
--   **Toggle on** bullets that match (yellow → green)
-    
--   **Add new bullets** for legitimate gaps (red → green)
-    
--   **Reorder** so relevant content is at the top
-    
--   **Export** and apply
-    
+- **Save the job** so you don't lose the description
+- **Check your Match Score** to see where you stand
+- **Toggle on** bullets that match (yellow → green)
+- **Add new bullets** for legitimate gaps (red → green)
+- **Reorder** so relevant content is at the top
+- **Export** and apply
 
 ---
 
 ## Related Articles
 
--   [How to Build a Master Resume](#)
-    
--   [Understanding Your Match Score](#)
-    
--   [How to Write Achievement-Based Bullet Points](#)
-    
--   [How to Save Jobs From Any Website](#)
-    
+- [How to Build a Master Resume](#)
+- [Understanding Your Match Score](#)
+- [How to Write Achievement-Based Bullet Points](#)
+- [How to Save Jobs From Any Website](#)
 
 ---
 

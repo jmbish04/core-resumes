@@ -9,7 +9,7 @@
  */
 
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { getDb } from "../../db";
 import { scoringRubrics, selectScoringRubricSchema, SCORING_RUBRIC_TYPES } from "../../db/schema";

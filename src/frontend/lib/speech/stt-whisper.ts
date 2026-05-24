@@ -75,9 +75,9 @@ export class CloudflareWhisperAdapter implements DictationAdapter {
     };
 
     // Initialize the microphone and MediaRecorder
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then((stream) => {
+    void (async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         streamReference = stream;
         mediaRecorder = new MediaRecorder(stream);
 
@@ -139,8 +139,7 @@ export class CloudflareWhisperAdapter implements DictationAdapter {
           type: "running",
         };
         for (const cb of callbacks.start) cb();
-      })
-      .catch((err) => {
+      } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         toast({
           title: "Microphone access denied",
@@ -152,7 +151,8 @@ export class CloudflareWhisperAdapter implements DictationAdapter {
           type: "ended",
           reason: "error",
         };
-      });
+      }
+    })();
 
     return session;
   }

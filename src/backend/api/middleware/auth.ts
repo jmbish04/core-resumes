@@ -7,8 +7,8 @@
 
 import { createMiddleware } from "hono/factory";
 
-import { getWorkerApiKey } from "@/backend/utils/secrets";
 import { verifySessionCookie } from "@/backend/lib/cookies";
+import { getWorkerApiKey } from "@/backend/utils/secrets";
 
 export const authMiddleware = createMiddleware<{
   Bindings: Env;
@@ -34,7 +34,7 @@ export const authMiddleware = createMiddleware<{
   // 2. Try API Key Auth (for programmatic/automation access)
   const workerApiKey = await getWorkerApiKey(c.env);
   const authHeader = c.req.header("Authorization") || c.req.header("x-api-key");
-  
+
   if (workerApiKey && authHeader) {
     let providedKey = "";
     if (authHeader.startsWith("Bearer ")) {
@@ -42,7 +42,7 @@ export const authMiddleware = createMiddleware<{
     } else {
       providedKey = authHeader;
     }
-    
+
     if (providedKey === workerApiKey) {
       c.set("authed", true);
       return next();

@@ -1,8 +1,9 @@
 "use client";
 
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
-import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
-import { AssistantChatTransport } from "@assistant-ui/react-ai-sdk";
+import { useAISDKRuntime } from "@assistant-ui/react-ai-sdk";
+import { useAgentChat } from "@cloudflare/ai-chat/react";
+import { useAgent } from "agents/react";
 import { type ReactNode } from "react";
 
 import {
@@ -25,12 +26,17 @@ interface RoleChatProviderProps {
   children: ReactNode;
 }
 
-export function RoleChatProvider({ roleId, threadId, children }: RoleChatProviderProps) {
-  const runtime = useChatRuntime({
-    transport: new AssistantChatTransport({
-      api: "/api/chat",
-      body: { roleId, threadId },
-    }),
+export function RoleChatProvider({ roleId, threadId: _threadId, children }: RoleChatProviderProps) {
+  const agentConnection = useAgent({
+    agent: "RoleChatAgent",
+    name: roleId,
+  });
+
+  const chatHelpers = useAgentChat({
+    agent: agentConnection,
+  });
+
+  const runtime = useAISDKRuntime(chatHelpers, {
     adapters: {
       speech: new CustomTTSAdapter({ apiUrl: "/api/tts" }),
       dictation: new CloudflareWhisperAdapter({ endpoint: "/api/transcribe" }),

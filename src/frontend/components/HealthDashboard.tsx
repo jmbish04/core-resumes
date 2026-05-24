@@ -25,13 +25,11 @@ import {
   Database,
   Key,
   Variable,
-  BookOpen,
   Cpu,
   Router,
   HardDrive,
-  AudioLines,
-  Mic,
   HelpCircle,
+  Sprout,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -214,6 +212,7 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>
   ai: Cpu,
   google: HardDrive,
   agents: Router,
+  greenhouse: Sprout,
 };
 
 function CheckCard({ result }: { result: HealthResult }) {
@@ -463,7 +462,7 @@ export function HealthDashboard() {
               <div>
                 <CardTitle>Running health screening…</CardTitle>
                 <CardDescription>
-                  Checking 16 modules in parallel. This may take a few seconds.
+                  Checking 28 modules in parallel. This may take a few seconds.
                 </CardDescription>
               </div>
             </CardHeader>

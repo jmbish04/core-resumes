@@ -2,9 +2,9 @@
 
 ## 3 key takeaways
 
--   The quality of your ChatGPT resume depends on the prompts you use—clear, detailed instructions produce tailored, professional results, while vague requests lead to generic output.
--   ChatGPT prompts can support every stage of resume writing, from drafting summaries and bullet points to tailoring your application for specific jobs and optimizing for ATS—especially when paired with an [AI resume builder](https://www.tealhq.com/tools/resume-builder) to streamline the process.
--   AI should be your drafting partner, not a replacement—review and refine the output to add accuracy, authenticity, and your personal voice so your resume feels both polished and human.
+- The quality of your ChatGPT resume depends on the prompts you use—clear, detailed instructions produce tailored, professional results, while vague requests lead to generic output.
+- ChatGPT prompts can support every stage of resume writing, from drafting summaries and bullet points to tailoring your application for specific jobs and optimizing for ATS—especially when paired with an [AI resume builder](https://www.tealhq.com/tools/resume-builder) to streamline the process.
+- AI should be your drafting partner, not a replacement—review and refine the output to add accuracy, authenticity, and your personal voice so your resume feels both polished and human.
 
 AI won’t create the perfect resume on its own—you need the right ChatGPT resume prompts.
 
@@ -73,11 +73,11 @@ Starting a resume from scratch is a lot of work, but using a [chatbot to create 
 
 **Example ChatGPT resume prompts:**
 
--   Write a resume for a \[TITLE\] based on this job description. _\[Paste the job description.\]_
--   Write a resume based on this \[TITLE\] position at \[COMPANY\] and include bullet point achievements that show impact and metrics. _\[Paste the job description.\]_
--   Write a tailored resume for this \[TITLE\] role at \[COMPANY\]. Don't include an objective statement or references, but do include a professional summary, my past 10 years of work experience with 3-5 bullet points per role, and incorporate the most important keywords from the job description in those achievements. _\[Paste the job description.\]_
--   Based on this job description for a \[JOB TITLE\] role at \[COMPANY\], write a resume for my past \[X\] years of work experience with 3-5 bullet points per role that include metrics and the most important 10 keywords from the job description. My past titles and companies were \[X, Y, and Z\]. No need to include an objective statement. _\[Paste job description.\]_
--   Based on my job responsibilities, please create a resume for \[JOB TITLE\] that focuses on the most relevant skills for \[INDUSTRY\] in today's competitive job market. Please be sure to use a chronologically structured resume layout. Include the top technical skills in the professional summary.
+- Write a resume for a \[TITLE\] based on this job description. _\[Paste the job description.\]_
+- Write a resume based on this \[TITLE\] position at \[COMPANY\] and include bullet point achievements that show impact and metrics. _\[Paste the job description.\]_
+- Write a tailored resume for this \[TITLE\] role at \[COMPANY\]. Don't include an objective statement or references, but do include a professional summary, my past 10 years of work experience with 3-5 bullet points per role, and incorporate the most important keywords from the job description in those achievements. _\[Paste the job description.\]_
+- Based on this job description for a \[JOB TITLE\] role at \[COMPANY\], write a resume for my past \[X\] years of work experience with 3-5 bullet points per role that include metrics and the most important 10 keywords from the job description. My past titles and companies were \[X, Y, and Z\]. No need to include an objective statement. _\[Paste job description.\]_
+- Based on my job responsibilities, please create a resume for \[JOB TITLE\] that focuses on the most relevant skills for \[INDUSTRY\] in today's competitive job market. Please be sure to use a chronologically structured resume layout. Include the top technical skills in the professional summary.
 
 ‍**Here's ChatGPT's resume creation:**
 
@@ -89,11 +89,11 @@ If you don't get the results you want, here are two Chat GPT resume prompts to h
 
 **AI prompt for accuracy**
 
--   Review the following resume content and ensure all metrics, job titles, and accomplishments are accurate and realistic based on the information I provide. If any numbers, percentages, or claims seem incorrect or overly generic, correct them. _\[Add specific details.\]_
+- Review the following resume content and ensure all metrics, job titles, and accomplishments are accurate and realistic based on the information I provide. If any numbers, percentages, or claims seem incorrect or overly generic, correct them. _\[Add specific details.\]_
 
 **Resume prompt for personalization**
 
--   Please rewrite this same resume, but add a \[RESUME SECTION NAME or SPECIFIC DETAILS YOU NEED INCLUDED\].
+- Please rewrite this same resume, but add a \[RESUME SECTION NAME or SPECIFIC DETAILS YOU NEED INCLUDED\].
 
 ### **ChatGPT prompts for writing a resume summary**
 
@@ -101,12 +101,12 @@ A well-written summary improves your resume’s impact—giving hiring managers 
 
 **ChatGPT prompt examples:**
 
--   Write a professional summary for my resume and keep it under 100 words. \[_Paste your existing resume.\]_
--   Create a compelling professional summary for a job application using my resume and the job description below as a reference, and keep it to 500 characters or less. \[_Paste your existing resume and the job description.\]_
--   Based on my resume below, write an executive summary resume section that includes metrics and total years of experience, and keep it shorter than 500 characters. \[_Paste your resume.\]_
--   Based on my resume below, write a resume introduction for a \[TITLE OR LEVEL\]'s resume that includes metrics and total years of experience. Please keep it shorter than three sentences. \[_Paste your existing resume\]_
--   Create a professional summary under 500 characters that showcases my skills and experiences relevant to a \[TITLE\] role in \[INDUSTRY\]. _\[Paste your resume.\]_
--   Create a summary as a _career overview_ that showcases my skills and experiences relevant to a \[TITLE\] role. _\[Paste your resume.\]_
+- Write a professional summary for my resume and keep it under 100 words. \[_Paste your existing resume.\]_
+- Create a compelling professional summary for a job application using my resume and the job description below as a reference, and keep it to 500 characters or less. \[_Paste your existing resume and the job description.\]_
+- Based on my resume below, write an executive summary resume section that includes metrics and total years of experience, and keep it shorter than 500 characters. \[_Paste your resume.\]_
+- Based on my resume below, write a resume introduction for a \[TITLE OR LEVEL\]'s resume that includes metrics and total years of experience. Please keep it shorter than three sentences. \[_Paste your existing resume\]_
+- Create a professional summary under 500 characters that showcases my skills and experiences relevant to a \[TITLE\] role in \[INDUSTRY\]. _\[Paste your resume.\]_
+- Create a summary as a _career overview_ that showcases my skills and experiences relevant to a \[TITLE\] role. _\[Paste your resume.\]_
 
 **Here's ChatGPT's summary output:**
 
@@ -122,20 +122,20 @@ An impact-driven resume focuses on quantifiable achievements like numbers, metri
 
 In addition, starting each resume bullet with an action verb shows momentum. Add this framework to each of the prompts below for the best results.
 
--   Please use this framework: "Action Verb + Noun + Metric + \[Strategy Optional\] + Outcome = 1 bulleted achievement."
+- Please use this framework: "Action Verb + Noun + Metric + \[Strategy Optional\] + Outcome = 1 bulleted achievement."
 
 Here's how to write bullet points for your achievements and work experience with Chat GPT prompts.
 
 **Example Chat GPT resume prompts:**
 
--   Write a resume bullet for a \[TITLE\] position that describes impact and uses metrics. Include at least 2 of these keywords: \[A, B, C, D, E, F\].
--   Please write 4 resume achievements with metrics based on the following job responsibilities. _\[Paste the job description.\]_
--   Please write 4 resume achievements with metrics based on the following job responsibilities. Start each with the best action verbs for resumes in the \[INDUSTRY TYPE\] industry. _\[Paste the job description.\]_
--   Write 3 bullet points demonstrating my ability to \[RELEVANT SKILL OR ACHIEVEMENT\].
+- Write a resume bullet for a \[TITLE\] position that describes impact and uses metrics. Include at least 2 of these keywords: \[A, B, C, D, E, F\].
+- Please write 4 resume achievements with metrics based on the following job responsibilities. _\[Paste the job description.\]_
+- Please write 4 resume achievements with metrics based on the following job responsibilities. Start each with the best action verbs for resumes in the \[INDUSTRY TYPE\] industry. _\[Paste the job description.\]_
+- Write 3 bullet points demonstrating my ability to \[RELEVANT SKILL OR ACHIEVEMENT\].
 
--   Write 3 resume bullet points for a \[Job Title\] demonstrating leadership and measurable impact.
--   Rewrite my resume bullet points to sound more results-oriented and include these quantifiable resume achievements \[ACHIEVEMENT 1, ACHIEVEMENT 2, ACHIEVEMENT 3\].
--   Update the Experience section of my resume to make it sound more actionable. _\[Paste your resume.\]_
+- Write 3 resume bullet points for a \[Job Title\] demonstrating leadership and measurable impact.
+- Rewrite my resume bullet points to sound more results-oriented and include these quantifiable resume achievements \[ACHIEVEMENT 1, ACHIEVEMENT 2, ACHIEVEMENT 3\].
+- Update the Experience section of my resume to make it sound more actionable. _\[Paste your resume.\]_
 
 **Here's what ChatGPT wrote:**
 
@@ -145,7 +145,7 @@ Here's how to write bullet points for your achievements and work experience with
 
 Achievement-based resume writing can be tricky. Even for AI. If you find your ChatGPT prompts are producing less than natural or human-sounding results, try the prompt below as a follow-up to the output.
 
--   Please rewrite those resume bullet points in a more engaging and natural way. Use nondramatic language.
+- Please rewrite those resume bullet points in a more engaging and natural way. Use nondramatic language.
 
 > <iframe name="__tt_embed__v86463198010725060" sandbox="allow-popups allow-popups-to-escape-sandbox allow-scripts allow-top-navigation allow-same-origin" src="https://www.tiktok.com/embed/v2/7176780316898594094?lang=en-US&amp;referrer=https%3A%2F%2Fwww.tealhq.com%2Fpost%2Fgreat-chatgpt-prompts-for-your-resume%3F_gl%3D1*cviv1u*_gcl_au*MTYyNTcxMzY5Ny4xNzc3ODQwOTk0*_ga*MTQ4ODg0MDQyMi4xNzc3ODQwOTk0*_ga_ZP0QG27VS2*czE3NzgzNDU5MzEkbzIkZzEkdDE3NzgzNDgxNTMkajE1JGwwJGg4MjMzOTUxMDgkZDg5eW1feDZoMUprLW1qc01vMGY2TUJSdXBBeHVkbHB5cWc." style="width: 100%; height: 812px; display: block; visibility: unset; max-height: 812px;"></iframe>
 
@@ -157,13 +157,13 @@ Customizing a resume for a role is one of the [best ways to make your resume sta
 
 **Example AI prompts:**
 
--   Update my resume based on this job description for my dream job. Please focus on resume keyword alignment where it makes sense when considering my experience. _\[Paste your resume and the job description.\]_
+- Update my resume based on this job description for my dream job. Please focus on resume keyword alignment where it makes sense when considering my experience. _\[Paste your resume and the job description.\]_
 
--   Rewrite my resume to align with the following job description _\[Paste the job description\]._
--   Tailor my resume to this specific job posting for a \[JOB TITLE\] role at \[COMPANY\]. _\[Paste your current resume and the job description\]_
--   Using the resume and job description below, showcase 10 relevant skills I should highlight. _\[Paste your current resume and the job description.\]_
--   Take my experience as a \[JOB TITLE\] and identify which skills I should highlight if I'm looking to pivot into a role as \[TITLE\] at \[COMPANY OR TYPE OF COMPANY\]. _\[Paste your resume and the job description.\]_
--   Here's my existing resume. How would you rewrite it if you were applying to this \[TITLE\] role at \[COMPANY\]? Include metrics in the achievements. _\[Paste your resume and the job description.\]_
+- Rewrite my resume to align with the following job description _\[Paste the job description\]._
+- Tailor my resume to this specific job posting for a \[JOB TITLE\] role at \[COMPANY\]. _\[Paste your current resume and the job description\]_
+- Using the resume and job description below, showcase 10 relevant skills I should highlight. _\[Paste your current resume and the job description.\]_
+- Take my experience as a \[JOB TITLE\] and identify which skills I should highlight if I'm looking to pivot into a role as \[TITLE\] at \[COMPANY OR TYPE OF COMPANY\]. _\[Paste your resume and the job description.\]_
+- Here's my existing resume. How would you rewrite it if you were applying to this \[TITLE\] role at \[COMPANY\]? Include metrics in the achievements. _\[Paste your resume and the job description.\]_
 
 **Here's what GPT wrote:**
 
@@ -181,13 +181,13 @@ Clear and professional resume writing is a fundamental part of the job search pr
 
 **ChatGPT resume prompt examples:**
 
--   Proofread my resume and suggest improvements for clarity and readability. _\[Paste your resume.\]_
--   Check my resume for passive voice and rewrite it using stronger action verbs. _\[Paste your resume.\]_
--   Review my resume for redundant phrasing and suggest more concise alternatives. _\[Paste your resume.\]_
--   Check my resume for consistency in formatting, punctuation, and capitalization._\[Paste your resume.\]_
--   Identify areas where I can add quantifiable metrics to strengthen my resume. _\[Paste your resume.\]_
--   Improve the flow of my resume \[SECTION\] while maintaining a professional tone. _\[Paste your resume.\]_
--   Please check the spelling and grammar of my resume to ensure it's correct. _\[Paste your resume.\]_
+- Proofread my resume and suggest improvements for clarity and readability. _\[Paste your resume.\]_
+- Check my resume for passive voice and rewrite it using stronger action verbs. _\[Paste your resume.\]_
+- Review my resume for redundant phrasing and suggest more concise alternatives. _\[Paste your resume.\]_
+- Check my resume for consistency in formatting, punctuation, and capitalization._\[Paste your resume.\]_
+- Identify areas where I can add quantifiable metrics to strengthen my resume. _\[Paste your resume.\]_
+- Improve the flow of my resume \[SECTION\] while maintaining a professional tone. _\[Paste your resume.\]_
+- Please check the spelling and grammar of my resume to ensure it's correct. _\[Paste your resume.\]_
 
 **Pro Tip:** No matter what elements you have ChatGPT review, you still need to have eyes on your resume. AI can catch common resume mistakes, but your content (and any AI suggestions or output) still needs human review.
 
@@ -201,16 +201,16 @@ The ATS is a digital filing system. And while there are no "passing ATS filters"
 
 **Example ChatGPT resume optimization prompts:**
 
--   Analyze my resume for ATS optimization based on this job description. _\[Paste the job description and your resume\]._
--   Suggest 5 keywords I should add to my resume to improve ATS compatibility with a job as a \[JOB TITLE\] in the \[INDUSTRY TYPE\] industry.
--   Identify the top skills a recruiter would search for in the ATS from the attached job description and incorporate them into my resume. _\[Paste your resume and the job description.\]_
--   Analyze my resume for job scan optimization based on this job description and my resume. _\[Paste the job description and your resume\]._
+- Analyze my resume for ATS optimization based on this job description. _\[Paste the job description and your resume\]._
+- Suggest 5 keywords I should add to my resume to improve ATS compatibility with a job as a \[JOB TITLE\] in the \[INDUSTRY TYPE\] industry.
+- Identify the top skills a recruiter would search for in the ATS from the attached job description and incorporate them into my resume. _\[Paste your resume and the job description.\]_
+- Analyze my resume for job scan optimization based on this job description and my resume. _\[Paste the job description and your resume\]._
 
 **Prompts for how to structure an ATS-friendly resume using AI**
 
--   Format my resume for ATS compatibility by ensuring clear section headings, bullet points, and consistent spacing. _\[Paste your resume.\]_
--   Review my resume layout and suggest improvements to enhance ATS readability while maintaining a professional design. _\[Paste your resume.\]_
--   Check my resume for any formatting issues (e.g., tables, graphics, or special characters) that might cause parsing errors in an ATS. _\[Paste your resume.\]_
+- Format my resume for ATS compatibility by ensuring clear section headings, bullet points, and consistent spacing. _\[Paste your resume.\]_
+- Review my resume layout and suggest improvements to enhance ATS readability while maintaining a professional design. _\[Paste your resume.\]_
+- Check my resume for any formatting issues (e.g., tables, graphics, or special characters) that might cause parsing errors in an ATS. _\[Paste your resume.\]_
 
 **Here's an example of the AI output:**
 
@@ -228,23 +228,23 @@ AI tends to overuse certain phrases, rely on predictable sentence structures, an
 
 **Editing techniques to humanize AI output on your own:**
 
--   Vary sentence lengths and structures instead of following predictable patterns
--   Replace generic terms with industry-specific language you actually use
--   Add transitional phrases that reflect your natural speaking style
--   Cut unnecessary adverbs that AI tends to overuse
--   Read your resume aloud to catch awkward phrasing that sounds unnatural
+- Vary sentence lengths and structures instead of following predictable patterns
+- Replace generic terms with industry-specific language you actually use
+- Add transitional phrases that reflect your natural speaking style
+- Cut unnecessary adverbs that AI tends to overuse
+- Read your resume aloud to catch awkward phrasing that sounds unnatural
 
 You can also use AI to do this for you. Below are some prompts to help.
 
 **Example Prompts for resume personalization:**
 
--   Make my resume sound less generic while still maintaining professionalism. _\[Paste your resume.\]_
--   Use a more personalized resume voice to make my content sound less robotic. _\[Paste your resume.\]_
--   Rewrite my resume to remove overly formal or repetitive AI-generated phrasing while keeping it professional. _\[Paste your resume.\]_
--   Adjust my resume tone to sound more natural and engaging, avoiding stiff or overly polished language. _\[Paste your resume.\]_
--   Reword my bullet points to sound more conversational while maintaining a strong, action-driven tone. _\[Paste your resume.\]_
--   Identify and replace any generic or overused phrases with more specific, compelling language. _\[Paste your resume.\]_
--   Edit my resume to include a mix of sentence structures that feel more natural and human-written. _\[Paste your resume.\]_
+- Make my resume sound less generic while still maintaining professionalism. _\[Paste your resume.\]_
+- Use a more personalized resume voice to make my content sound less robotic. _\[Paste your resume.\]_
+- Rewrite my resume to remove overly formal or repetitive AI-generated phrasing while keeping it professional. _\[Paste your resume.\]_
+- Adjust my resume tone to sound more natural and engaging, avoiding stiff or overly polished language. _\[Paste your resume.\]_
+- Reword my bullet points to sound more conversational while maintaining a strong, action-driven tone. _\[Paste your resume.\]_
+- Identify and replace any generic or overused phrases with more specific, compelling language. _\[Paste your resume.\]_
+- Edit my resume to include a mix of sentence structures that feel more natural and human-written. _\[Paste your resume.\]_
 
 **Pro Tip:** Try writing a [ChatGPT cover letter](/post/3-ways-to-use-chatgpt-ai-for-your-job-search) using some of the prompts above to make it sound genuine and professional.
 
@@ -252,60 +252,60 @@ You can also use AI to do this for you. Below are some prompts to help.
 
 ## Full list of ChatGPT resume prompts
 
--   Write a resume for a \[TITLE\] based on this job description. _\[Paste the job description.\]_
--   Write a resume based on this \[TITLE\] position at \[COMPANY\] and include bullet point achievements that show impact and metrics. _\[Paste the job description.\]_
--   Write a tailored resume for this \[TITLE\] role at \[COMPANY\]. Don't include an objective statement or references, but do include a professional summary, my past 10 years of work experience with 3-5 bullet points per role, and incorporate the most important keywords from the job description in those achievements. _\[Paste the job description.\]_
--   Based on this job description for a \[JOB TITLE\] role at \[COMPANY\], write a resume for my past \[X\] years of work experience with 3-5 bullet points per role that include metrics and the most important 10 keywords from the job description. My past titles and companies were \[X, Y, and Z\]. No need to include an objective statement. _\[Paste job description.\]_
--   Based on my job responsibilities, please create a resume for \[JOB TITLE\] that focuses on the most relevant skills for \[INDUSTRY\] in today's competitive job market. Please be sure to use a chronologically structured resume layout. Include the top technical skills in the professional summary.
--   Review the following resume content and ensure all metrics, job titles, and accomplishments are accurate and realistic based on the information I provide. If any numbers, percentages, or claims seem incorrect or overly generic, correct them. \[Add specific details.\]
--   Please rewrite this same resume, but add a \[RESUME SECTION NAME or SPECIFIC DETAILS YOU NEED INCLUDED\].
--   Write a professional summary for my resume and keep it under 100 words. \[_Paste your existing resume.\]_
--   Create a compelling professional summary for a job application using my resume and the job description below as a reference, and keep it to 500 characters or less. \[_Paste your existing resume and the job description.\]_
--   Based on my resume below, write an executive summary resume section that includes metrics and total years of experience, and keep it shorter than 500 characters. \[_Paste your resume.\]_
--   Based on my resume below, write a resume introduction for a \[TITLE OR LEVEL\]'s resume that includes metrics and total years of experience. Please keep it shorter than three sentences. \[_Paste your existing resume\]_
--   Create a professional summary under 500 characters that showcases my skills and experiences relevant to a \[TITLE\] role in \[INDUSTRY\]. _\[Paste your resume.\]_
--   Create a summary as a _career overview_ that showcases my skills and experiences relevant to a \[TITLE\] role.
--   Please use this framework: "Action Verb + Noun + Metric + \[Strategy Optional\] + Outcome = 1 bulleted achievement."
--   Write a resume bullet for a \[TITLE\] position that describes impact and uses metrics. Include at least 2 of these keywords: \[A, B, C, D, E, F\].
--   Please write 4 resume achievements with metrics based on the following job responsibilities. \[Paste the job description.\]
--   Please write 4 resume achievements with metrics based on the following job responsibilities. Start each with the best action verbs for resumes in the \[INDUSTRY TYPE\] industry. \[Paste the job description.\]
--   Write 3 bullet points demonstrating my ability to \[RELEVANT SKILL OR ACHIEVEMENT\].
--   Write 3 resume bullet points for a \[Job Title\] demonstrating leadership and measurable impact.
--   Rewrite my resume bullet points to sound more results-oriented and include these quantifiable resume achievements \[ACHIEVEMENT 1, ACHIEVEMENT 2, ACHIEVEMENT 3\].
--   Update the Experience section of my resume to make it sound more actionable. \[Paste your resume.\]
--   Please rewrite those resume bullet points in a more engaging and natural way. Use nondramatic language.
--   Update my resume based on this job description for my dream job. Please focus on resume keyword alignment where it makes sense when considering my experience. \[Paste your resume and the job description.\]
--   Rewrite my resume to align with the following job description \[Paste the job description\].
--   Tailor my resume to this specific job posting for a \[JOB TITLE\] role at \[COMPANY\]. \[Paste your current resume and the job description\]
--   Using the resume and job description below, showcase 10 relevant skills I should highlight. \[Paste your current resume and the job description.\]
--   Take my experience as a \[JOB TITLE\] and identify which skills I should highlight if I'm looking to pivot into a role as \[TITLE\] at \[COMPANY OR TYPE OF COMPANY\]. \[Paste your resume and the job description.\]
--   Here's my existing resume. How would you rewrite it if you were applying to this \[TITLE\] role at \[COMPANY\]? Include metrics in the achievements. \[Paste your resume and the job description.\]
--   Proofread my resume and suggest improvements for clarity and readability. \[Paste your resume.\]
--   Check my resume for passive voice and rewrite it using stronger action verbs. \[Paste your resume.\]
--   Review my resume for redundant phrasing and suggest more concise alternatives. \[Paste your resume.\]
--   Check my resume for consistency in formatting, punctuation, and capitalization.\[Paste your resume.\]
--   Identify areas where I can add quantifiable metrics to strengthen my resume. \[Paste your resume.\]
--   Improve the flow of my resume \[SECTION\] while maintaining a professional tone. \[Paste your resume.\]
--   Please check the spelling and grammar of my resume to ensure it's correct. \[Paste your resume.\]
--   Analyze my resume for ATS optimization based on this job description. \[Paste the job description and your resume\].
--   Suggest 5 keywords I should add to my resume to improve ATS compatibility with a job as a \[JOB TITLE\] in the \[INDUSTRY TYPE\] industry.
--   Identify the top skills a recruiter would search for in the ATS from the attached job description and incorporate them into my resume. \[Paste your resume and the job description.\]
--   Analyze my resume for job scan optimization based on this job description and my resume. \[Paste the job description and your resume\].
--   Format my resume for ATS compatibility by ensuring clear section headings, bullet points, and consistent spacing. \[Paste your resume.\]
--   Review my resume layout and suggest improvements to enhance ATS readability while maintaining a professional design. \[Paste your resume.\]
--   Check my resume for any formatting issues (e.g., tables, graphics, or special characters) that might cause parsing errors in an ATS. \[Paste your resume.\]
--   Vary sentence lengths and structures instead of following predictable patterns
--   Replace generic terms with industry-specific language you actually use
--   Add transitional phrases that reflect your natural speaking style
--   Cut unnecessary adverbs that AI tends to overuse
--   Read your resume aloud to catch awkward phrasing that sounds unnatural
--   Make my resume sound less generic while still maintaining professionalism. \[Paste your resume.\]
--   Use a more personalized resume voice to make my content sound less robotic. \[Paste your resume.\]
--   Rewrite my resume to remove overly formal or repetitive AI-generated phrasing while keeping it professional. \[Paste your resume.\]
--   Adjust my resume tone to sound more natural and engaging, avoiding stiff or overly polished language. \[Paste your resume.\]
--   Reword my bullet points to sound more conversational while maintaining a strong, action-driven tone. \[Paste your resume.\]
--   Identify and replace any generic or overused phrases with more specific, compelling language. \[Paste your resume.\]
--   Edit my resume to include a mix of sentence structures that feel more natural and human-written. _\[Paste your resume.\]_
+- Write a resume for a \[TITLE\] based on this job description. _\[Paste the job description.\]_
+- Write a resume based on this \[TITLE\] position at \[COMPANY\] and include bullet point achievements that show impact and metrics. _\[Paste the job description.\]_
+- Write a tailored resume for this \[TITLE\] role at \[COMPANY\]. Don't include an objective statement or references, but do include a professional summary, my past 10 years of work experience with 3-5 bullet points per role, and incorporate the most important keywords from the job description in those achievements. _\[Paste the job description.\]_
+- Based on this job description for a \[JOB TITLE\] role at \[COMPANY\], write a resume for my past \[X\] years of work experience with 3-5 bullet points per role that include metrics and the most important 10 keywords from the job description. My past titles and companies were \[X, Y, and Z\]. No need to include an objective statement. _\[Paste job description.\]_
+- Based on my job responsibilities, please create a resume for \[JOB TITLE\] that focuses on the most relevant skills for \[INDUSTRY\] in today's competitive job market. Please be sure to use a chronologically structured resume layout. Include the top technical skills in the professional summary.
+- Review the following resume content and ensure all metrics, job titles, and accomplishments are accurate and realistic based on the information I provide. If any numbers, percentages, or claims seem incorrect or overly generic, correct them. \[Add specific details.\]
+- Please rewrite this same resume, but add a \[RESUME SECTION NAME or SPECIFIC DETAILS YOU NEED INCLUDED\].
+- Write a professional summary for my resume and keep it under 100 words. \[_Paste your existing resume.\]_
+- Create a compelling professional summary for a job application using my resume and the job description below as a reference, and keep it to 500 characters or less. \[_Paste your existing resume and the job description.\]_
+- Based on my resume below, write an executive summary resume section that includes metrics and total years of experience, and keep it shorter than 500 characters. \[_Paste your resume.\]_
+- Based on my resume below, write a resume introduction for a \[TITLE OR LEVEL\]'s resume that includes metrics and total years of experience. Please keep it shorter than three sentences. \[_Paste your existing resume\]_
+- Create a professional summary under 500 characters that showcases my skills and experiences relevant to a \[TITLE\] role in \[INDUSTRY\]. _\[Paste your resume.\]_
+- Create a summary as a _career overview_ that showcases my skills and experiences relevant to a \[TITLE\] role.
+- Please use this framework: "Action Verb + Noun + Metric + \[Strategy Optional\] + Outcome = 1 bulleted achievement."
+- Write a resume bullet for a \[TITLE\] position that describes impact and uses metrics. Include at least 2 of these keywords: \[A, B, C, D, E, F\].
+- Please write 4 resume achievements with metrics based on the following job responsibilities. \[Paste the job description.\]
+- Please write 4 resume achievements with metrics based on the following job responsibilities. Start each with the best action verbs for resumes in the \[INDUSTRY TYPE\] industry. \[Paste the job description.\]
+- Write 3 bullet points demonstrating my ability to \[RELEVANT SKILL OR ACHIEVEMENT\].
+- Write 3 resume bullet points for a \[Job Title\] demonstrating leadership and measurable impact.
+- Rewrite my resume bullet points to sound more results-oriented and include these quantifiable resume achievements \[ACHIEVEMENT 1, ACHIEVEMENT 2, ACHIEVEMENT 3\].
+- Update the Experience section of my resume to make it sound more actionable. \[Paste your resume.\]
+- Please rewrite those resume bullet points in a more engaging and natural way. Use nondramatic language.
+- Update my resume based on this job description for my dream job. Please focus on resume keyword alignment where it makes sense when considering my experience. \[Paste your resume and the job description.\]
+- Rewrite my resume to align with the following job description \[Paste the job description\].
+- Tailor my resume to this specific job posting for a \[JOB TITLE\] role at \[COMPANY\]. \[Paste your current resume and the job description\]
+- Using the resume and job description below, showcase 10 relevant skills I should highlight. \[Paste your current resume and the job description.\]
+- Take my experience as a \[JOB TITLE\] and identify which skills I should highlight if I'm looking to pivot into a role as \[TITLE\] at \[COMPANY OR TYPE OF COMPANY\]. \[Paste your resume and the job description.\]
+- Here's my existing resume. How would you rewrite it if you were applying to this \[TITLE\] role at \[COMPANY\]? Include metrics in the achievements. \[Paste your resume and the job description.\]
+- Proofread my resume and suggest improvements for clarity and readability. \[Paste your resume.\]
+- Check my resume for passive voice and rewrite it using stronger action verbs. \[Paste your resume.\]
+- Review my resume for redundant phrasing and suggest more concise alternatives. \[Paste your resume.\]
+- Check my resume for consistency in formatting, punctuation, and capitalization.\[Paste your resume.\]
+- Identify areas where I can add quantifiable metrics to strengthen my resume. \[Paste your resume.\]
+- Improve the flow of my resume \[SECTION\] while maintaining a professional tone. \[Paste your resume.\]
+- Please check the spelling and grammar of my resume to ensure it's correct. \[Paste your resume.\]
+- Analyze my resume for ATS optimization based on this job description. \[Paste the job description and your resume\].
+- Suggest 5 keywords I should add to my resume to improve ATS compatibility with a job as a \[JOB TITLE\] in the \[INDUSTRY TYPE\] industry.
+- Identify the top skills a recruiter would search for in the ATS from the attached job description and incorporate them into my resume. \[Paste your resume and the job description.\]
+- Analyze my resume for job scan optimization based on this job description and my resume. \[Paste the job description and your resume\].
+- Format my resume for ATS compatibility by ensuring clear section headings, bullet points, and consistent spacing. \[Paste your resume.\]
+- Review my resume layout and suggest improvements to enhance ATS readability while maintaining a professional design. \[Paste your resume.\]
+- Check my resume for any formatting issues (e.g., tables, graphics, or special characters) that might cause parsing errors in an ATS. \[Paste your resume.\]
+- Vary sentence lengths and structures instead of following predictable patterns
+- Replace generic terms with industry-specific language you actually use
+- Add transitional phrases that reflect your natural speaking style
+- Cut unnecessary adverbs that AI tends to overuse
+- Read your resume aloud to catch awkward phrasing that sounds unnatural
+- Make my resume sound less generic while still maintaining professionalism. \[Paste your resume.\]
+- Use a more personalized resume voice to make my content sound less robotic. \[Paste your resume.\]
+- Rewrite my resume to remove overly formal or repetitive AI-generated phrasing while keeping it professional. \[Paste your resume.\]
+- Adjust my resume tone to sound more natural and engaging, avoiding stiff or overly polished language. \[Paste your resume.\]
+- Reword my bullet points to sound more conversational while maintaining a strong, action-driven tone. \[Paste your resume.\]
+- Identify and replace any generic or overused phrases with more specific, compelling language. \[Paste your resume.\]
+- Edit my resume to include a mix of sentence structures that feel more natural and human-written. _\[Paste your resume.\]_
 
 ‍
 
@@ -335,7 +335,7 @@ To ensure your resume doesn't read like it's written by ChatGPT, always review t
 
 ### Can employers tell that my resume was written by ChatGPT?
 
-Nothing says you _can't_ use AI in your job search, just like nothing says you can't use tools like Grammarly to improve your writing, or calculators to do quick math. Though tools exist that can detect AI-generated writing, it's unlikely that employers will spend a ton of time and energy cross-checking every single application.
+Nothing says you *can't* use AI in your job search, just like nothing says you can't use tools like Grammarly to improve your writing, or calculators to do quick math. Though tools exist that can detect AI-generated writing, it's unlikely that employers will spend a ton of time and energy cross-checking every single application.
 
 That said, you still want to make sure the qualifications you present are truthful and accurate, and that you can back up your resume bullet points with real examples from your past experience.
 

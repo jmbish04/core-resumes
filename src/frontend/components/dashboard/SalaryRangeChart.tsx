@@ -1,15 +1,21 @@
-import { useEffect, useMemo, useState } from "react";
 import { TrendingUp } from "lucide-react";
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { useEffect, useMemo, useState } from "react";
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import { apiGet } from "@/lib/api-client";
 
 import type { SalaryChartRow } from "./types";
@@ -47,7 +53,9 @@ export function SalaryRangeChart() {
     [rows],
   );
 
-  const hasSalary = points.some((point) => point.midpoint !== null || point.min !== null || point.max !== null);
+  const hasSalary = points.some(
+    (point) => point.midpoint !== null || point.min !== null || point.max !== null,
+  );
 
   useEffect(() => {
     apiGet<SalaryChartRow[]>("/api/dashboard/by-salary")
@@ -85,7 +93,7 @@ export function SalaryRangeChart() {
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                tickFormatter={(value) => value.length > 20 ? value.slice(0, 20) + "..." : value}
+                tickFormatter={(value) => (value.length > 20 ? value.slice(0, 20) + "..." : value)}
               />
               <YAxis
                 tickFormatter={(value) => `$${Number(value) / 1000}k`}

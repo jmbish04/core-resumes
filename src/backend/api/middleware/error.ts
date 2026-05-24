@@ -9,7 +9,7 @@ export const errorHandler: ErrorHandler<{
     "status" in error && typeof error.status === "number" ? error.status : 500
   ) as ContentfulStatusCode;
   const isServerError = status >= 500;
-  const environment = "ENVIRONMENT" in c.env ? c.env.ENVIRONMENT : "production";
+
   const message = error.message;
 
   console.error(

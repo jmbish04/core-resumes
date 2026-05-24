@@ -42,10 +42,7 @@ export function Stepper({ activeStep, children, className }: StepperProps) {
   return (
     <StepperContext.Provider value={{ activeIndex: activeStep, totalSteps }}>
       <div
-        className={cn(
-          "flex items-center gap-0 overflow-x-auto scrollbar-none",
-          className,
-        )}
+        className={cn("flex items-center gap-0 overflow-x-auto scrollbar-none", className)}
         role="navigation"
         aria-label="Status progression"
       >
@@ -80,11 +77,7 @@ export function StepperItem({
 
   const status =
     statusOverride ??
-    (index < activeIndex
-      ? "completed"
-      : index === activeIndex
-        ? "active"
-        : "pending");
+    (index < activeIndex ? "completed" : index === activeIndex ? "active" : "pending");
 
   return (
     <div className="flex items-center">
@@ -150,10 +143,7 @@ function StepperIndicator({
 
   if (status === "terminal") {
     return (
-      <div
-        className={cn(baseClasses, "bg-muted/50")}
-        style={color ? { color } : undefined}
-      >
+      <div className={cn(baseClasses, "bg-muted/50")} style={color ? { color } : undefined}>
         {icon ?? <div className="size-2 rounded-full bg-current" />}
       </div>
     );
@@ -176,9 +166,7 @@ function StepperSeparator({ status }: { status: StepStatus }) {
     <div
       className={cn(
         "mx-1 h-px w-4 sm:mx-1.5 sm:w-6",
-        status === "completed"
-          ? "bg-emerald-500/40"
-          : "bg-border/30",
+        status === "completed" ? "bg-emerald-500/40" : "bg-border/30",
       )}
     />
   );

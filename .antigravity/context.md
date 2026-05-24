@@ -1,6 +1,8 @@
 # PDFx — AI Context Guide
+
 # Version: 1.1 | Updated: 2026 | License: MIT
-# Or run: npx pdfx-cli@latest skills init  (handles editor-specific paths & frontmatter)
+
+# Or run: npx pdfx-cli@latest skills init (handles editor-specific paths & frontmatter)
 
 ## What is PDFx?
 
@@ -10,6 +12,7 @@ PDFx is an open-source, shadcn/ui-style PDF component library for React. It is b
 that expose a public API).
 
 Key facts:
+
 - Package: pdfx-cli (the CLI that installs components)
 - Registry: https://pdfx.akashpise.dev/r/
 - Runtime: Works in browser AND Node.js (Next.js App Router, Express, etc.)
@@ -42,11 +45,12 @@ Page, Document, etc.). They CANNOT render HTML or DOM elements — they only wor
 <Document> from @react-pdf/renderer.
 
 Usage pattern:
+
 ```tsx
-import { Document, Page } from '@react-pdf/renderer';
-import { Heading } from '@/components/pdfx/heading/pdfx-heading';
-import { Text } from '@/components/pdfx/text/pdfx-text';
-import { Table } from '@/components/pdfx/table/pdfx-table';
+import { Document, Page } from "@react-pdf/renderer";
+import { Heading } from "@/components/pdfx/heading/pdfx-heading";
+import { Text } from "@/components/pdfx/text/pdfx-text";
+import { Table } from "@/components/pdfx/table/pdfx-table";
 
 export function MyDocument() {
   return (
@@ -56,10 +60,16 @@ export function MyDocument() {
         <Text>Thank you for your business.</Text>
         <Table variant="grid" zebraStripe>
           <TableHeader>
-            <TableRow><TableCell header>Item</TableCell><TableCell header>Price</TableCell></TableRow>
+            <TableRow>
+              <TableCell header>Item</TableCell>
+              <TableCell header>Price</TableCell>
+            </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow><TableCell>Design</TableCell><TableCell>$4,800</TableCell></TableRow>
+            <TableRow>
+              <TableCell>Design</TableCell>
+              <TableCell>$4,800</TableCell>
+            </TableRow>
           </TableBody>
         </Table>
       </Page>
@@ -69,20 +79,25 @@ export function MyDocument() {
 ```
 
 Rendering to PDF:
+
 ```tsx
 // Browser: live preview
-import { PDFViewer } from '@react-pdf/renderer';
-<PDFViewer><MyDocument /></PDFViewer>
+import { PDFViewer } from "@react-pdf/renderer";
+<PDFViewer>
+  <MyDocument />
+</PDFViewer>;
 
 // Browser: download button
-import { PDFDownloadLink } from '@react-pdf/renderer';
-<PDFDownloadLink document={<MyDocument />} fileName="output.pdf">Download</PDFDownloadLink>
+import { PDFDownloadLink } from "@react-pdf/renderer";
+<PDFDownloadLink document={<MyDocument />} fileName="output.pdf">
+  Download
+</PDFDownloadLink>;
 
 // Server (Next.js App Router):
-import { renderToBuffer } from '@react-pdf/renderer';
+import { renderToBuffer } from "@react-pdf/renderer";
 export async function GET() {
   const buf = await renderToBuffer(<MyDocument />);
-  return new Response(buf, { headers: { 'Content-Type': 'application/pdf' } });
+  return new Response(buf, { headers: { "Content-Type": "application/pdf" } });
 }
 ```
 
@@ -93,6 +108,7 @@ export async function GET() {
 CRITICAL: These are the EXACT props. Do not invent additional props.
 
 ### Heading
+
 ```tsx
 import { Heading } from '@/components/pdfx/heading/pdfx-heading';
 <Heading
@@ -111,6 +127,7 @@ import { Heading } from '@/components/pdfx/heading/pdfx-heading';
 ```
 
 ### Text
+
 ```tsx
 import { Text } from '@/components/pdfx/text/pdfx-text';
 <Text
@@ -129,6 +146,7 @@ import { Text } from '@/components/pdfx/text/pdfx-text';
 ```
 
 ### Link
+
 ```tsx
 import { Link } from '@/components/pdfx/link/pdfx-link';
 <Link
@@ -144,40 +162,44 @@ import { Link } from '@/components/pdfx/link/pdfx-link';
 ```
 
 ### Divider
+
 ```tsx
-import { Divider } from '@/components/pdfx/divider/pdfx-divider';
+import { Divider } from "@/components/pdfx/divider/pdfx-divider";
 <Divider
-  spacing="md"        // 'none' | 'sm' | 'md' | 'lg' — default: 'md'
-  variant="solid"     // 'solid' | 'dashed' | 'dotted' — default: 'solid'
-  thickness="thin"    // 'thin' | 'medium' | 'thick' — default: 'thin'
-  color="#e4e4e7"     // string — default: theme border color
-  label="or"          // string — text centered in divider line
-  width="80%"         // string | number — constrain width
-/>
+  spacing="md" // 'none' | 'sm' | 'md' | 'lg' — default: 'md'
+  variant="solid" // 'solid' | 'dashed' | 'dotted' — default: 'solid'
+  thickness="thin" // 'thin' | 'medium' | 'thick' — default: 'thin'
+  color="#e4e4e7" // string — default: theme border color
+  label="or" // string — text centered in divider line
+  width="80%" // string | number — constrain width
+/>;
 ```
 
 ### PageBreak
+
 ```tsx
-import { PageBreak } from '@/components/pdfx/page-break/pdfx-page-break';
-<PageBreak /> // No props. Forces a new page.
+import { PageBreak } from "@/components/pdfx/page-break/pdfx-page-break";
+<PageBreak />; // No props. Forces a new page.
 ```
 
 ### Stack
+
 ```tsx
-import { Stack } from '@/components/pdfx/stack/pdfx-stack';
+import { Stack } from "@/components/pdfx/stack/pdfx-stack";
 <Stack
-  direction="vertical"  // 'vertical' | 'horizontal' — default: 'vertical'
-  gap="md"              // 'none' | 'sm' | 'md' | 'lg' | 'xl' — default: 'md'
-  align="start"         // 'start' | 'center' | 'end' | 'stretch'
-  justify="start"       // 'start' | 'center' | 'end' | 'between' | 'around'
-  wrap                  // boolean — flex-wrap
-  noWrap                // boolean — prevent page split
+  direction="vertical" // 'vertical' | 'horizontal' — default: 'vertical'
+  gap="md" // 'none' | 'sm' | 'md' | 'lg' | 'xl' — default: 'md'
+  align="start" // 'start' | 'center' | 'end' | 'stretch'
+  justify="start" // 'start' | 'center' | 'end' | 'between' | 'around'
+  wrap // boolean — flex-wrap
+  noWrap // boolean — prevent page split
 >
   {children}
-</Stack>
+</Stack>;
 ```
 
 ### Section
+
 ```tsx
 import { Section } from '@/components/pdfx/section/pdfx-section';
 <Section
@@ -195,12 +217,20 @@ import { Section } from '@/components/pdfx/section/pdfx-section';
 ```
 
 ### Table (composable API)
+
 ```tsx
-import { Table, TableHeader, TableBody, TableFooter, TableRow, TableCell } from '@/components/pdfx/table/pdfx-table';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableRow,
+  TableCell,
+} from "@/components/pdfx/table/pdfx-table";
 <Table
-  variant="line"       // 'line' | 'grid' | 'minimal' | 'striped' | 'compact' | 'bordered' | 'primary-header'
-  zebraStripe          // boolean — alternating row background
-  noWrap               // boolean — prevent page split
+  variant="line" // 'line' | 'grid' | 'minimal' | 'striped' | 'compact' | 'bordered' | 'primary-header'
+  zebraStripe // boolean — alternating row background
+  noWrap // boolean — prevent page split
 >
   <TableHeader>
     <TableRow>
@@ -211,48 +241,54 @@ import { Table, TableHeader, TableBody, TableFooter, TableRow, TableCell } from 
   <TableBody>
     <TableRow>
       <TableCell>R1C1</TableCell>
-      <TableCell align="right" width={80}>R1C2</TableCell>
+      <TableCell align="right" width={80}>
+        R1C2
+      </TableCell>
     </TableRow>
   </TableBody>
-</Table>
+</Table>;
 ```
 
 ### DataTable (declarative API)
+
 ```tsx
-import { DataTable } from '@/components/pdfx/data-table/pdfx-data-table';
+import { DataTable } from "@/components/pdfx/data-table/pdfx-data-table";
 <DataTable
   columns={[
-    { key: 'name', header: 'Name', width: 2 },
-    { key: 'amount', header: 'Amount', width: 1, align: 'right' },
+    { key: "name", header: "Name", width: 2 },
+    { key: "amount", header: "Amount", width: 1, align: "right" },
   ]}
-  data={[{ name: 'Item A', amount: '$100' }]}
-  variant="grid"       // 'line' | 'grid' | 'minimal' | 'striped' | 'compact' | 'bordered' | 'primary-header'
-  stripe               // boolean — alternating row background
-  size="default"       // 'default' | 'compact'
-  footer={{ amount: '$100' }}  // partial record for footer row
-  noWrap               // boolean — prevent page split
-/>
+  data={[{ name: "Item A", amount: "$100" }]}
+  variant="grid" // 'line' | 'grid' | 'minimal' | 'striped' | 'compact' | 'bordered' | 'primary-header'
+  stripe // boolean — alternating row background
+  size="default" // 'default' | 'compact'
+  footer={{ amount: "$100" }} // partial record for footer row
+  noWrap // boolean — prevent page split
+/>;
 ```
+
 DataTable render prop: `render` and `renderFooter` must return @react-pdf/renderer elements
 (Text, View, Image) — NOT HTML elements. TypeScript accepts ReactNode but DOM elements crash.
 
 ### PdfList
+
 ```tsx
-import { PdfList } from '@/components/pdfx/list/pdfx-list';
+import { PdfList } from "@/components/pdfx/list/pdfx-list";
 <PdfList
   items={[
-    { text: 'First item' },
-    { text: 'Second item', description: 'Details here' },
-    { text: 'Checked item', checked: true },
-    { text: 'Parent', children: [{ text: 'Nested' }] },
+    { text: "First item" },
+    { text: "Second item", description: "Details here" },
+    { text: "Checked item", checked: true },
+    { text: "Parent", children: [{ text: "Nested" }] },
   ]}
-  variant="bullet"     // 'bullet' | 'numbered' | 'checklist' | 'icon' | 'multi-level' | 'descriptive'
-  gap="sm"             // 'xs' | 'sm' | 'md' — default: 'sm'
-  noWrap               // boolean — prevent page split
-/>
+  variant="bullet" // 'bullet' | 'numbered' | 'checklist' | 'icon' | 'multi-level' | 'descriptive'
+  gap="sm" // 'xs' | 'sm' | 'md' — default: 'sm'
+  noWrap // boolean — prevent page split
+/>;
 ```
 
 ### PdfCard
+
 ```tsx
 import { PdfCard } from '@/components/pdfx/card/pdfx-card';
 <PdfCard
@@ -267,32 +303,31 @@ import { PdfCard } from '@/components/pdfx/card/pdfx-card';
 ```
 
 ### PdfForm (read-only fillable form for PDFs)
+
 ```tsx
-import { PdfForm } from '@/components/pdfx/form/pdfx-form';
+import { PdfForm } from "@/components/pdfx/form/pdfx-form";
 <PdfForm
   title="Application Form"
   subtitle="Please fill in all fields"
   groups={[
     {
-      title: 'Personal Information',
-      layout: 'two-column',     // 'single' | 'two-column' | 'three-column'
-      fields: [
-        { label: 'Full Name', hint: 'As on ID', height: 24 },
-        { label: 'Email' },
-      ],
+      title: "Personal Information",
+      layout: "two-column", // 'single' | 'two-column' | 'three-column'
+      fields: [{ label: "Full Name", hint: "As on ID", height: 24 }, { label: "Email" }],
     },
     {
-      title: 'Notes',
-      fields: [{ label: 'Additional Info', height: 60 }],
+      title: "Notes",
+      fields: [{ label: "Additional Info", height: 60 }],
     },
   ]}
-  variant="underline"           // 'underline' | 'box' | 'outlined' | 'ghost'
-  labelPosition="above"         // 'above' | 'left' — default: 'above'
-  noWrap                        // boolean
-/>
+  variant="underline" // 'underline' | 'box' | 'outlined' | 'ghost'
+  labelPosition="above" // 'above' | 'left' — default: 'above'
+  noWrap // boolean
+/>;
 ```
 
 ### PdfSignatureBlock
+
 ```tsx
 import { PdfSignatureBlock } from '@/components/pdfx/signature/pdfx-signature';
 // Single signature
@@ -314,45 +349,48 @@ import { PdfSignatureBlock } from '@/components/pdfx/signature/pdfx-signature';
 ```
 
 ### PageHeader
+
 ```tsx
-import { PageHeader } from '@/components/pdfx/page-header/pdfx-page-header';
+import { PageHeader } from "@/components/pdfx/page-header/pdfx-page-header";
 <PageHeader
-  title="Document Title"         // string — required
-  subtitle="Subtitle"            // string
-  rightText="INV-001"            // string — right-aligned text
-  rightSubText="Due: Jan 31"     // string — right sub-text
-  variant="simple"               // 'simple' | 'centered' | 'minimal' | 'branded' | 'logo-left' | 'logo-right' | 'two-column'
-  logo={<PdfImage src="..." />}  // ReactNode — for logo-left/logo-right
-  background="#18181b"            // string — background color (branded)
-  titleColor="#fff"               // string — title text color
-  address="123 Main St"          // string — for two-column variant
-  phone="+1-555-0100"            // string
-  email="hello@acme.com"         // string
-  fixed                          // boolean — repeat on every page
-/>
+  title="Document Title" // string — required
+  subtitle="Subtitle" // string
+  rightText="INV-001" // string — right-aligned text
+  rightSubText="Due: Jan 31" // string — right sub-text
+  variant="simple" // 'simple' | 'centered' | 'minimal' | 'branded' | 'logo-left' | 'logo-right' | 'two-column'
+  logo={<PdfImage src="..." />} // ReactNode — for logo-left/logo-right
+  background="#18181b" // string — background color (branded)
+  titleColor="#fff" // string — title text color
+  address="123 Main St" // string — for two-column variant
+  phone="+1-555-0100" // string
+  email="hello@acme.com" // string
+  fixed // boolean — repeat on every page
+/>;
 ```
 
 ### PageFooter
+
 ```tsx
-import { PageFooter } from '@/components/pdfx/page-footer/pdfx-page-footer';
+import { PageFooter } from "@/components/pdfx/page-footer/pdfx-page-footer";
 <PageFooter
-  leftText="© 2024 Acme Corp"   // string
-  centerText="Confidential"      // string
-  rightText="Page 1 of 1"        // string
-  variant="simple"               // 'simple' | 'centered' | 'branded' | 'minimal' | 'three-column' | 'detailed'
-  background="#18181b"            // string
-  textColor="#fff"                // string
-  address="123 Main St"          // string — for three-column/detailed
-  phone="+1-555-0100"            // string
-  email="hello@acme.com"         // string
-  website="https://acme.com"     // string
-  fixed                          // boolean — repeat on every page
-  sticky                         // boolean — absolute position at page bottom
-  pagePadding={40}               // number — offset for sticky positioning
-/>
+  leftText="© 2024 Acme Corp" // string
+  centerText="Confidential" // string
+  rightText="Page 1 of 1" // string
+  variant="simple" // 'simple' | 'centered' | 'branded' | 'minimal' | 'three-column' | 'detailed'
+  background="#18181b" // string
+  textColor="#fff" // string
+  address="123 Main St" // string — for three-column/detailed
+  phone="+1-555-0100" // string
+  email="hello@acme.com" // string
+  website="https://acme.com" // string
+  fixed // boolean — repeat on every page
+  sticky // boolean — absolute position at page bottom
+  pagePadding={40} // number — offset for sticky positioning
+/>;
 ```
 
 ### Badge
+
 ```tsx
 import { Badge } from '@/components/pdfx/badge/pdfx-badge';
 // Use label prop OR children (string only — not a React node)
@@ -368,134 +406,143 @@ import { Badge } from '@/components/pdfx/badge/pdfx-badge';
 ```
 
 ### KeyValue
+
 ```tsx
-import { KeyValue } from '@/components/pdfx/key-value/pdfx-key-value';
+import { KeyValue } from "@/components/pdfx/key-value/pdfx-key-value";
 <KeyValue
   items={[
-    { key: 'Invoice #', value: 'INV-001' },
-    { key: 'Due Date', value: 'Jan 31, 2025', valueColor: 'destructive' },
+    { key: "Invoice #", value: "INV-001" },
+    { key: "Due Date", value: "Jan 31, 2025", valueColor: "destructive" },
   ]}
-  direction="horizontal"  // 'horizontal' | 'vertical' — default: 'horizontal'
-  divided                  // boolean — dividers between rows
-  size="md"                // 'sm' | 'md' | 'lg' — default: 'md'
-  labelFlex={1}            // number — flex ratio for label column
-  labelColor="#666"        // string
-  valueColor="#000"        // string
-  boldValue                // boolean — bold all values
-  noWrap                   // boolean
-/>
+  direction="horizontal" // 'horizontal' | 'vertical' — default: 'horizontal'
+  divided // boolean — dividers between rows
+  size="md" // 'sm' | 'md' | 'lg' — default: 'md'
+  labelFlex={1} // number — flex ratio for label column
+  labelColor="#666" // string
+  valueColor="#000" // string
+  boldValue // boolean — bold all values
+  noWrap // boolean
+/>;
 ```
 
 ### KeepTogether
+
 ```tsx
-import { KeepTogether } from '@/components/pdfx/keep-together/pdfx-keep-together';
+import { KeepTogether } from "@/components/pdfx/keep-together/pdfx-keep-together";
 // Prevents page breaks inside its children
 <KeepTogether>
   <Heading level={3}>Section that must not split</Heading>
   <Table variant="grid">...</Table>
-</KeepTogether>
+</KeepTogether>;
 ```
 
 ### PdfImage
+
 ```tsx
-import { PdfImage } from '@/components/pdfx/pdf-image/pdfx-pdf-image';
+import { PdfImage } from "@/components/pdfx/pdf-image/pdfx-pdf-image";
 <PdfImage
-  src="https://example.com/image.png"  // string | { uri, method?, headers?, body? } — required
-  variant="default"     // 'default' | 'full-width' | 'thumbnail' | 'avatar' | 'cover' | 'bordered' | 'rounded'
-  width={200}           // number | string in pt
-  height={150}          // number | string — auto from aspect ratio if omitted
-  fit="contain"         // 'cover' | 'contain' | 'fill' | 'none' — default varies by variant
-  position="50% 50%"   // string — object-position
-  caption="Figure 1"   // string — centered below image
-  aspectRatio={16/9}    // number — compute height from width
-  borderRadius={4}      // number
-  noWrap                // boolean — default: true
-/>
+  src="https://example.com/image.png" // string | { uri, method?, headers?, body? } — required
+  variant="default" // 'default' | 'full-width' | 'thumbnail' | 'avatar' | 'cover' | 'bordered' | 'rounded'
+  width={200} // number | string in pt
+  height={150} // number | string — auto from aspect ratio if omitted
+  fit="contain" // 'cover' | 'contain' | 'fill' | 'none' — default varies by variant
+  position="50% 50%" // string — object-position
+  caption="Figure 1" // string — centered below image
+  aspectRatio={16 / 9} // number — compute height from width
+  borderRadius={4} // number
+  noWrap // boolean — default: true
+/>;
 ```
 
 ### PdfGraph
+
 ```tsx
-import { PdfGraph } from '@/components/pdfx/graph/pdfx-graph';
+import { PdfGraph } from "@/components/pdfx/graph/pdfx-graph";
 <PdfGraph
-  variant="bar"         // 'bar' | 'horizontal-bar' | 'line' | 'area' | 'pie' | 'donut'
+  variant="bar" // 'bar' | 'horizontal-bar' | 'line' | 'area' | 'pie' | 'donut'
   data={[
-    { label: 'Q1', value: 4200 },
-    { label: 'Q2', value: 6100 },
+    { label: "Q1", value: 4200 },
+    { label: "Q2", value: 6100 },
   ]}
-  title="Revenue"       // string
-  subtitle="FY2024"     // string
-  xLabel="Quarter"      // string — x-axis label
-  yLabel="Revenue ($)"  // string — y-axis label
-  width={420}           // number — default: 420 (or auto with fullWidth)
-  height={260}          // number — default: 260
-  fullWidth             // boolean — auto-calculates width from page margins
+  title="Revenue" // string
+  subtitle="FY2024" // string
+  xLabel="Quarter" // string — x-axis label
+  yLabel="Revenue ($)" // string — y-axis label
+  width={420} // number — default: 420 (or auto with fullWidth)
+  height={260} // number — default: 260
+  fullWidth // boolean — auto-calculates width from page margins
   containerPadding={12} // number — for fullWidth: outer container padding
-  wrapperPadding={12}   // number — for fullWidth: wrapper padding
-  colors={['#18181b', '#71717a']}  // string[] — color palette
-  showValues            // boolean — show numeric labels on bars/points
-  showGrid              // boolean — default: true
-  legend="bottom"       // 'bottom' | 'right' | 'none' — default: 'bottom'
-  centerLabel="$1.2M"  // string — for donut: text in center hole
-  showDots              // boolean — default: true (line/area only)
-  smooth                // boolean — bezier curves (line/area only)
-  yTicks={5}            // number — Y-axis tick count
-  noWrap                // boolean — default: true
-/>
+  wrapperPadding={12} // number — for fullWidth: wrapper padding
+  colors={["#18181b", "#71717a"]} // string[] — color palette
+  showValues // boolean — show numeric labels on bars/points
+  showGrid // boolean — default: true
+  legend="bottom" // 'bottom' | 'right' | 'none' — default: 'bottom'
+  centerLabel="$1.2M" // string — for donut: text in center hole
+  showDots // boolean — default: true (line/area only)
+  smooth // boolean — bezier curves (line/area only)
+  yTicks={5} // number — Y-axis tick count
+  noWrap // boolean — default: true
+/>;
 ```
+
 Multi-series data: `data={[{ name: 'Series A', data: [...] }, { name: 'Series B', data: [...] }]}`
 Graph width utilities: `getGraphWidth(theme, opts?)`, `GRAPH_SAFE_WIDTHS`, `A4_WIDTH` are exported.
 
 ### PdfPageNumber
+
 ```tsx
-import { PdfPageNumber } from '@/components/pdfx/page-number/pdfx-page-number';
+import { PdfPageNumber } from "@/components/pdfx/page-number/pdfx-page-number";
 <PdfPageNumber
-  format="Page {page} of {total}"  // string — use {page} and {total} placeholders
-  align="center"       // 'left' | 'center' | 'right' — default: 'center'
-  size="sm"            // 'xs' | 'sm' | 'md' — default: 'sm'
-  fixed                // boolean — repeats on every page
-  muted                // boolean — default: true, uses mutedForeground color
-/>
+  format="Page {page} of {total}" // string — use {page} and {total} placeholders
+  align="center" // 'left' | 'center' | 'right' — default: 'center'
+  size="sm" // 'xs' | 'sm' | 'md' — default: 'sm'
+  fixed // boolean — repeats on every page
+  muted // boolean — default: true, uses mutedForeground color
+/>;
 ```
 
 ### PdfWatermark
+
 ```tsx
-import { PdfWatermark } from '@/components/pdfx/watermark/pdfx-watermark';
+import { PdfWatermark } from "@/components/pdfx/watermark/pdfx-watermark";
 <PdfWatermark
-  text="CONFIDENTIAL"   // string — required
-  opacity={0.15}        // number 0–1 — default: 0.15
-  fontSize={60}         // number — default: 60
+  text="CONFIDENTIAL" // string — required
+  opacity={0.15} // number 0–1 — default: 0.15
+  fontSize={60} // number — default: 60
   color="mutedForeground" // string — default: 'mutedForeground' (theme key or hex)
-  angle={-45}           // number in degrees — default: -45
-  position="center"     // 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
-  fixed                 // boolean — default: true (repeats on every page)
-/>
+  angle={-45} // number in degrees — default: -45
+  position="center" // 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+  fixed // boolean — default: true (repeats on every page)
+/>;
 ```
 
 ### PdfQRCode
+
 ```tsx
-import { PdfQRCode } from '@/components/pdfx/qrcode/pdfx-qrcode';
+import { PdfQRCode } from "@/components/pdfx/qrcode/pdfx-qrcode";
 <PdfQRCode
-  value="https://example.com"  // string — required
-  size={100}                    // number — default: 100
-  color="#000000"               // string — default: '#000000'
-  backgroundColor="#ffffff"     // string — default: '#ffffff'
-  errorLevel="M"               // 'L' | 'M' | 'Q' | 'H' — default: 'M'
-  margin={2}                    // number — quiet zone modules — default: 2
-  caption="Scan me"             // string — text below QR code
-/>
+  value="https://example.com" // string — required
+  size={100} // number — default: 100
+  color="#000000" // string — default: '#000000'
+  backgroundColor="#ffffff" // string — default: '#ffffff'
+  errorLevel="M" // 'L' | 'M' | 'Q' | 'H' — default: 'M'
+  margin={2} // number — quiet zone modules — default: 2
+  caption="Scan me" // string — text below QR code
+/>;
 ```
 
 ### PdfAlert
+
 ```tsx
-import { PdfAlert } from '@/components/pdfx/alert/pdfx-alert';
+import { PdfAlert } from "@/components/pdfx/alert/pdfx-alert";
 <PdfAlert
-  variant="info"       // 'info' | 'success' | 'warning' | 'error' — default: 'info'
-  title="Note"         // string — optional bold title
-  showIcon             // boolean — default: true
-  showBorder           // boolean — default: true (left border)
+  variant="info" // 'info' | 'success' | 'warning' | 'error' — default: 'info'
+  title="Note" // string — optional bold title
+  showIcon // boolean — default: true
+  showBorder // boolean — default: true (left border)
 >
   This is an informational note.
-</PdfAlert>
+</PdfAlert>;
 ```
 
 ---
@@ -503,11 +550,13 @@ import { PdfAlert } from '@/components/pdfx/alert/pdfx-alert';
 ## Pre-built Blocks
 
 Blocks are complete document templates. Add them with:
+
 ```bash
 npx pdfx-cli@latest block add <block-name>
 ```
 
 ### Invoice Blocks
+
 - invoice-classic — Professional with logo-left header and zebra-striped grid table
 - invoice-minimal — Clean stripped-down, typography-focused layout
 - invoice-modern — Full-width banner header, horizontal meta strip
@@ -516,6 +565,7 @@ npx pdfx-cli@latest block add <block-name>
 - invoice-consultant — Hourly rate breakdown, project summary
 
 ### Report Blocks
+
 - report-financial — KPI cards, trend chart, delivery table
 - report-marketing — Channel performance, acquisition trendline
 - report-operations — SLA health, throughput trends, risk tracking
@@ -534,31 +584,36 @@ Every PDFx component reads from this file — change a token once, all component
 
 ```typescript
 export const theme: PdfxTheme = {
-  name: 'my-brand',
+  name: "my-brand",
   colors: {
-    primary: '#2563eb',
-    accent: '#7c3aed',
-    foreground: '#1a1a1a',
-    background: '#ffffff',
-    muted: '#f4f4f5',
-    mutedForeground: '#71717a',
-    primaryForeground: '#ffffff',
-    border: '#e4e4e7',
-    destructive: '#dc2626',
-    success: '#16a34a',
-    warning: '#d97706',
-    info: '#0ea5e9',
+    primary: "#2563eb",
+    accent: "#7c3aed",
+    foreground: "#1a1a1a",
+    background: "#ffffff",
+    muted: "#f4f4f5",
+    mutedForeground: "#71717a",
+    primaryForeground: "#ffffff",
+    border: "#e4e4e7",
+    destructive: "#dc2626",
+    success: "#16a34a",
+    warning: "#d97706",
+    info: "#0ea5e9",
   },
   typography: {
-    heading: { fontFamily: 'Helvetica-Bold', fontWeight: 700, lineHeight: 1.2,
-      fontSize: { h1: 36, h2: 28, h3: 22, h4: 18, h5: 15, h6: 12 } },
-    body: { fontFamily: 'Helvetica', fontSize: 11, lineHeight: 1.5 },
+    heading: {
+      fontFamily: "Helvetica-Bold",
+      fontWeight: 700,
+      lineHeight: 1.2,
+      fontSize: { h1: 36, h2: 28, h3: 22, h4: 18, h5: 15, h6: 12 },
+    },
+    body: { fontFamily: "Helvetica", fontSize: 11, lineHeight: 1.5 },
   },
   // primitives, spacing, page — all required (scaffolded by init)
 };
 ```
 
 ### Theme presets
+
 ```bash
 npx pdfx-cli@latest theme init              # scaffold blank theme
 npx pdfx-cli@latest theme switch modern     # switch preset: professional | modern | minimal
@@ -619,24 +674,31 @@ When importing, always use the exact name shown in each component section above.
 ## Common patterns
 
 ### Full invoice from scratch
+
 ```tsx
-import { Document, Page } from '@react-pdf/renderer';
-import { Heading } from '@/components/pdfx/heading/pdfx-heading';
-import { KeyValue } from '@/components/pdfx/key-value/pdfx-key-value';
-import { Table, TableHeader, TableBody, TableRow, TableCell } from '@/components/pdfx/table/pdfx-table';
-import { Divider } from '@/components/pdfx/divider/pdfx-divider';
-import { Badge } from '@/components/pdfx/badge/pdfx-badge';
-import { PageFooter } from '@/components/pdfx/page-footer/pdfx-page-footer';
+import { Document, Page } from "@react-pdf/renderer";
+import { Heading } from "@/components/pdfx/heading/pdfx-heading";
+import { KeyValue } from "@/components/pdfx/key-value/pdfx-key-value";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/pdfx/table/pdfx-table";
+import { Divider } from "@/components/pdfx/divider/pdfx-divider";
+import { Badge } from "@/components/pdfx/badge/pdfx-badge";
+import { PageFooter } from "@/components/pdfx/page-footer/pdfx-page-footer";
 
 export function InvoiceDoc() {
   return (
     <Document>
-      <Page size="A4" style={{ padding: 48, fontFamily: 'Helvetica' }}>
+      <Page size="A4" style={{ padding: 48, fontFamily: "Helvetica" }}>
         <Heading level={1}>Invoice #INV-001</Heading>
         <KeyValue
           items={[
-            { key: 'Date', value: 'Jan 1, 2025' },
-            { key: 'Due', value: 'Jan 31, 2025' },
+            { key: "Date", value: "Jan 1, 2025" },
+            { key: "Due", value: "Jan 31, 2025" },
           ]}
           direction="horizontal"
         />
@@ -644,9 +706,15 @@ export function InvoiceDoc() {
         <Table variant="grid" zebraStripe>
           <TableHeader>
             <TableRow>
-              <TableCell header width="60%">Description</TableCell>
-              <TableCell header align="center">Qty</TableCell>
-              <TableCell header align="right">Total</TableCell>
+              <TableCell header width="60%">
+                Description
+              </TableCell>
+              <TableCell header align="center">
+                Qty
+              </TableCell>
+              <TableCell header align="right">
+                Total
+              </TableCell>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -666,6 +734,7 @@ export function InvoiceDoc() {
 ```
 
 ### Preventing page splits
+
 ```tsx
 // Wrap anything that must stay together across page boundaries
 <KeepTogether>
@@ -675,6 +744,7 @@ export function InvoiceDoc() {
 ```
 
 ### Server-side generation (Next.js)
+
 ```typescript
 // app/api/invoice/route.ts
 import { renderToBuffer } from '@react-pdf/renderer';
@@ -736,14 +806,16 @@ export async function GET(req: Request) {
 ## MCP Server (for AI editors)
 
 The PDFx MCP server gives AI editors live access to the entire registry:
+
 ```bash
 npx pdfx-cli@latest mcp init   # interactive setup for your editor
 ```
+
 Supported: Claude Code, Cursor, VS Code, Windsurf, Qoder, opencode, Antigravity
 
 Tools: list_components, get_component, list_blocks, get_block, search_registry,
-       get_theme, get_installation, get_add_command, get_audit_checklist
+get_theme, get_installation, get_add_command, get_audit_checklist
 
 ---
-# End of PDFx AI Context Guide
 
+# End of PDFx AI Context Guide

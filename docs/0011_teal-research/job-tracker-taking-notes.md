@@ -83,14 +83,10 @@ Upon clicking the Notes icon, a dedicated notes panel or window will appear to t
 
 Utilize the Notes section to document key information related to the selected job.
 
--   Record the dates of your interactions with hiring managers, employees, or recruiters.
-    
--   Log the dates of any emails you receive regarding potential interviews.
-    
--   Include specific notes or questions you may want to address with a recruiter.
-    
--   Chronicle your impressions of how the interview went and jot down any questions you have for future interviews.
-    
+- Record the dates of your interactions with hiring managers, employees, or recruiters.
+- Log the dates of any emails you receive regarding potential interviews.
+- Include specific notes or questions you may want to address with a recruiter.
+- Chronicle your impressions of how the interview went and jot down any questions you have for future interviews.
 
 ---
 
@@ -108,12 +104,9 @@ You can categorize your notes under different headings to make it easier to find
 
 You can further emphasize content within your notes by bolding, italicizing, or underlining text – you can even do a mix of two or all three! Highlight the details you'd like to emphasize and select from the following icons:
 
--   "B" - Bold
-    
--   Slanted "I" - Italicize
-    
--   "U" with a line underneath it - Underline
-    
+- "B" - Bold
+- Slanted "I" - Italicize
+- "U" with a line underneath it - Underline
 
 [![](https://downloads.intercomcdn.com/i/o/x87je8q1/1246851777/0d2334cc9b937464f79f6dae0350/2024-11-10+18_39_01.gif?expires=1778347800&signature=add758c2a615fdd43821a69bffbc7f4104ab9e6751228794a32c799b9a80d904&req=dSIjEMF7nIZYXvMW1HO4zUv7Bkptr9o6GWIo7HR6W2qa6ObcGDHctip8xjaN%0AojDn4Pzizq2VZ9%2FMMbs%3D%0A)](https://downloads.intercomcdn.com/i/o/x87je8q1/1246851777/0d2334cc9b937464f79f6dae0350/2024-11-10+18_39_01.gif?expires=1778347800&signature=add758c2a615fdd43821a69bffbc7f4104ab9e6751228794a32c799b9a80d904&req=dSIjEMF7nIZYXvMW1HO4zUv7Bkptr9o6GWIo7HR6W2qa6ObcGDHctip8xjaN%0AojDn4Pzizq2VZ9%2FMMbs%3D%0A)
 
@@ -123,10 +116,8 @@ Looking to separate some chunks of text into lists to make your notes easier to 
 
 Then, highlight all of the content you'd like to turn into a list and click the associated icon:
 
--   List with bullets for a bulleted list
-    
--   List with numbers for a numbered list
-    
+- List with bullets for a bulleted list
+- List with numbers for a numbered list
 
 [![](https://downloads.intercomcdn.com/i/o/x87je8q1/1246854815/fe7ea116045282b4fa24a38e503c/2024-11-10+18_46_40.gif?expires=1778347800&signature=20a7416b9327dd032e2b2f747848689ed1d3a7ab850696b766da7db1c1160fe7&req=dSIjEMF7mYleXPMW1HO4zcqUoPt0hG0FohVyPHl1N31x3ad9tIHUhdeNW3XF%0AsndyN30KhfrdPc4OO%2Fg%3D%0A)](https://downloads.intercomcdn.com/i/o/x87je8q1/1246854815/fe7ea116045282b4fa24a38e503c/2024-11-10+18_46_40.gif?expires=1778347800&signature=20a7416b9327dd032e2b2f747848689ed1d3a7ab850696b766da7db1c1160fe7&req=dSIjEMF7mYleXPMW1HO4zcqUoPt0hG0FohVyPHl1N31x3ad9tIHUhdeNW3XF%0AsndyN30KhfrdPc4OO%2Fg%3D%0A)
 
@@ -168,7 +159,8 @@ Watch our [YouTube tutorials](https://www.youtube.com/@teal_hq)!
 
 ---
 
-#   
+#
+
 Have feedback or further questions? Something missing here that we can do a better job covering?
 
 Please reach out to [membersupport@tealhq.com](mailto:membersupport@tealhq.com)!

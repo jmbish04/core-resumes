@@ -38,24 +38,15 @@ _Stop losing track of where you applied, when to follow up, and which resume you
 
 ## In This Article
 
--   [💡 Why Tracking Matters](#h_f749f56f63)
-    
--   [📋 The Job Tracker Overview](#h_41bbf435f9)
-    
--   [💾 Step 1: Save Jobs as You Find Them](#h_d641d3f028)
-    
--   [📊 Step 2: Understand the Stages](#h_787280976d)
-    
--   [📅 Step 3: Work Your Tracker Daily](#h_7bf85daac2)
-    
--   [🔧 Using the Built-In Tools](#h_0a26bcccfe)
-    
--   [💪 Pro Tips for High-Volume Job Searching](#h_e8aed3665b)
-    
--   [📝 Quick Recap](#h_d28acfe9ab)
-    
--   [📚 Related Articles](#h_86d501a827)
-    
+- [💡 Why Tracking Matters](#h_f749f56f63)
+- [📋 The Job Tracker Overview](#h_41bbf435f9)
+- [💾 Step 1: Save Jobs as You Find Them](#h_d641d3f028)
+- [📊 Step 2: Understand the Stages](#h_787280976d)
+- [📅 Step 3: Work Your Tracker Daily](#h_7bf85daac2)
+- [🔧 Using the Built-In Tools](#h_0a26bcccfe)
+- [💪 Pro Tips for High-Volume Job Searching](#h_e8aed3665b)
+- [📝 Quick Recap](#h_d28acfe9ab)
+- [📚 Related Articles](#h_86d501a827)
 
 ---
 
@@ -84,18 +75,12 @@ Teal's Job Tracker is a spreadsheet-style dashboard built specifically for job s
 **What you can track:**  
 ​
 
--   Job title, company, location, salary range
-    
--   Application status (Bookmarked → Applied → Interviewing → Negotiating → Accepted)
-    
--   Date saved, date applied, follow-up dates
-    
--   Your excitement level (helps with prioritization)
-    
--   Notes, contacts, and the resume you used
-    
+- Job title, company, location, salary range
+- Application status (Bookmarked → Applied → Interviewing → Negotiating → Accepted)
+- Date saved, date applied, follow-up dates
+- Your excitement level (helps with prioritization)
+- Notes, contacts, and the resume you used
 
-  
 ​**The key insight:** Your Job Tracker becomes your single source of truth. Everything about your job search lives here, not scattered across browser tabs, email, and sticky notes.
 
 ---
@@ -166,49 +151,32 @@ A tracker only works if you use it. Build these habits:
 **Morning (5 minutes):**  
 ​
 
--   Check for any follow-up dates that hit today
-    
--   Review your "Applied" jobs: anyone you should nudge?
-    
--   Scan new jobs in your saved searches
-    
+- Check for any follow-up dates that hit today
+- Review your "Applied" jobs: anyone you should nudge?
+- Scan new jobs in your saved searches
 
-  
 ​**After applying:**  
 ​
 
--   Update the status to "Applied"
-    
--   Set your follow-up date (typically 1 week out)
-    
--   Attach the resume version you used
-    
+- Update the status to "Applied"
+- Set your follow-up date (typically 1 week out)
+- Attach the resume version you used
 
-  
 ​**After interviews:**  
 ​
 
--   Add notes while the conversation is fresh
-    
--   Log interviewer names in Contacts
-    
--   Send thank-you emails (use the templates)
-    
--   Update your follow-up date
-    
+- Add notes while the conversation is fresh
+- Log interviewer names in Contacts
+- Send thank-you emails (use the templates)
+- Update your follow-up date
 
-  
 ​**Weekly review (15 minutes):**  
 ​
 
--   Archive any stale jobs (no response after 3+ weeks)
-    
--   Review your pipeline: enough jobs in each stage?
-    
--   Check for patterns: what's working, what isn't?
-    
+- Archive any stale jobs (no response after 3+ weeks)
+- Review your pipeline: enough jobs in each stage?
+- Check for patterns: what's working, what isn't?
 
-  
 ​
 
 ---
@@ -221,14 +189,10 @@ Your Job Tracker has several tools that make organization easier. Here's when to
 
 Every job has its own notepad. Use it for:
 
--   Why you're interested in this role
-    
--   Questions you want to ask in interviews
-    
--   Impressions after each interview
-    
--   Details mentioned that you want to reference later
-    
+- Why you're interested in this role
+- Questions you want to ask in interviews
+- Impressions after each interview
+- Details mentioned that you want to reference later
 
 Notes stay with the job through every stage. When you're prepping for round 3 and need to remember what the hiring manager said in round 1, you'll be glad you wrote it down.
 
@@ -236,12 +200,9 @@ Notes stay with the job through every stage. When you're prepping for round 3 an
 
 Each stage shows recommended actions based on where you are in the process. Think of it as a coach nudging you toward best practices:
 
--   "Rate your excitement level to prioritize"
-    
--   "Research the company's values"
-    
--   "Send a follow-up email"
-    
+- "Rate your excitement level to prioritize"
+- "Research the company's values"
+- "Send a follow-up email"
 
 Check the Guidance panel when you're not sure what to do next.
 
@@ -249,12 +210,9 @@ Check the Guidance panel when you're not sure what to do next.
 
 Track the people involved with each job:
 
--   Recruiter who reached out
-    
--   Hiring manager you interviewed with
-    
--   Connections who work at the company
-    
+- Recruiter who reached out
+- Hiring manager you interviewed with
+- Connections who work at the company
 
 Having this in one place makes follow-ups easier and helps you personalize your communication.
 
@@ -295,29 +253,20 @@ If you have 50+ jobs sitting in "Bookmarked" for weeks, they're not really prosp
 
 ## Quick Recap
 
--   **Save every job** you're considering (use the Chrome Extension for speed)
-    
--   **Track by stage** from Bookmarked → Applied → Interviewing → Negotiating → Accepted
-    
--   **Set follow-up dates** and actually follow up
-    
--   **Take notes** after every interview while it's fresh
-    
--   **Review weekly** to keep your pipeline healthy
-    
--   **Archive stale jobs** so your active list stays focused
-    
+- **Save every job** you're considering (use the Chrome Extension for speed)
+- **Track by stage** from Bookmarked → Applied → Interviewing → Negotiating → Accepted
+- **Set follow-up dates** and actually follow up
+- **Take notes** after every interview while it's fresh
+- **Review weekly** to keep your pipeline healthy
+- **Archive stale jobs** so your active list stays focused
 
 ---
 
 ## Related Articles
 
--   [How to Save Jobs From Any Website](#) (Chrome Extension)
-    
--   [How to Tailor Your Resume for a Specific Job](#)
-    
--   [How to Prepare for an Interview Using Teal](#)
-    
+- [How to Save Jobs From Any Website](#) (Chrome Extension)
+- [How to Tailor Your Resume for a Specific Job](#)
+- [How to Prepare for an Interview Using Teal](#)
 
 ---
 

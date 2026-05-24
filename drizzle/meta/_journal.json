@@ -218,6 +218,20 @@
       "when": 1779088941310,
       "tag": "0030_fantastic_morbius",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "6",
+      "when": 1779616265783,
+      "tag": "0031_steady_joshua_kane",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "6",
+      "when": 1779617805786,
+      "tag": "0032_red_solo",
+      "breakpoints": true
     }
   ]
 }

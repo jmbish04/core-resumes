@@ -94,10 +94,8 @@ export const DraftDocumentToolUI = makeAssistantToolUI({
       <div className="flex-1 min-w-0">
         <div className="text-xs font-medium text-amber-400 mb-1">Drafting Document</div>
         <p className="text-xs text-muted-foreground">
-          {(args as { docType?: string })?.docType === "cover_letter"
-            ? "Cover Letter"
-            : "Resume"}{" "}
-          — {status?.type === "running" ? "generating…" : "queued"}
+          {(args as { docType?: string })?.docType === "cover_letter" ? "Cover Letter" : "Resume"} —{" "}
+          {status?.type === "running" ? "generating…" : "queued"}
         </p>
         {!!result && (
           <div className="mt-2 p-2 rounded bg-muted/30 text-xs leading-relaxed">
@@ -140,9 +138,7 @@ export const SearchCareerMemoryToolUI = makeAssistantToolUI({
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-xs font-medium text-violet-400 mb-1">Career Memory Search</div>
-          <p className="text-xs text-muted-foreground">
-            {typedArgs?.query ?? "Searching memory…"}
-          </p>
+          <p className="text-xs text-muted-foreground">{typedArgs?.query ?? "Searching memory…"}</p>
           {typedArgs?.category && (
             <span className="inline-flex items-center gap-1 mt-1 text-[10px] px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-400">
               <TagIcon className="size-2.5" />
@@ -159,16 +155,16 @@ export const SearchCareerMemoryToolUI = makeAssistantToolUI({
                   Found {typedResult.count ?? 0} memories
                   {(typedResult.memories?.length ?? 0) > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1.5">
-                      {[
-                        ...new Set(typedResult.memories?.map((m) => m.category) ?? []),
-                      ].map((cat) => (
-                        <span
-                          key={cat}
-                          className="text-[10px] px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground"
-                        >
-                          {cat}
-                        </span>
-                      ))}
+                      {[...new Set(typedResult.memories?.map((m) => m.category) ?? [])].map(
+                        (cat) => (
+                          <span
+                            key={cat}
+                            className="text-[10px] px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground"
+                          >
+                            {cat}
+                          </span>
+                        ),
+                      )}
                     </div>
                   )}
                 </>
@@ -204,9 +200,7 @@ export const GenerateMockInterviewToolUI = makeAssistantToolUI({
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-xs font-medium text-emerald-400 mb-1">
-            Generating Mock Interview
-          </div>
+          <div className="text-xs font-medium text-emerald-400 mb-1">Generating Mock Interview</div>
           <p className="text-xs text-muted-foreground">
             {status?.type === "running"
               ? `Creating interview questions${typedArgs?.focus ? ` (focus: ${typedArgs.focus})` : ""}…`

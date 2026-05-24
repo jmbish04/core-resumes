@@ -116,7 +116,7 @@
     "oxlint": "^1.63.0",
     "playwright": "^1.59.1",
     "typescript": "^5.9.3",
-    "wrangler": "^4.90.0"
+    "wrangler": "^4.94.0"
   },
   "pnpm": {
     "overrides": {

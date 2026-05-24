@@ -1,5 +1,5 @@
 import { getModelRegistry } from "../models";
-import { getProvider } from "../providers";
+import { AiProvider } from "../providers";
 
 export async function embed(
   env: Env,
@@ -8,7 +8,7 @@ export async function embed(
     cacheTtl?: number;
   },
 ): Promise<number[][]> {
-  const provider = await getProvider(env);
+  const provider = new AiProvider(env);
   const model = getModelRegistry(env).embed;
   const result = await provider.invokeModel(
     model,

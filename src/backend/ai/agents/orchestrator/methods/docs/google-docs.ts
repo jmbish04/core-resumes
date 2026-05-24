@@ -8,7 +8,7 @@
 
 import { GoogleDocsClient } from "@/ai/tools/google/docs";
 import { GoogleDriveClient } from "@/ai/tools/google/drive";
-import { extractBrandColors, DEFAULT_BRAND_COLORS } from "@/ai/tools/google/templates/brand-colors";
+import { extractBrandColors } from "@/ai/tools/google/templates/brand-colors";
 import {
   renderDocumentTemplate,
   renderBrandedDocumentTemplate,

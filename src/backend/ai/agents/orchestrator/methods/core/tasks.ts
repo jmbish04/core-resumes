@@ -1,16 +1,19 @@
 import { eq } from "drizzle-orm";
 
-import { draft, analyzeRole, generateInterview } from "@/ai/tasks";
-import { analyzeCompany } from "@/ai/tasks/analyze/company";
+import type { OrchestratorAgent } from "@/backend/ai/agents/orchestrator";
+import type {
+  OrchestratorTask,
+  OrchestratorTaskStatus,
+} from "@/backend/ai/agents/orchestrator/types";
+import type { ROLE_BULLET_TYPES } from "@/db/schemas/applications/role-bullets";
+
+import { analyzeRole, generateInterview } from "@/ai/tasks";
 import { classifyEmailStatus } from "@/ai/tasks";
+import { analyzeCompany } from "@/ai/tasks/analyze/company";
 import { enforceTokenLimit } from "@/ai/utils/token-estimator";
+import { RoleInsightsService } from "@/backend/services/role-insights";
 import { getDb } from "@/db";
 import { emails, roleBullets, roles } from "@/db/schema";
-import type { ROLE_BULLET_TYPES } from "@/db/schemas/role-bullets";
-import { RoleInsightsService } from "@/backend/services/role-insights";
-
-import type { OrchestratorAgent } from "@/backend/ai/agents/orchestrator";
-import type { OrchestratorTask, OrchestratorTaskStatus } from "@/backend/ai/agents/orchestrator/types";
 
 function readString(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
@@ -103,19 +106,29 @@ export async function handleProcessPendingTasks(agent: OrchestratorAgent, env: E
       const { Logger } = await import("@/backend/lib/logger");
       const logger = new Logger(env);
 
-      await logger.info(`[OrchestratorAgent][${agent.name}] Starting task`, { type: task.type, id: task.id });
+      await logger.info(`[OrchestratorAgent][${agent.name}] Starting task`, {
+        type: task.type,
+        id: task.id,
+      });
       agent.updateTask(task.id, { status: "running", error: undefined });
       agent.broadcastProgress("running", task);
 
       try {
         await processTask(agent, env, task);
-        await logger.info(`[OrchestratorAgent][${agent.name}] Successfully completed task`, { type: task.type, id: task.id });
+        await logger.info(`[OrchestratorAgent][${agent.name}] Successfully completed task`, {
+          type: task.type,
+          id: task.id,
+        });
         agent.updateTask(task.id, { status: "complete" });
         agent.broadcastProgress("complete", task);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unknown task failure";
-        await logger.error(`[OrchestratorAgent][${agent.name}] TASK FAILED`, { type: task.type, id: task.id, error: message });
-        
+        await logger.error(`[OrchestratorAgent][${agent.name}] TASK FAILED`, {
+          type: task.type,
+          id: task.id,
+          error: message,
+        });
+
         agent.updateTask(task.id, { status: "failed", error: message });
         agent.broadcastProgress("failed", { ...task, error: message });
 
@@ -164,7 +177,9 @@ async function persistTaskError(
   } catch (persistErr) {
     const { Logger } = await import("@/backend/lib/logger");
     const logger = new Logger(env);
-    await logger.error("Failed to persist processing error to role (non-fatal)", { error: String(persistErr) });
+    await logger.error("Failed to persist processing error to role (non-fatal)", {
+      error: String(persistErr),
+    });
   }
 }
 
@@ -174,7 +189,7 @@ async function evaluateRoleStatus(agent: OrchestratorAgent, env: Env) {
 
   const allTasks = agent.state.pendingTasks;
   const anyFailed = allTasks.some((t) => t.status === "failed");
-  const allComplete = allTasks.length > 0 && allTasks.every((t) => t.status === "done");
+  const allComplete = allTasks.length > 0 && allTasks.every((t) => t.status === "complete");
 
   try {
     const { RoleStatusService } = await import("@/backend/services/role-status-service");
@@ -203,10 +218,12 @@ async function evaluateRoleStatus(agent: OrchestratorAgent, env: Env) {
           await db.update(roles).set({ metadata: meta }).where(eq(roles.id, roleId));
         }
 
-        agent.broadcast(JSON.stringify({
-          type: "role_status_update",
-          payload: { roleId, status: "preparing", previousStatus: role.status },
-        }));
+        agent.broadcast(
+          JSON.stringify({
+            type: "role_status_update",
+            payload: { roleId, status: "preparing", previousStatus: role.status },
+          }),
+        );
       }
     }
   } catch (err) {
@@ -258,11 +275,15 @@ async function processTask(agent: OrchestratorAgent, env: Env, task: Orchestrato
             const { BrowserRendering } = await import("@/backend/ai/tools/browser-rendering");
             const browser = new BrowserRendering(env);
             const cfUrl = await browser.uploadImageFromUrl(extracted.companyLogoUrl);
-            
+
             // Import companies schema
             const { companies } = await import("@/backend/db/schema");
-            const [company] = await db.select().from(companies).where(eq(companies.id, existing.companyId)).limit(1);
-            
+            const [company] = await db
+              .select()
+              .from(companies)
+              .where(eq(companies.id, existing.companyId))
+              .limit(1);
+
             if (company) {
               await db
                 .update(companies)
@@ -381,14 +402,17 @@ async function processTask(agent: OrchestratorAgent, env: Env, task: Orchestrato
               const { Logger } = await import("@/backend/lib/logger");
               const logger = new Logger(env);
               await logger.info(`[orchestrator] Synced extracted bullets to role_bullets`, {
-                roleId: task.roleId, count: bulletRows.length
+                roleId: task.roleId,
+                count: bulletRows.length,
               });
             }
           }
         } catch (bulletSyncErr) {
           const { Logger } = await import("@/backend/lib/logger");
           const logger = new Logger(env);
-          await logger.error("Failed to sync extracted bullets to role_bullets (non-fatal)", { error: String(bulletSyncErr) });
+          await logger.error("Failed to sync extracted bullets to role_bullets (non-fatal)", {
+            error: String(bulletSyncErr),
+          });
         }
       }
 
@@ -417,12 +441,17 @@ async function processTask(agent: OrchestratorAgent, env: Env, task: Orchestrato
           } else {
             const { Logger } = await import("@/backend/lib/logger");
             const logger = new Logger(env);
-            await logger.info(`[orchestrator] Enqueued 3 follow-up tasks (no bullets for analysis)`, { roleId: task.roleId });
+            await logger.info(
+              `[orchestrator] Enqueued 3 follow-up tasks (no bullets for analysis)`,
+              { roleId: task.roleId },
+            );
           }
         } catch (chainErr) {
           const { Logger } = await import("@/backend/lib/logger");
           const logger = new Logger(env);
-          await logger.error("Failed to enqueue follow-up insight tasks (non-fatal)", { error: String(chainErr) });
+          await logger.error("Failed to enqueue follow-up insight tasks (non-fatal)", {
+            error: String(chainErr),
+          });
         }
       }
 

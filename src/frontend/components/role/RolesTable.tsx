@@ -149,7 +149,10 @@ export function RolesTable() {
                 <TableRow key={role.id}>
                   <TableCell>
                     {role.companyId ? (
-                      <a className="font-medium hover:underline text-primary" href={`/companies/${role.companyId}`}>
+                      <a
+                        className="font-medium hover:underline text-primary"
+                        href={`/companies/${role.companyId}`}
+                      >
                         {role.companyName}
                       </a>
                     ) : (
@@ -157,7 +160,10 @@ export function RolesTable() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <a className="font-medium hover:underline text-foreground" href={`/roles/${role.id}`}>
+                    <a
+                      className="font-medium hover:underline text-foreground"
+                      href={`/roles/${role.id}`}
+                    >
                       {role.jobTitle}
                     </a>
                   </TableCell>
@@ -268,4 +274,3 @@ function formatSalary(role: RoleRow) {
 
   return formatter.format(role.salaryMin ?? role.salaryMax ?? 0);
 }
-

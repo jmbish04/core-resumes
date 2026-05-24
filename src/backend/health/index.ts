@@ -16,9 +16,8 @@ import type {
   HealthStepResult,
   HealthTrigger,
   CheckStatus,
-  GreenhouseJob,
 } from "@/backend/health/types";
-4
+
 export type {
   HealthCheckDescriptor,
   HealthRun,
@@ -44,14 +43,23 @@ import { getDb } from "@/backend/db";
 import { checkD1, checkKV } from "@/backend/db/health";
 import { healthRuns, healthResults, type NewHealthResultRow } from "@/backend/db/schema";
 import { checkBindings } from "@/backend/health/checks/bindings";
+import { checkBoardTokenConfig } from "@/backend/health/checks/board-token-config";
 import { checkD1TableScan } from "@/backend/health/checks/d1-table-scan";
 import { checkExtractionFidelity } from "@/backend/health/checks/extraction-fidelity";
+import { checkGeminiProvider } from "@/backend/health/checks/gemini-provider";
+import { checkGreenhouseApi } from "@/backend/health/checks/greenhouse-api";
+import { checkGreenhouseEnvVars } from "@/backend/health/checks/greenhouse-env-vars";
 import { checkIntakePipeline } from "@/backend/health/checks/intake-pipeline";
+import { checkJobsDataQuality } from "@/backend/health/checks/jobs-data-quality";
+import { checkJobsSchemaIntegrity } from "@/backend/health/checks/jobs-schema-integrity";
 import { checkNotebookLMCredentials } from "@/backend/health/checks/notebooklm-credentials";
 import { checkNotebookLMQuery } from "@/backend/health/checks/notebooklm-query";
 import { checkOpenRoute } from "@/backend/health/checks/openroute";
+import { checkPipelineSessions } from "@/backend/health/checks/pipeline-sessions";
+import { checkR2JobsBucket } from "@/backend/health/checks/r2-jobs-bucket";
 import { checkSTT } from "@/backend/health/checks/stt";
 import { checkTTS } from "@/backend/health/checks/tts";
+import { checkVectorizeJobs } from "@/backend/health/checks/vectorize-jobs";
 import { checkSecrets, checkEnvVars } from "@/backend/utils/health";
 
 // ---------------------------------------------------------------------------
@@ -70,6 +78,9 @@ function getTimeoutOverrides(trigger: HealthTrigger): Record<string, number> {
     google_drive_lifecycle: 45_000,
     extraction_fidelity: 120_000,
     openroute_commute: 90_000,
+    board_token_config: 45_000,
+    greenhouse_api: 15_000,
+    gemini_provider: 15_000,
   };
   // Live query mode needs more time for SDK connect + query
   if (trigger === "manual" || trigger === "agent") {
@@ -152,6 +163,21 @@ function buildCheckRegistry(
       fn: () => checkNotebookLMQuery(env, trigger),
     },
     { name: "openroute_commute", category: "api", fn: () => checkOpenRoute(env) },
+
+    // Greenhouse Scanner Pipeline
+    { name: "greenhouse_env_vars", category: "greenhouse", fn: () => checkGreenhouseEnvVars(env) },
+    { name: "greenhouse_api", category: "greenhouse", fn: () => checkGreenhouseApi(env) },
+    { name: "r2_jobs_bucket", category: "greenhouse", fn: () => checkR2JobsBucket(env) },
+    { name: "vectorize_jobs", category: "greenhouse", fn: () => checkVectorizeJobs(env) },
+    {
+      name: "jobs_schema_integrity",
+      category: "greenhouse",
+      fn: () => checkJobsSchemaIntegrity(env),
+    },
+    { name: "board_token_config", category: "greenhouse", fn: () => checkBoardTokenConfig(env) },
+    { name: "jobs_data_quality", category: "greenhouse", fn: () => checkJobsDataQuality(env) },
+    { name: "gemini_provider", category: "greenhouse", fn: () => checkGeminiProvider(env) },
+    { name: "pipeline_sessions", category: "greenhouse", fn: () => checkPipelineSessions(env) },
   ];
 }
 

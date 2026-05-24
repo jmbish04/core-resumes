@@ -28,12 +28,12 @@ export function parseMarkdownToHtml(markdown: string): string {
   );
 
   // 4. Bold (**text** or __text__)
-  html = html.replace(/\*\*([^\*\n]+)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
   html = html.replace(/__([^_\n]+)__/g, "<strong>$1</strong>");
 
   // 5. Italic (*text* or _text_)
-  html = html.replace(/\*([^\*\n]+)\*/g, "<em>$1</em>");
-  html = html.replace(/_([^\_\n]+)_/g, "<em>$1</em>");
+  html = html.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
+  html = html.replace(/_([^_\n]+)_/g, "<em>$1</em>");
 
   // 6. Headers (# Header)
   html = html.replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>');

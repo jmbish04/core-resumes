@@ -19,15 +19,15 @@ import { getDb } from "../../db";
 import { roles, resumeBullets } from "../../db/schema";
 import { CareerMemoryService } from "../../services/career-memory";
 import { getModelRegistry } from "../models";
-import { getProvider } from "../providers";
+import { AiProvider } from "../providers";
 import { GoogleDocsClient } from "../tools/google/docs";
+import { consultNotebook } from "../tools/notebooklm/notebooklm";
+import { extractText } from "../utils/extract-text";
+import { enforceTokenLimit } from "../utils/token-estimator";
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 import { WRITING_RULES } from "./generate/resume-bullets";
-import { consultNotebook } from "../tools/notebooklm/notebooklm";
-import { extractText } from "../utils/extract-text";
-import { enforceTokenLimit } from "../utils/token-estimator";
 
 // ---------------------------------------------------------------------------
 // Main
@@ -42,7 +42,7 @@ export async function respondToComments(
   const progress = onProgress ?? (() => {});
   const memory = new CareerMemoryService(env);
   const docsClient = new GoogleDocsClient(env);
-  const provider = await getProvider(env);
+  const provider = new AiProvider(env);
   const model = getModelRegistry(env).chat;
 
   // Load role context

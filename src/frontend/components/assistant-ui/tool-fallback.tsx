@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   WrenchIcon,
   Loader2Icon,
@@ -11,6 +10,7 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
 } from "lucide-react";
+import { useState } from "react";
 
 // ---------------------------------------------------------------------------
 // ToolFallback — resilient fallback UI for unregistered or failed tool calls.
@@ -42,9 +42,9 @@ export function ToolFallback({ toolName, args, result, status }: ToolFallbackPro
       "message" in (result as Record<string, unknown>));
 
   const errorMessage = isError
-    ? (result as Record<string, unknown>).error ??
+    ? ((result as Record<string, unknown>).error ??
       (result as Record<string, unknown>).message ??
-      "Unknown error"
+      "Unknown error")
     : null;
 
   // Build the full error context string for copy-to-clipboard
@@ -168,9 +168,7 @@ export function ToolFallback({ toolName, args, result, status }: ToolFallbackPro
         <div className="flex items-center gap-1.5 text-xs font-medium">
           <WrenchIcon className="size-3" />
           <span>{toolName}</span>
-          {isRunning && (
-            <span className="text-muted-foreground animate-pulse">running…</span>
-          )}
+          {isRunning && <span className="text-muted-foreground animate-pulse">running…</span>}
         </div>
 
         {Object.keys(args).length > 0 && (

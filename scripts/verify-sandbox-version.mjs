@@ -12,7 +12,6 @@ import { createRequire } from "module";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 console.log(
@@ -28,7 +27,7 @@ try {
   const pkgPath = path.resolve(cwd, "node_modules/@cloudflare/sandbox/package.json");
   const pkgStr = fs.readFileSync(pkgPath, "utf8");
   installedVersion = JSON.parse(pkgStr).version;
-} catch (error) {
+} catch {
   try {
     const fallbackPkgPath = path.join(
       __dirname,
@@ -36,7 +35,7 @@ try {
     );
     const fallbackPkgStr = fs.readFileSync(fallbackPkgPath, "utf8");
     installedVersion = JSON.parse(fallbackPkgStr).version;
-  } catch (fallbackError) {
+  } catch {
     console.error(
       "[Sandbox Check] Error: Could not resolve @cloudflare/sandbox/package.json. Run pnpm install first?",
     );
@@ -62,7 +61,7 @@ function findDockerfiles(dir, fileList = []) {
       } else if (file === "Dockerfile" || file.endsWith(".Dockerfile")) {
         fileList.push(filePath);
       }
-    } catch (e) {
+    } catch {
       // Ignore files that cannot be read due to permissions
     }
   }
@@ -76,7 +75,7 @@ try {
     encoding: "utf8",
     stdio: ["pipe", "pipe", "ignore"],
   }).trim();
-} catch (error) {
+} catch {
   console.log(
     "[Sandbox Check] Could not check for updates (network issue or pnpm not configured). Proceeding with local validation.",
   );
@@ -95,7 +94,7 @@ if (isUpdateAvailable) {
     console.log(`[Sandbox Check] Running: pnpm add -w @cloudflare/sandbox@${targetVersion}`);
     execSync(`pnpm add -w @cloudflare/sandbox@${targetVersion}`, { stdio: "inherit" });
     console.log(`[Sandbox Check] Package successfully updated to v${targetVersion}.`);
-  } catch (e) {
+  } catch {
     console.error(
       `[Sandbox Check] Failed to run pnpm add. Please run: pnpm add @cloudflare/sandbox@${targetVersion}`,
     );
@@ -124,7 +123,7 @@ if (dockerfiles.length === 0) {
       const line = lines[i];
       // Match the Cloudflare Sandbox Docker image format
       if (line.startsWith("FROM docker.io/cloudflare/sandbox:")) {
-        const match = line.match(/cloudflare\/sandbox:([0-9\.]+)(?:-\w+)?/);
+        const match = line.match(/cloudflare\/sandbox:([0-9.]+)(?:-\w+)?/);
         if (match) {
           const dockerfileVersion = match[1];
           // If the version in the Dockerfile doesn't match our target version, update it
@@ -133,7 +132,7 @@ if (dockerfiles.length === 0) {
               `  -> Updating ${path.relative(cwd, filePath)} line ${i + 1}: v${dockerfileVersion} -> v${targetVersion}`,
             );
             // Replace the version string but keep any optional variant suffixes intact (e.g., -python)
-            lines[i] = line.replace(/(cloudflare\/sandbox:)[0-9\.]+/, `$1${targetVersion}`);
+            lines[i] = line.replace(/(cloudflare\/sandbox:)[0-9.]+/, `$1${targetVersion}`);
             hasChanges = true;
           }
         }

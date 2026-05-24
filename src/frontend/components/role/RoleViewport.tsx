@@ -125,7 +125,6 @@ export function RoleViewport({ role }: { role: RoleRow & { roleInstructions?: st
                 <RoleConfig role={role} />
               </DialogContent>
             </Dialog>
-
           </div>
 
           {/* Tab bar */}

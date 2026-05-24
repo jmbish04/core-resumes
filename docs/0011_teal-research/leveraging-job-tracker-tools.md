@@ -28,18 +28,12 @@ Table of contents
 
 **The Job Tracker is a significant tool with lots of smaller tools built in. Below, we'll detail each including where to find them and how to use them.**
 
--   Guidance
-    
--   [Notes](#h_97503dfa22)
-    
--   [Resume Attachments](#h_b1cf92685c)
-    
--   [Contacts](#h_e70b4dc217)
-    
--   [Email Templates](#h_4a9dd522c7)
-    
--   [Check List](#h_e62d9bb9ba)
-    
+- Guidance
+- [Notes](#h_97503dfa22)
+- [Resume Attachments](#h_b1cf92685c)
+- [Contacts](#h_e70b4dc217)
+- [Email Templates](#h_4a9dd522c7)
+- [Check List](#h_e62d9bb9ba)
 
 ---
 
@@ -92,16 +86,11 @@ Just like you can keep track of notes per position, you can also track contacts 
 
 Lastly, our email template tool allows you to copy/paste or send emails directly to hiring managers, interviewers, or connections for a variety of reasons:
 
--   Saying thank you
-    
--   Following up
-    
--   Asking for a reference
-    
--   Withdrawing from the interview process
-    
--   Declining an offer
-    
+- Saying thank you
+- Following up
+- Asking for a reference
+- Withdrawing from the interview process
+- Declining an offer
 
 [![](https://tealhq-28815987f08d.intercom-attachments-1.com/i/o/1093538110/8da616aea6a5fe4d0cf0fa6c/file-BAi1xyIMd1.png?expires=1778349600&signature=16d22244aeae883a24a11fd403b20b2ad253ffbf83306fdf7aaf96b15092f49b&req=dSAuFcx9lYBeWfMW1HO4zXdJOLNDKKQWXOnit0Z2Jx2DkKDQ9H3Y%2FmAUhOLG%0A%2BwM7fpf4BN5exbmv6lg%3D%0A)](https://tealhq-28815987f08d.intercom-attachments-1.com/i/o/1093538110/8da616aea6a5fe4d0cf0fa6c/file-BAi1xyIMd1.png?expires=1778349600&signature=16d22244aeae883a24a11fd403b20b2ad253ffbf83306fdf7aaf96b15092f49b&req=dSAuFcx9lYBeWfMW1HO4zXdJOLNDKKQWXOnit0Z2Jx2DkKDQ9H3Y%2FmAUhOLG%0A%2BwM7fpf4BN5exbmv6lg%3D%0A)
 
@@ -127,7 +116,8 @@ Watch our [YouTube tutorials](https://www.youtube.com/@teal_hq)!
 
 ---
 
-##   
+##
+
 Have feedback or further questions? Something missing here that we can do a better job covering?
 
 Please reach out to [membersupport@tealhq.com](mailto:membersupport@tealhq.com)!

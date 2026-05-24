@@ -1,6 +1,6 @@
 # Document Generation
 
-Last updated: May 11, 2026
+Last updated: May 6, 2026
 
 The `core-resumes` architecture provides two distinct paths for generating Google Docs (Resumes and Cover Letters): a non-deterministic LLM pipeline driven by NotebookLM, and a deterministic Script-Backed pipeline. Both paths utilize the `GoogleDriveClient` wrapper for robust, cached multipart uploads to Google Drive.
 
@@ -9,20 +9,12 @@ The `core-resumes` architecture provides two distinct paths for generating Googl
 This is a multi-phase AI workflow orchestrated by the Colby (`OrchestratorAgent`) and NotebookLM (`NotebookLMAgent`) agents.
 
 - **Trigger:** Chat interactions or orchestration pipeline tasks (`OrchestratorAgent.draft_resume()`).
-- **Phases:** 
-  0. Draft Planning (Workers AI selects focus areas + keyword targets).
+- **Phases:**
   1. Pre-Draft Consultation (NotebookLM locates evidence).
   2. AI Draft (Workers AI synthesizes).
   3. Review (NotebookLM verifies facts/strategy).
-  4. Evaluate + Improve (Workers AI scores + iterates until threshold).
-  5. Google Doc Creation.
-- **File:** `src/backend/ai/tasks/draft/notebook.ts`
-
-### Evaluation Loop Notes
-
-- The evaluation loop uses a hybrid signal (programmatic keyword coverage + embedding similarity + LLM rubric scoring) to produce an `overall` score and actionable issues.
-- Evaluation snapshots are stored to Career Memory (`source=draft_review`, category `resume_draft` / `cover_letter`).
-- A short rolling history is also persisted to `roles.metadata.draftEvaluation` for UI trend display.
+  4. Google Doc Creation.
+- **File:** `src/backend/ai/tasks/draft-with-notebook.ts`
 
 ## 2. Deterministic Generation (Script-Backed)
 
@@ -37,6 +29,7 @@ The deterministic pipeline generates a highly formatted, predictable resume or c
 - **Database:** When a `roleId` is passed in the payload, the newly generated document is persisted directly to the D1 `documents` table and will automatically appear in the Role Viewport's Documents tab.
 
 ### Schema Requirements
+
 The deterministic generator endpoints accept rigid JSON payloads. For example, the `ResumeRequestSchema` demands fields such as `targetRole`, `summaryStatement`, `skillsProduct`, `skillsData`, `googleBullets` (Array of HTML strings), and `osdBullets`. These are then injected into a stylized, self-contained HTML payload before multipart upload to Google Drive.
 
 ## 3. Resume ATS Engine & Live CV Optimization
@@ -52,6 +45,7 @@ The platform utilizes a real-time Google Docs CV pipeline that automatically sco
 ### Resume Viewport & Assistant-UI
 
 The frontend exposes a dedicated **Resume Viewport** (`ATSScoreDashboard`) which provides actionable metrics on the resume's alignment:
+
 - **Top-Level Metrics:** Displays an overall ATS alignment score, the count of missing high-priority keywords, # of warnings, and # of open Google Doc comments.
 - **Gap Analysis:** Visually breaks down keyword matches vs. misses across the 5 ATS taxonomy categories, allowing the user to immediately identify missing skills.
 - **Assistant-UI Modal:** The viewport contains a context-aware assistant-ui chat interface. The user can interact with the agent to discuss missing keywords. The agent, equipped with Google Docs tools, can automatically read, modify, and optimize the Google Doc in real time based on the chat discussion, eliminating the need to manually copy-paste content between the UI and the resume.

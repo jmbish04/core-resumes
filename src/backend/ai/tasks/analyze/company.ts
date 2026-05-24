@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
+import { AiProvider } from "@/backend/ai/providers";
+import { enforceTokenLimit } from "@/backend/ai/utils/token-estimator";
 import { getDb } from "@/backend/db";
 import { companies, roles } from "@/backend/db/schema";
-import { generateStructuredAnalysis } from "@/backend/ai/providers";
-import { enforceTokenLimit } from "@/backend/ai/utils/token-estimator";
 
 // ---------------------------------------------------------------------------
 // Output schema — structured response from Kimi K2.5
@@ -14,9 +14,7 @@ import { enforceTokenLimit } from "@/backend/ai/utils/token-estimator";
 const CompanyAnalysisSchema = z.object({
   salaryTrends: z.string().describe("Description of salary trends across roles"),
   experienceTrends: z.string().describe("Description of experience level trends"),
-  commonRequirements: z
-    .array(z.string())
-    .describe("List of commonly required skills across roles"),
+  commonRequirements: z.array(z.string()).describe("List of commonly required skills across roles"),
   outliers: z.array(z.string()).describe("List of notable outliers or anomalies"),
   overallSummary: z.string().describe("High-level summary of company role trends"),
 });
@@ -28,20 +26,13 @@ const CompanyAnalysisSchema = z.object({
 export async function analyzeCompany(env: Env, companyId: string) {
   const db = getDb(env);
 
-  const [company] = await db
-    .select()
-    .from(companies)
-    .where(eq(companies.id, companyId))
-    .limit(1);
+  const [company] = await db.select().from(companies).where(eq(companies.id, companyId)).limit(1);
 
   if (!company) {
     throw new Error(`Company ${companyId} not found`);
   }
 
-  const allRoles = await db
-    .select()
-    .from(roles)
-    .where(eq(roles.companyId, companyId));
+  const allRoles = await db.select().from(roles).where(eq(roles.companyId, companyId));
 
   if (allRoles.length === 0) {
     return null;
@@ -63,7 +54,7 @@ export async function analyzeCompany(env: Env, companyId: string) {
   const payloadStr = JSON.stringify(rolesPayload, null, 2);
   const safePayload = enforceTokenLimit(payloadStr, 200_000, "analyze-company");
 
-  const insights = await generateStructuredAnalysis(env, {
+  const insights = await new AiProvider(env).generateStructuredAnalysis({
     messages: [
       {
         role: "system",

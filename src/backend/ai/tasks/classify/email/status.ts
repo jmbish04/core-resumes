@@ -11,7 +11,7 @@
  */
 
 import { enforceTokenLimit } from "../../../utils/token-estimator";
-import { VALID_STATUSES, type EmailClassification, type StatusSuggestion } from "../../types";
+import { VALID_STATUSES, type EmailClassification } from "../../types";
 
 // ---------------------------------------------------------------------------
 // JSON Schema for structured output
@@ -64,14 +64,7 @@ const EMAIL_CLASSIFICATION_SCHEMA = {
     },
     intent: {
       type: "string" as const,
-      enum: [
-        "interview_scheduling",
-        "rejection",
-        "offer",
-        "status_update",
-        "general",
-        "unknown",
-      ],
+      enum: ["interview_scheduling", "rejection", "offer", "status_update", "general", "unknown"],
       description: "The primary intent of the email.",
     },
     availabilityOptions: {

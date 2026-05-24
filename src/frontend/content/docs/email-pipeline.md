@@ -62,11 +62,11 @@ The `EmailInbox` component provides a unified email browsing experience structur
 
 ### Where It Appears
 
-| Page | Filter | Description |
-|------|--------|-------------|
-| `/emails` (Global) | None — shows all emails | Full dashboard with stats cards + inbox. Includes manual override controls and Context-Aware Assistant-UI. |
-| `/roles/{id}` (Role Viewport) | `roleId` | Shows only emails associated with this role |
-| `/companies/{id}` (Company Viewport) | `companyId` | Shows all emails across all roles for this company |
+| Page                                 | Filter                  | Description                                                                                                |
+| ------------------------------------ | ----------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `/emails` (Global)                   | None — shows all emails | Full dashboard with stats cards + inbox. Includes manual override controls and Context-Aware Assistant-UI. |
+| `/roles/{id}` (Role Viewport)        | `roleId`                | Shows only emails associated with this role                                                                |
+| `/companies/{id}` (Company Viewport) | `companyId`             | Shows all emails across all roles for this company                                                         |
 
 ### Features
 
@@ -96,25 +96,28 @@ interface EmailInboxProps {
 
 ## API Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/emails` | List all emails (optional filters: `roleId`, `companyId`, `processedStatus`) |
-| `GET` | `/api/emails/stats` | Aggregate counts for dashboard badges |
-| `GET` | `/api/emails/unmatched` | Emails awaiting manual association |
-| `GET` | `/api/emails/:id` | Get single email with full body |
-| `GET` | `/api/emails/:id/parties` | Get email sender/recipient parties |
-| `GET` | `/api/emails/:id/attachments` | Get email attachments |
-| `POST` | `/api/emails/:id/associate` | Associate email with a role (triggers AI workflow) |
+| Method | Path                          | Description                                                                  |
+| ------ | ----------------------------- | ---------------------------------------------------------------------------- |
+| `GET`  | `/api/emails`                 | List all emails (optional filters: `roleId`, `companyId`, `processedStatus`) |
+| `GET`  | `/api/emails/stats`           | Aggregate counts for dashboard badges                                        |
+| `GET`  | `/api/emails/unmatched`       | Emails awaiting manual association                                           |
+| `GET`  | `/api/emails/:id`             | Get single email with full body                                              |
+| `GET`  | `/api/emails/:id/parties`     | Get email sender/recipient parties                                           |
+| `GET`  | `/api/emails/:id/attachments` | Get email attachments                                                        |
+| `POST` | `/api/emails/:id/associate`   | Associate email with a role (triggers AI workflow)                           |
 
 ## Database Tables
 
 ### `emails`
+
 Primary email records with subject, body, sender, classification JSON, draft reply, and processing status.
 
 ### `email_parties`
+
 Records each sender/recipient with role (from, to, cc, bcc) and whether they match an allowed email address.
 
 ### `email_attachments`
+
 File attachments with R2 keys for binary storage.
 
 ## Status Lifecycle

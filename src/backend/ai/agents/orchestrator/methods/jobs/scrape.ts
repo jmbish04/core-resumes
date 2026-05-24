@@ -4,12 +4,12 @@ import type { ScrapeResult } from "@/ai/tools/browser-rendering";
 
 import { extractRolePostingHybrid, extractStructuredRolePosting } from "@/ai/tasks";
 import { BrowserRendering } from "@/ai/tools/browser-rendering";
+import { parseGreenhouseUrl, scrapeGreenhouseJob } from "@/ai/tools/greenhouse";
 import {
   classifyScrapedElements,
   groupedBulletsByType,
   HYBRID_SCRAPE_SELECTORS,
 } from "@/ai/tools/role/html-bullet-parser";
-import { parseGreenhouseUrl, scrapeGreenhouseJob } from "@/ai/tools/greenhouse";
 
 import { JobPosting, JobPostingSchema, type DetailedScrapeResult } from "../../types";
 
@@ -90,10 +90,7 @@ export async function handleScrapeJob(env: Env, url: string): Promise<DetailedSc
     ),
   );
 
-  const [mdResult, pdfResult, scrapeResult] = (await Promise.race([
-    brPromise,
-    timeoutPromise,
-  ])) as [
+  const [mdResult, pdfResult, scrapeResult] = (await Promise.race([brPromise, timeoutPromise])) as [
     PromiseSettledResult<string>,
     PromiseSettledResult<ArrayBuffer>,
     PromiseSettledResult<ScrapeResult>,

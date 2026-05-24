@@ -78,21 +78,6 @@ async function main() {
   // Step 3: Create an actual Google Doc via the orchestrator
   console.log("📝 Creating Google Doc via orchestrator...");
   // Use the direct HTML template approach
-  const testContent = [
-    "Colby Bishop",
-    "",
-    "Senior Software Engineer with 13 years of experience building scalable web applications.",
-    "",
-    "Experience:",
-    "- Led migration of monolithic architecture to microservices, reducing deployment time by 75%",
-    "- Built real-time analytics pipeline processing 10M events/day using Kafka and ClickHouse",
-    "- Managed team of 8 engineers delivering enterprise SaaS platform",
-    "",
-    "Skills:",
-    "- TypeScript, React, Node.js, Python",
-    "- Cloudflare Workers, AWS Lambda, GCP Cloud Functions",
-    "- PostgreSQL, Redis, Kafka",
-  ].join("\n");
 
   // Create doc via the orchestrator's create_doc_from_html_template
   const createDocResponse = await apiFetch("/api/notebook/chat", {

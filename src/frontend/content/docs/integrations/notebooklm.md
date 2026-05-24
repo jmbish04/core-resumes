@@ -177,6 +177,7 @@ For automated setups (like local Python services), two API endpoints allow headl
 Triggers an active query to NotebookLM to verify if the cookies are still valid.
 
 **Response:**
+
 ```json
 {
   "ok": true, // false if auth is failing
@@ -193,6 +194,7 @@ Triggers an active query to NotebookLM to verify if the cookies are still valid.
 Updates the session cookies in KV.
 
 **Request Body:**
+
 ```json
 {
   "cookies": "SID=...; __Secure-1PSID=..."
@@ -213,30 +215,30 @@ scripts/.venv/bin/python3 scripts/notebooklm_fastapi_server.py
 
 By default it binds to `127.0.0.1:8789`. Configure with:
 
-| Variable | Purpose | Default |
-| -------- | ------- | ------- |
-| `NOTEBOOKLM_FASTAPI_HOST` | Bind host | `127.0.0.1` |
-| `NOTEBOOKLM_FASTAPI_PORT` | Bind port | `8789` |
-| `NOTEBOOKLM_FASTAPI_KEY` | Optional API key for `x-api-key` or `Authorization: Bearer` auth | unset |
-| `NOTEBOOKLM_PROFILE` | `notebooklm-py` profile / storage path name | `jmbish04` |
-| `NOTEBOOKLM_CHROME_PROFILE_DIR` | Chrome profile directory used for cookie refresh | `Profile 6` |
+| Variable                        | Purpose                                                          | Default     |
+| ------------------------------- | ---------------------------------------------------------------- | ----------- |
+| `NOTEBOOKLM_FASTAPI_HOST`       | Bind host                                                        | `127.0.0.1` |
+| `NOTEBOOKLM_FASTAPI_PORT`       | Bind port                                                        | `8789`      |
+| `NOTEBOOKLM_FASTAPI_KEY`        | Optional API key for `x-api-key` or `Authorization: Bearer` auth | unset       |
+| `NOTEBOOKLM_PROFILE`            | `notebooklm-py` profile / storage path name                      | `jmbish04`  |
+| `NOTEBOOKLM_CHROME_PROFILE_DIR` | Chrome profile directory used for cookie refresh                 | `Profile 6` |
 
 The bridge uses `~/.notebooklm/profiles/jmbish04/storage_state.json`. If it is missing, or if a NotebookLM call fails with an auth/session/cookie/CSRF-style error, the server decrypts fresh cookies from Chrome Profile 6 through `scripts/sync-cookies.py`, writes a new storage state, and retries the operation once.
 
 Core endpoints:
 
-| Endpoint | Purpose |
-| -------- | ------- |
-| `GET /health` | Local readiness, no outbound NotebookLM call |
-| `POST /auth/refresh` | Force Chrome Profile 6 cookie decrypt into `notebooklm-py` storage |
-| `POST /auth/check` | Run `notebooklm auth check --test --json` |
-| `POST /cli` | Run the `notebooklm` CLI with bridge storage injected |
-| `POST /rpc/{namespace}/{method}` | Generic notebooklm-py API method bridge |
-| `GET /notebooks` | List notebooks |
-| `POST /notebooks/{id}/chat/ask` | Ask a notebook question |
-| `POST /notebooks/{id}/sources/url` / `text` / `drive` / `file` | Add sources |
-| `POST /notebooks/{id}/artifacts/generate/{kind}` | Generate audio, video, reports, quizzes, flashcards, slide decks, infographics, data tables, and mind maps |
-| `POST /notebooks/{id}/research/start` | Start NotebookLM research |
+| Endpoint                                                       | Purpose                                                                                                    |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `GET /health`                                                  | Local readiness, no outbound NotebookLM call                                                               |
+| `POST /auth/refresh`                                           | Force Chrome Profile 6 cookie decrypt into `notebooklm-py` storage                                         |
+| `POST /auth/check`                                             | Run `notebooklm auth check --test --json`                                                                  |
+| `POST /cli`                                                    | Run the `notebooklm` CLI with bridge storage injected                                                      |
+| `POST /rpc/{namespace}/{method}`                               | Generic notebooklm-py API method bridge                                                                    |
+| `GET /notebooks`                                               | List notebooks                                                                                             |
+| `POST /notebooks/{id}/chat/ask`                                | Ask a notebook question                                                                                    |
+| `POST /notebooks/{id}/sources/url` / `text` / `drive` / `file` | Add sources                                                                                                |
+| `POST /notebooks/{id}/artifacts/generate/{kind}`               | Generate audio, video, reports, quizzes, flashcards, slide decks, infographics, data tables, and mind maps |
+| `POST /notebooks/{id}/research/start`                          | Start NotebookLM research                                                                                  |
 
 The generic RPC route maps directly to installed notebooklm-py namespaces: `notebooks`, `sources`, `artifacts`, `chat`, `research`, `notes`, `settings`, and `sharing`.
 

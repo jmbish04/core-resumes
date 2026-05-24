@@ -6,6 +6,7 @@
 import {
   BarChart3,
   BookOpen,
+  Building2,
   FileText,
   HardDrive,
   Loader2,
@@ -43,9 +44,7 @@ type ActionItem = {
   handler: (role: RoleRow, setRole: (r: RoleRow) => void) => Promise<void>;
 };
 
-function buildCategories(
-  setGenerating: (id: string | null) => void,
-): ActionCategory[] {
+function buildCategories(setGenerating: (id: string | null) => void): ActionCategory[] {
   return [
     {
       label: "Documents",
@@ -99,10 +98,7 @@ function buildCategories(
           description: "Open this role's Google Drive folder",
           handler: async (role) => {
             if (role.driveFolderId) {
-              window.open(
-                `https://drive.google.com/drive/folders/${role.driveFolderId}`,
-                "_blank",
-              );
+              window.open(`https://drive.google.com/drive/folders/${role.driveFolderId}`, "_blank");
             } else {
               toast({
                 title: "No Drive folder",
@@ -125,10 +121,7 @@ function buildCategories(
               );
               setRole({ ...role, driveFolderId: res.driveFolderId });
               toast({ title: "Folder created", description: "Drive folder ready." });
-              window.open(
-                `https://drive.google.com/drive/folders/${res.driveFolderId}`,
-                "_blank",
-              );
+              window.open(`https://drive.google.com/drive/folders/${res.driveFolderId}`, "_blank");
             } finally {
               setGenerating(null);
             }
@@ -224,6 +217,40 @@ function buildCategories(
         },
       ],
     },
+    {
+      label: "Management",
+      icon: Building2,
+      actions: [
+        {
+          id: "promote_tracker",
+          label: "Promote to Tracker",
+          description: "Add this company to the official Pipeline B tracker for regular scanning",
+          handler: async (role) => {
+            setGenerating("promote_tracker");
+            try {
+              // Extract token from jobUrl if possible
+              let token = role.companyName.toLowerCase().replace(/[^a-z0-9]/g, "");
+              if (role.jobUrl?.includes("greenhouse.io/")) {
+                const match = role.jobUrl.match(/greenhouse\.io\/([^/]+)/);
+                if (match) token = match[1];
+              }
+
+              await apiPost(`/api/pipeline/board-tokens`, {
+                token,
+                companyName: role.companyName,
+                isActive: true,
+              });
+              toast({
+                title: "Company Promoted",
+                description: `${role.companyName} is now tracked for regular scanning.`,
+              });
+            } finally {
+              setGenerating(null);
+            }
+          },
+        },
+      ],
+    },
   ];
 }
 
@@ -259,17 +286,17 @@ export function RoleActionsDialog({ role, onRoleUpdate }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5">
-          <Settings className="size-4" />
-          <span className="hidden sm:inline">Actions</span>
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button variant="outline" size="sm" className="gap-1.5">
+            <Settings className="size-4" />
+            <span className="hidden sm:inline">Actions</span>
+          </Button>
+        }
+      />
       <DialogContent className="max-h-[85vh] max-w-[700px] gap-0 overflow-hidden p-0">
         <DialogHeader className="border-b border-border px-4 py-3">
-          <DialogTitle className="text-base">
-            Actions — {role.companyName}
-          </DialogTitle>
+          <DialogTitle className="text-base">Actions — {role.companyName}</DialogTitle>
         </DialogHeader>
         <div className="flex min-h-[350px]">
           {/* Sidebar nav */}
@@ -305,14 +332,10 @@ export function RoleActionsDialog({ role, onRoleUpdate }: Props) {
                   disabled={generating !== null}
                 >
                   <div className="flex items-center gap-2">
-                    {isRunning ? (
-                      <Loader2 className="size-4 animate-spin text-blue-400" />
-                    ) : null}
+                    {isRunning ? <Loader2 className="size-4 animate-spin text-blue-400" /> : null}
                     <span className="text-sm font-medium">{action.label}</span>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {action.description}
-                  </span>
+                  <span className="text-xs text-muted-foreground">{action.description}</span>
                 </button>
               );
             })}

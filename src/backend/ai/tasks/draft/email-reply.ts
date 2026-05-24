@@ -10,8 +10,9 @@
  *  - Rejection: No draft (status auto-updated instead)
  */
 
-import { enforceTokenLimit } from "../../utils/token-estimator";
 import type { EmailClassification } from "../types";
+
+import { enforceTokenLimit } from "../../utils/token-estimator";
 
 // ---------------------------------------------------------------------------
 // Types

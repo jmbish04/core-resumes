@@ -1,17 +1,33 @@
 "use client";
 
-import { DollarSignIcon, RefreshCcwIcon, Loader2Icon, ChevronDownIcon, TrendingUpIcon, AlertTriangleIcon } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import {
+  DollarSignIcon,
+  RefreshCcwIcon,
+  Loader2Icon,
+  ChevronDownIcon,
+  TrendingUpIcon,
+  AlertTriangleIcon,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip as RechartsTooltip,
+  CartesianGrid,
+  LabelList,
+} from "recharts";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { apiGet, apiPost, toast } from "@/lib/api-client";
+
 import { ScoreRadialChart } from "./ScoreRadialChart";
-import { LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid, LabelList } from "recharts";
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -65,7 +81,7 @@ function formatShortCurrency(amount: number | null | undefined, currency = "USD"
     currency,
     maximumFractionDigits: 0,
     notation: "compact",
-    compactDisplay: "short"
+    compactDisplay: "short",
   }).format(amount);
 }
 
@@ -152,7 +168,8 @@ export function CompensationAnalysis({ roleId }: { roleId: string }) {
   const currency = payload?.currency ?? "USD";
 
   const delta = payload?.deltaVsGoogle;
-  const deltaColor = delta != null ? (delta >= 0 ? "text-green-500" : "text-red-500") : "text-muted-foreground";
+  const deltaColor =
+    delta != null ? (delta >= 0 ? "text-green-500" : "text-red-500") : "text-muted-foreground";
 
   // Detect which fields are missing for user visibility
   const missingFields: string[] = [];
@@ -166,7 +183,11 @@ export function CompensationAnalysis({ roleId }: { roleId: string }) {
     <Card className="flex flex-col">
       <div className="flex flex-col md:flex-row items-start p-6 gap-6">
         <div className="flex-1 w-full md:w-auto self-center">
-          <ScoreRadialChart score={insight.score} label={getScoreLabel(insight.score)} color={color} />
+          <ScoreRadialChart
+            score={insight.score}
+            label={getScoreLabel(insight.score)}
+            color={color}
+          />
         </div>
 
         <div className="flex-[2] flex flex-col gap-4 w-full">
@@ -200,8 +221,8 @@ export function CompensationAnalysis({ roleId }: { roleId: string }) {
             <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2">
               <AlertTriangleIcon className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
               <div className="text-xs text-amber-500/90">
-                <span className="font-medium">Partial data:</span>{" "}
-                {missingFields.join(", ")} could not be computed.
+                <span className="font-medium">Partial data:</span> {missingFields.join(", ")} could
+                not be computed.
                 <span className="text-muted-foreground ml-1">Try re-analyzing to fill gaps.</span>
               </div>
             </div>
@@ -221,8 +242,12 @@ export function CompensationAnalysis({ roleId }: { roleId: string }) {
               <DataUnavailable label="Negotiation target" />
             )}
             {delta != null ? (
-              <div className={`flex items-center gap-1 text-sm font-mono font-semibold ${deltaColor}`}>
-                <span className="text-xs text-muted-foreground font-sans font-normal">vs Google TC:</span>
+              <div
+                className={`flex items-center gap-1 text-sm font-mono font-semibold ${deltaColor}`}
+              >
+                <span className="text-xs text-muted-foreground font-sans font-normal">
+                  vs Google TC:
+                </span>
                 {delta >= 0 ? "+" : ""}
                 {formatShortCurrency(delta, currency)}
               </div>
@@ -232,94 +257,112 @@ export function CompensationAnalysis({ roleId }: { roleId: string }) {
           </div>
 
           {/* Comparison Line Chart */}
-          {payload && (() => {
-            const chartData = [
-              {
-                name: "Google TC",
-                value: 260672,
-                fill: "hsl(var(--chart-1))"
-              },
-              payload.advertisedMax != null ? {
-                name: "Advertised Max",
-                value: payload.advertisedMax,
-                fill: "hsl(var(--chart-2))"
-              } : null,
-              payload.negotiationTarget != null ? {
-                name: "Target",
-                value: payload.negotiationTarget,
-                fill: "hsl(var(--chart-3))"
-              } : null,
-              payload.futurePromotionPath != null ? {
-                name: "Future Path (+2yr)",
-                value: payload.futurePromotionPath,
-                fill: "hsl(var(--chart-4))"
-              } : null,
-            ].filter((d): d is NonNullable<typeof d> => d != null && d.value > 0);
+          {payload &&
+            (() => {
+              const chartData = [
+                {
+                  name: "Google TC",
+                  value: 260672,
+                  fill: "hsl(var(--chart-1))",
+                },
+                payload.advertisedMax != null
+                  ? {
+                      name: "Advertised Max",
+                      value: payload.advertisedMax,
+                      fill: "hsl(var(--chart-2))",
+                    }
+                  : null,
+                payload.negotiationTarget != null
+                  ? {
+                      name: "Target",
+                      value: payload.negotiationTarget,
+                      fill: "hsl(var(--chart-3))",
+                    }
+                  : null,
+                payload.futurePromotionPath != null
+                  ? {
+                      name: "Future Path (+2yr)",
+                      value: payload.futurePromotionPath,
+                      fill: "hsl(var(--chart-4))",
+                    }
+                  : null,
+              ].filter((d): d is NonNullable<typeof d> => d != null && d.value > 0);
 
-            // Need at least 2 data points for a meaningful line chart
-            if (chartData.length < 2) {
+              // Need at least 2 data points for a meaningful line chart
+              if (chartData.length < 2) {
+                return (
+                  <div className="mt-4 border rounded-md p-4 bg-muted/10 w-full">
+                    <h4 className="text-sm font-semibold mb-2 text-muted-foreground">
+                      Compensation Comparison
+                    </h4>
+                    <div className="flex items-center gap-2 py-6 justify-center text-sm text-muted-foreground/60">
+                      <AlertTriangleIcon className="h-4 w-4" />
+                      <span>
+                        Insufficient data points for chart — salary data may not have been
+                        disclosed.
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div className="mt-4 border rounded-md p-4 bg-muted/10 w-full">
-                  <h4 className="text-sm font-semibold mb-2 text-muted-foreground">Compensation Comparison</h4>
-                  <div className="flex items-center gap-2 py-6 justify-center text-sm text-muted-foreground/60">
-                    <AlertTriangleIcon className="h-4 w-4" />
-                    <span>Insufficient data points for chart — salary data may not have been disclosed.</span>
-                  </div>
-                </div>
-              );
-            }
-
-            return (
-              <div className="mt-4 border rounded-md p-4 bg-muted/10 w-full">
-                <h4 className="text-sm font-semibold mb-3 text-muted-foreground">Compensation Comparison</h4>
-                <div className="h-[220px] w-full">
-                  <ChartContainer config={{}} className="h-full w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                  <h4 className="text-sm font-semibold mb-3 text-muted-foreground">
+                    Compensation Comparison
+                  </h4>
+                  <div className="h-[220px] w-full">
+                    <ChartContainer config={{}} className="h-full w-full">
                       <LineChart
                         data={chartData}
                         margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
                       >
                         <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                        <XAxis 
-                          dataKey="name" 
-                          tick={{ fontSize: 12 }} 
-                          tickLine={false} 
-                          axisLine={false} 
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 12 }}
+                          tickLine={false}
+                          axisLine={false}
                           tickMargin={12}
                         />
-                        <YAxis 
-                          type="number" 
-                          hide 
-                          domain={[0, 'dataMax + 40000']} 
-                        />
+                        <YAxis type="number" hide domain={[0, "dataMax + 40000"]} />
                         <RechartsTooltip
-                          cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1, strokeDasharray: "3 3" }}
-                          content={<ChartTooltipContent formatter={(value: any) => formatShortCurrency(Number(value), currency)} />}
+                          cursor={{
+                            stroke: "hsl(var(--muted-foreground))",
+                            strokeWidth: 1,
+                            strokeDasharray: "3 3",
+                          }}
+                          content={
+                            <ChartTooltipContent
+                              formatter={(value: any) =>
+                                formatShortCurrency(Number(value), currency)
+                              }
+                            />
+                          }
                         />
-                        <Line 
-                          type="monotone" 
-                          dataKey="value" 
-                          stroke="hsl(var(--primary))" 
+                        <Line
+                          type="monotone"
+                          dataKey="value"
+                          stroke="hsl(var(--primary))"
                           strokeWidth={3}
                           dot={{ r: 6, fill: "hsl(var(--background))", strokeWidth: 2 }}
                           activeDot={{ r: 8 }}
                         >
-                           <LabelList 
-                             dataKey="value" 
-                             position="top" 
-                             formatter={(val: any) => formatShortCurrency(Number(val), currency)} 
-                             fill="hsl(var(--foreground))" 
-                             fontSize={12}
-                             offset={10}
-                           />
+                          <LabelList
+                            dataKey="value"
+                            position="top"
+                            formatter={(val: any) => formatShortCurrency(Number(val), currency)}
+                            fill="hsl(var(--foreground))"
+                            fontSize={12}
+                            offset={10}
+                          />
                         </Line>
                       </LineChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
+                    </ChartContainer>
+                  </div>
                 </div>
-              </div>
-            );
-          })()}
+              );
+            })()}
 
           {/* Negotiation strategy */}
           {payload?.negotiationRationale ? (
@@ -334,7 +377,8 @@ export function CompensationAnalysis({ roleId }: { roleId: string }) {
               <div className="flex items-center gap-2">
                 <AlertTriangleIcon className="h-3.5 w-3.5 text-amber-500/70" />
                 <p className="text-sm text-muted-foreground/60">
-                  Negotiation strategy unavailable — salary data may not have been disclosed. Re-analyze to attempt computation.
+                  Negotiation strategy unavailable — salary data may not have been disclosed.
+                  Re-analyze to attempt computation.
                 </p>
               </div>
             </div>
@@ -348,7 +392,9 @@ export function CompensationAnalysis({ roleId }: { roleId: string }) {
             <div className="flex items-center gap-2">
               AI Insight <TrendingUpIcon className="h-4 w-4 text-green-500" />
             </div>
-            <ChevronDownIcon className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+            <ChevronDownIcon
+              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+            />
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3">
             <div className="prose prose-sm dark:prose-invert max-w-none text-left">

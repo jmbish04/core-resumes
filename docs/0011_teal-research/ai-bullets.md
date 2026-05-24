@@ -180,7 +180,8 @@ For more advice and suggestions related to prompting the AI, check out our blog 
 
 ---
 
-#   
+#
+
 Where should I go from here?
 
 We recommend checking out this article next: [Using AI - Cover Letter](https://help.tealhq.com/en/articles/9519269-using-ai-cover-letter).
@@ -193,12 +194,13 @@ Watch our [YouTube tutorials](https://www.youtube.com/@teal_hq)!
 
 ---
 
-#   
+#
+
 Have feedback or further questions? Something missing here that we can do a better job covering?
 
 Please reach out to [membersupport@tealhq.com](mailto:membersupport@tealhq.com)!
 
-AI, achievements, AI bullet points, bullet points, accomplishments, ai generation, ai generator, ai achievements, bullet point ai, bullet, achievement bullet 
+AI, achievements, AI bullet points, bullet points, accomplishments, ai generation, ai generator, ai achievements, bullet point ai, bullet, achievement bullet
 
 ---
 

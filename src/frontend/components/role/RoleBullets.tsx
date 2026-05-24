@@ -13,7 +13,7 @@ import {
   CheckIcon,
   RefreshCwIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { apiPost, toast } from "@/lib/api-client";
+
 import { ClarificationModal } from "./ClarificationModal";
 
 // ---------------------------------------------------------------------------
@@ -146,9 +147,11 @@ function BulletItem({
   const [clarifyModalOpen, setClarifyModalOpen] = useState(false);
   const [editValue, setEditValue] = useState(bullet.content);
   const tier = getScoreTier(bullet.aiScore);
-  const previousTier = bullet.previousAiScore !== null ? getScoreTier(bullet.previousAiScore) : null;
-  
-  const needsClarification = bullet.aiScore !== null && bullet.aiScore < 90 && !pendingClarification;
+  const previousTier =
+    bullet.previousAiScore !== null ? getScoreTier(bullet.previousAiScore) : null;
+
+  const needsClarification =
+    bullet.aiScore !== null && bullet.aiScore < 90 && !pendingClarification;
 
   async function handleSave() {
     if (!editValue.trim()) return;
@@ -192,7 +195,6 @@ function BulletItem({
           onChange={(e) => setEditValue(e.target.value)}
           className="flex-1 resize-none text-sm min-h-[2.25rem]"
           rows={Math.max(2, Math.ceil(editValue.length / 80))}
-          autoFocus
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -368,7 +370,7 @@ function BulletTypeSection({
     setAdding(false);
   }
 
-  const allExpanded = bullets.length > 0 && bullets.every(b => expandedBullets.has(b.id));
+  const allExpanded = bullets.length > 0 && bullets.every((b) => expandedBullets.has(b.id));
 
   return (
     <div className="space-y-1">
@@ -429,7 +431,6 @@ function BulletTypeSection({
             placeholder="Enter bullet content…"
             className="flex-1 resize-none text-sm min-h-[2.25rem]"
             rows={Math.max(2, Math.ceil(newContent.length / 80))}
-            autoFocus
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -498,7 +499,7 @@ export function RoleBullets({ roleId }: RoleBulletsProps) {
     }
   }, [roleId]);
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       const res = await fetch(`/api/roles/${roleId}/bullets`, { credentials: "include" });
       if (res.ok) {
@@ -510,11 +511,11 @@ export function RoleBullets({ roleId }: RoleBulletsProps) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [roleId]);
 
   useEffect(() => {
     load();
-  }, [roleId]);
+  }, [load]);
 
   function handleDelete(id: number) {
     setBullets((prev) => prev.filter((b) => b.id !== id));
@@ -541,7 +542,14 @@ export function RoleBullets({ roleId }: RoleBulletsProps) {
         const created = (await res.json()) as RoleBulletRow;
         setBullets((prev) => [
           ...prev,
-          { ...created, aiScore: null, previousAiScore: null, aiRationale: null, revisionNumber: null, fidelityStatus: null },
+          {
+            ...created,
+            aiScore: null,
+            previousAiScore: null,
+            aiRationale: null,
+            revisionNumber: null,
+            fidelityStatus: null,
+          },
         ]);
       }
     } catch {
@@ -621,7 +629,7 @@ export function RoleBullets({ roleId }: RoleBulletsProps) {
 
   function handleExpandUncorrected() {
     const uncorrected = bullets.filter(
-      (b) => b.aiScore !== null && b.aiScore < 90 && !pendingClarifications[b.id]
+      (b) => b.aiScore !== null && b.aiScore < 90 && !pendingClarifications[b.id],
     );
     setExpandedBullets(new Set(uncorrected.map((b) => b.id)));
   }
@@ -675,7 +683,7 @@ ${JSON.stringify(exportData, null, 2)}
       if (match) {
         jsonStr = match[0];
       }
-      
+
       const parsed = JSON.parse(jsonStr);
       if (parsed.corrections && Array.isArray(parsed.corrections)) {
         const nextClarifications = { ...pendingClarifications };
@@ -688,14 +696,25 @@ ${JSON.stringify(exportData, null, 2)}
         });
         setPendingClarifications(nextClarifications);
         localStorage.setItem(`clarifications-${roleId}`, JSON.stringify(nextClarifications));
-        toast({ title: "Import successful", description: `Imported ${count} feedback items as drafts.` });
+        toast({
+          title: "Import successful",
+          description: `Imported ${count} feedback items as drafts.`,
+        });
         setImportModalOpen(false);
         setImportJsonText("");
       } else {
-        toast({ title: "Invalid format", description: "Missing 'corrections' array in JSON.", variant: "destructive" });
+        toast({
+          title: "Invalid format",
+          description: "Missing 'corrections' array in JSON.",
+          variant: "destructive",
+        });
       }
-    } catch (e) {
-      toast({ title: "Parse error", description: "Could not parse JSON. Check format.", variant: "destructive" });
+    } catch {
+      toast({
+        title: "Parse error",
+        description: "Could not parse JSON. Check format.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -750,8 +769,8 @@ ${JSON.stringify(exportData, null, 2)}
           <div className="flex flex-col gap-1">
             <h4 className="font-medium text-sm text-foreground">You have pending changes</h4>
             <p className="text-xs text-muted-foreground">
-              You've adjusted {pendingCount} bullet{pendingCount > 1 ? "s" : ""} via direct edit or clarification.
-              Submit them to recalculate your hireability score.
+              You've adjusted {pendingCount} bullet{pendingCount > 1 ? "s" : ""} via direct edit or
+              clarification. Submit them to recalculate your hireability score.
             </p>
           </div>
           <Button onClick={handleReprocess} disabled={isReprocessing} size="sm">
@@ -785,7 +804,7 @@ ${JSON.stringify(exportData, null, 2)}
         </CardHeader>
         <CardContent className="space-y-4">
           {Array.from(grouped.entries()).map(([type, items]) => (
-              <BulletTypeSection
+            <BulletTypeSection
               key={type}
               type={type}
               bullets={items}
@@ -810,7 +829,8 @@ ${JSON.stringify(exportData, null, 2)}
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <p className="text-sm text-muted-foreground">
-              Paste the JSON response from your AI here, or upload a JSON file. It will be parsed and loaded as draft clarifications.
+              Paste the JSON response from your AI here, or upload a JSON file. It will be parsed
+              and loaded as draft clarifications.
             </p>
             <div className="flex items-center gap-2">
               <input
@@ -837,9 +857,7 @@ ${JSON.stringify(exportData, null, 2)}
             <Button variant="outline" onClick={() => setImportModalOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleImportJson}>
-              Import Feedback
-            </Button>
+            <Button onClick={handleImportJson}>Import Feedback</Button>
           </div>
         </DialogContent>
       </Dialog>

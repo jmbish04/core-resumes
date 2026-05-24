@@ -107,7 +107,10 @@ function ThreadWelcome() {
   );
 }
 
-function SuggestionButton({ text, ...props }: { text: string } & ComponentPropsWithoutRef<"button">) {
+function SuggestionButton({
+  text,
+  ...props
+}: { text: string } & ComponentPropsWithoutRef<"button">) {
   return (
     <button
       {...props}
@@ -232,9 +235,7 @@ function InlineStreamError() {
       <div className="flex items-center justify-between px-3 py-2 border-b border-destructive/10 bg-destructive/5">
         <div className="flex items-center gap-2">
           <XCircleIcon className="size-4 text-destructive shrink-0" />
-          <span className="text-xs font-semibold text-destructive">
-            Something went wrong
-          </span>
+          <span className="text-xs font-semibold text-destructive">Something went wrong</span>
         </div>
         <button
           onClick={() => {
@@ -268,8 +269,8 @@ function InlineStreamError() {
         <div className="flex items-start gap-1.5 p-2 rounded bg-muted/20 border border-border/30">
           <AlertTriangleIcon className="size-3 mt-0.5 text-muted-foreground shrink-0" />
           <p className="text-[10px] text-muted-foreground leading-relaxed">
-            Click <strong>"Copy for debugging"</strong> to copy the full error report,
-            then paste it into your coding agent to diagnose and fix the issue.
+            Click <strong>"Copy for debugging"</strong> to copy the full error report, then paste it
+            into your coding agent to diagnose and fix the issue.
           </p>
         </div>
       </div>
@@ -321,7 +322,6 @@ function Composer() {
       <ComposerPrimitive.Input
         className="min-h-[40px] flex-1 resize-none bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
         placeholder="Type a message or use voice..."
-        autoFocus
       />
 
       <div className="flex gap-1.5">

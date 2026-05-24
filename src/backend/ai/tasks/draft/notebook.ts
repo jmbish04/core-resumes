@@ -1,13 +1,11 @@
 /**
  * @fileoverview NotebookLM-backed resume/cover-letter drafting pipeline.
  *
- * 4-phase pipeline (+ optional evaluation loop):
- *   Phase 0 — Draft Planning (Workers AI: focus areas + keyword targets)
+ * 4-phase pipeline:
  *   Phase 1 — Pre-Draft Consultation (NotebookLM: career evidence for this role)
  *   Phase 2 — AI Draft (Workers AI: draft document with NotebookLM evidence + bullets)
  *   Phase 3a — Accuracy Review (NotebookLM: verify factual accuracy)
  *   Phase 3b — Strategic Review (NotebookLM: positioning & strategy feedback)
- *   Phase 3c — Evaluate + Improve (Workers AI: score + iterate until threshold)
  *   Phase 4 — Google Doc Creation (template render → upload → persist)
  *
  * Each phase stores interactions in career memory and broadcasts progress
@@ -16,28 +14,20 @@
 
 import { eq } from "drizzle-orm";
 
-import type {
-  DraftResult,
-  DraftWithNotebookOpts,
-} from "../types";
+import type { DraftResult, DraftWithNotebookOpts } from "../types";
 
 import { getDb } from "../../../db";
 import { roles, documents, resumeBullets, type Role } from "../../../db/schema";
 import { CareerMemoryService } from "../../../services/career-memory";
 import { handleCreateBrandedDocFromTemplate } from "../../agents/orchestrator/methods/docs/google-docs";
 import { getModelRegistry } from "../../models";
-import { getProvider } from "../../providers";
-import { evaluateDraft } from "./evaluate";
-import { planDraft } from "./planner";
+import { AiProvider } from "../../providers";
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 import { consultNotebook } from "../../tools/notebooklm/notebooklm";
 import { extractText } from "../../utils/extract-text";
 import { enforceTokenLimit } from "../../utils/token-estimator";
-
-const EVAL_SCORE_THRESHOLD = 80;
-const EVAL_MAX_ITERATIONS = 2;
 
 // ---------------------------------------------------------------------------
 // Main pipeline
@@ -47,7 +37,7 @@ export async function draftWithNotebook(opts: DraftWithNotebookOpts): Promise<Dr
   const { env, roleId, docType, onProgress } = opts;
   const progress = onProgress ?? (() => {});
   const memory = new CareerMemoryService(env);
-  const provider = await getProvider(env);
+  const provider = new AiProvider(env);
   const model = getModelRegistry(env).draft;
   const memoryIds: string[] = [];
 
@@ -74,18 +64,6 @@ export async function draftWithNotebook(opts: DraftWithNotebookOpts): Promise<Dr
       : "";
 
   const roleContext = buildRoleContext(role);
-
-  // ── Phase 0: Draft Planning ─────────────────────────────────────────
-
-  progress({ phase: "planning", message: "Planning draft focus and keyword targets..." });
-
-  const draftPlan = await planDraft({
-    env,
-    role,
-    docType,
-    roleContext,
-    bulletsBlock,
-  });
 
   // ── Phase 1: Pre-Draft Consultation ─────────────────────────────────
 
@@ -129,7 +107,6 @@ Please cite specific examples with dates, metrics, and outcomes. Do NOT summariz
   });
 
   const systemPrompt = `You are Colby, an expert career assistant. Draft polished, truthful job-application content.
-${draftPlan.docGuidance || draftPlan.focusAreas.length || draftPlan.keywordTargets.length ? `\n## Draft Plan\n${draftPlan.docGuidance ? `${draftPlan.docGuidance}\n` : ""}${draftPlan.focusAreas.length ? `\nFocus areas:\n${draftPlan.focusAreas.map((f) => `- ${f}`).join("\n")}\n` : ""}${draftPlan.keywordTargets.length ? `\nKeyword targets:\n${draftPlan.keywordTargets.slice(0, 40).map((k) => `- ${k}`).join("\n")}\n` : ""}` : ""}
 ${preDraftEvidence ? `\n## Evidence from Career Knowledge Base\n${preDraftEvidence}` : ""}
 ${bulletsBlock ? `\n## Historical Performance Truths\n${bulletsBlock}` : ""}
 
@@ -266,146 +243,6 @@ ${draftContent}`;
     }
   } catch (error) {
     console.error("Strategic review failed, continuing with accuracy-checked draft:", error);
-  }
-
-  // ── Phase 3c: Evaluate + Improve Loop (optional) ────────────────────
-
-  const evalHistory: Array<{
-    iteration: number;
-    overall: number;
-    scores: Record<string, number | undefined>;
-    atsScore: number;
-    semanticScore: number;
-    createdAt: string;
-  }> = [];
-
-  for (let iteration = 1; iteration <= EVAL_MAX_ITERATIONS; iteration++) {
-    progress({
-      phase: "evaluating",
-      message: `Evaluating draft quality (iteration ${iteration}/${EVAL_MAX_ITERATIONS})...`,
-    });
-
-    const evalResult = await evaluateDraft({
-      env,
-      role,
-      docType,
-      draftContent,
-      roleContext,
-      keywordTargets: draftPlan.keywordTargets,
-    });
-
-    evalHistory.push({
-      iteration,
-      overall: evalResult.overall,
-      scores: evalResult.scores,
-      atsScore: evalResult.atsScore,
-      semanticScore: evalResult.semanticScore,
-      createdAt: new Date().toISOString(),
-    });
-
-    memoryIds.push(
-      await memory.remember({
-        query: `Evaluation: ${docType} draft for ${role.companyName} — ${role.jobTitle} (iteration ${iteration})`,
-        answer: JSON.stringify(
-          {
-            overall: evalResult.overall,
-            scores: evalResult.scores,
-            critical_issues: evalResult.critical_issues,
-            improvement_hints: evalResult.improvement_hints,
-            missingKeywords: evalResult.missingKeywords.slice(0, 40),
-            atsScore: evalResult.atsScore,
-            semanticScore: evalResult.semanticScore,
-          },
-          null,
-          2,
-        ),
-        source: "draft_review",
-        agent: "orchestrator",
-        category: docType === "resume" ? "resume_draft" : "cover_letter",
-        roleId,
-        references: [],
-        metadata: { phase: "evaluation", docType, iteration, threshold: EVAL_SCORE_THRESHOLD },
-      }),
-    );
-
-    if (evalResult.overall >= EVAL_SCORE_THRESHOLD) break;
-    if (iteration >= EVAL_MAX_ITERATIONS) break;
-    if (evalResult.critical_issues.length === 0 && evalResult.missingKeywords.length === 0) break;
-
-    progress({
-      phase: "improving",
-      message: `Applying targeted improvements (iteration ${iteration}/${EVAL_MAX_ITERATIONS})...`,
-    });
-
-    const improvementResult = await provider.invokeModel(model, {
-      messages: [
-        {
-          role: "system",
-          content: `You are a surgical document editor specializing in job application materials.
-
-Mandate:
-- Fix ONLY the problems listed under critical issues.
-- Do not rewrite sections that were not flagged.
-- Weave missing keywords naturally into existing content (no keyword lists).
-- Do not invent facts or metrics. If a number is unknown, omit it rather than guessing.
-
-Return ONLY the full updated draft content. No preamble. No markdown fences.`,
-        },
-        {
-          role: "user",
-          content: `Doc type: ${docType}
-Company: ${role.companyName}
-Title: ${role.jobTitle}
-
-Role context:
-${roleContext}
-
-Critical issues:
-${evalResult.critical_issues.map((i, idx) => `${idx + 1}. ${i}`).join("\n") || "(none)"}
-
-Improvement hints:
-${evalResult.improvement_hints.map((h) => `- ${h}`).join("\n") || "(none)"}
-
-Missing keywords (sample):
-${evalResult.missingKeywords.slice(0, 30).join(", ") || "(none detected)"}
-
-Current draft:
-${draftContent}`,
-        },
-      ],
-      temperature: 0.2,
-      max_tokens: 8096,
-    });
-
-    const improvedContent = extractText(improvementResult);
-    if (improvedContent.trim()) {
-      draftContent = improvedContent;
-    }
-  }
-
-  // Persist evaluation history (best-effort) so the UI can display trends per role.
-  if (evalHistory.length > 0) {
-    try {
-      const meta = ((role.metadata as Record<string, unknown> | undefined) ?? {}) as Record<
-        string,
-        unknown
-      >;
-      const existing = meta.draftEvaluation;
-      const draftEvaluation =
-        existing && typeof existing === "object" ? (existing as Record<string, unknown>) : {};
-
-      const key = docType === "resume" ? "resume" : docType === "cover_letter" ? "cover_letter" : "other";
-      const prev = Array.isArray((draftEvaluation as any)[key]) ? ((draftEvaluation as any)[key] as unknown[]) : [];
-      (draftEvaluation as any)[key] = [...prev, ...evalHistory].slice(-10);
-      meta.draftEvaluation = draftEvaluation;
-
-      await db
-        .update(roles)
-        .set({ metadata: meta, updatedAt: new Date() })
-        .where(eq(roles.id, roleId));
-    } catch (e) {
-      console.warn("Failed to persist draft evaluation history (non-fatal):", e);
-    }
   }
 
   // ── Phase 4: Google Doc Creation ────────────────────────────────────

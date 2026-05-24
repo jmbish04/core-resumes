@@ -122,7 +122,9 @@ export function IntakeModal() {
   const [bullets, setBullets] = useState<BulletRow[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submissionPhase, setSubmissionPhase] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [submissionPhase, setSubmissionPhase] = useState<
+    "idle" | "submitting" | "success" | "error"
+  >("idle");
   const [createdRole, setCreatedRole] = useState<RoleResponse | null>(null);
   const [logs, setLogs] = useState<IntakeLogData>({
     scraping: [],
@@ -404,8 +406,8 @@ export function IntakeModal() {
               {/* ── Submission error banner ────────────────────────── */}
               {submitError && (
                 <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                  <strong>Submission failed:</strong> {submitError}. Your data is preserved
-                  below — fix any issues and try again.
+                  <strong>Submission failed:</strong> {submitError}. Your data is preserved below —
+                  fix any issues and try again.
                 </div>
               )}
 
@@ -446,9 +448,7 @@ export function IntakeModal() {
                 <Textarea
                   id="about-company"
                   value={draft.aboutCompany ?? ""}
-                  onChange={(event) =>
-                    updateDraft("aboutCompany", event.target.value || undefined)
-                  }
+                  onChange={(event) => updateDraft("aboutCompany", event.target.value || undefined)}
                   rows={4}
                   placeholder="Paste or edit the company introduction section…"
                 />
@@ -586,9 +586,7 @@ export function IntakeModal() {
                 <Textarea
                   id="other-content"
                   value={draft.otherContent ?? ""}
-                  onChange={(event) =>
-                    updateDraft("otherContent", event.target.value || undefined)
-                  }
+                  onChange={(event) => updateDraft("otherContent", event.target.value || undefined)}
                   rows={3}
                   placeholder="Paste anything the scraping extraction failed to pick up…"
                 />

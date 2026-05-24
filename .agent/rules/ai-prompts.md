@@ -56,12 +56,14 @@ return generateStructuredOutput(env, {
 ## 4. Context Provisioning for Integrations
 
 When integrating newly provided services that require state management:
+
 - Always explicitly dictate the Drizzle schema definitions and migration commands (e.g., `pnpm run migrate:local` / `pnpm run migrate:remote`) in the prompt.
 - Always instruct the agent to update the `Env` interface with any new secret bindings (e.g., `Secret`) before asking it to integrate code that relies on `env.NEW_SECRET.get()`.
 
 ## 5. CV Optimization & ATS Parsing Rules (Global)
 
 ### 5.1 Resume Bullet Standards
+
 - **Structure:** Every bullet must follow the format: "What you did + How + Result/Impact".
 - **Tone:** Professional and metric-driven.
 - **Forbidden Words:** Never use fluff words such as "spearheaded", "synergized", "passionate", or "guru".
@@ -69,7 +71,9 @@ When integrating newly provided services that require state management:
 - **Applies to:** `resume-bullets.ts` AND `respond-to-comments.ts`.
 
 ### 5.2 ATS Taxonomy Extraction
+
 When parsing job descriptions for ATS keywords, the LLM must extract 30-50+ atomic tags categorized exactly as follows:
+
 - `programmingLanguagesAndFrameworks` (e.g., extract both "PHP" and "Symfony" if mentioned).
 - `testingAndQuality` (e.g., TDD, Jest, Cypress).
 - `engineeringPractices` (e.g., SOLID, microservices, clean architecture).
@@ -77,12 +81,15 @@ When parsing job descriptions for ATS keywords, the LLM must extract 30-50+ atom
 - `infrastructureAndDevOps` (e.g., Docker, AWS, Terraform).
 
 ### 5.3 Implicit Skill Mapping
+
 The agent must infer hard skills from contextual phrasing in job descriptions. For example:
+
 - "high traffic" → "scalability", "high availability"
 - "multiple services" → "distributed systems", "microservices"
 - "complex codebase" → "complex systems thinking", "refactoring"
 
 ### 5.4 Holistic Role Analysis (`role.ts`)
+
 - Must map implicit skills contextually (e.g., "complex codebase" → "complex systems thinking", "refactoring").
 - Must evaluate the candidate's alignment against the 5 core ATS taxonomy categories: Programming/Frameworks, Testing/Quality, Engineering Practices, Business Domain, and Infrastructure/DevOps.
 - Phase 2 prompts must reference the ATS taxonomy when computing `hire_likelihood` and `counter_positioning`.

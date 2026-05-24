@@ -10,7 +10,7 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,46 @@ export function PipelineOperations() {
 
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const startSyncTimeout = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = setTimeout(() => {
+      setSteps((prevSteps) => {
+        if (prevSteps.length === 0 || prevSteps[0].status !== "active") {
+          return prevSteps;
+        }
+
+        const nextSteps = [...prevSteps].map((s) => ({ ...s, logs: [...s.logs] }));
+        
+        nextSteps[0].status = "failed";
+        nextSteps[0].logs.push(
+          "CRITICAL ERROR: Remote Action connection timeout after 45 seconds."
+        );
+        nextSteps[0].logs.push(
+          "Please verify that your GitHub Repository has secrets.WORKER_API_KEY set correctly, matches the Worker's active secret, and that the runner is not queued or blocked."
+        );
+
+        setSyncing(false);
+        setSyncError("Remote Action connection timeout. Verify GitHub workflow runner is online and authenticated.");
+        toast({ title: "Sync Connection Timeout", variant: "destructive" });
+        return nextSteps;
+      });
+    }, 45000);
+  };
 
   // Safely formats timestamps without throwing RangeErrors
   const formatTimestamp = (ts: string | number | Date | null | undefined) => {
@@ -79,6 +119,14 @@ export function PipelineOperations() {
         const payload = message.payload;
         const status = payload.status;
         const msgText = payload.message || status;
+
+        // Clear the self-healing timeout on any progress message from the active runner (non-dispatching statuses)
+        if (status && status !== "dispatching" && status !== "trigger-sync") {
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+          }
+        }
 
         setSteps((prevSteps) => {
           const nextSteps = [...prevSteps].map((s) => ({ ...s, logs: [...s.logs] }));
@@ -196,6 +244,7 @@ export function PipelineOperations() {
 
   useEffect(() => {
     fetchSteps();
+    fetchStats();
   }, []);
 
   const triggerSync = async () => {
@@ -245,8 +294,15 @@ export function PipelineOperations() {
         return next;
       });
 
+      // Start the 45-second self-healing timeout listener
+      startSyncTimeout();
+
       toast({ title: "GitHub Action triggered!", description: "Connecting to live logs..." });
     } catch (e: any) {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
       setSyncing(false);
       setSyncError(e.message || "An error occurred while dispatching the repository sync run.");
       
