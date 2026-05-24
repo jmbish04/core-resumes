@@ -2,7 +2,7 @@
  * @file Schema for job category mappings — M:M link between snapshots and categories.
  */
 
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
 import { jobCategories } from "./job-categories";
