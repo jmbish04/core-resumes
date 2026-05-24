@@ -16,7 +16,7 @@
       "invocation_logs": true,
     },
     "traces": {
-      "enabled": false,
+      "enabled": true,
       "persist": true,
       "head_sampling_rate": 1,
     },
@@ -71,6 +71,11 @@
       "binding": "R2_FILES_BUCKET",
       "remote": true,
     },
+    {
+      "binding": "R2_JOBS_BUCKET",
+      "bucket_name": "core-resumes-jobs",
+      "remote": true,
+    },
   ],
   // "queues": {
   // 	"producers": [
@@ -102,8 +107,8 @@
     {
       "name": "core-resumes-role-analysis",
       "binding": "ROLE_ANALYSIS_WORKFLOW",
-      "class_name": "RoleAnalysisWorkflow"
-    }  
+      "class_name": "RoleAnalysisWorkflow",
+    },
   ],
   "durable_objects": {
     "bindings": [
@@ -127,6 +132,22 @@
         "name": "SANDBOX",
         "class_name": "Sandbox",
       },
+      {
+        "name": "JOB_SCANNER_AGENT",
+        "class_name": "JobScannerAgent",
+      },
+      {
+        "name": "JOB_ANALYSIS_AGENT",
+        "class_name": "JobAnalysisAgent",
+      },
+      {
+        "name": "SYNC_BROADCAST_AGENT",
+        "class_name": "SyncBroadcastAgent",
+      },
+      {
+        "name": "ROLE_CHAT_AGENT",
+        "class_name": "RoleChatAgent",
+      },
     ],
   },
   "migrations": [
@@ -140,32 +161,48 @@
         "Sandbox",
       ],
     },
+    {
+      "tag": "v4",
+      "new_sqlite_classes": ["JobScannerAgent", "JobAnalysisAgent"],
+    },
+    {
+      "tag": "v5",
+      "new_sqlite_classes": ["SyncBroadcastAgent"],
+    },
+    {
+      "tag": "v6",
+      "new_sqlite_classes": ["RoleChatAgent"],
+    },
   ],
   "vars": {
     "DEFAULT_MODEL_EMBEDDING": "@cf/baai/bge-large-en-v1.5",
     "PARENT_DRIVE_FOLDER_ID": "1jCokY9_gi3w3_qjdCX8MbnbtZrF9p52j",
     "HEALTH_CHECK_DRIVE_FOLDER_ID": "1Sc-uzcth6LfaaDvWsTI7tCcbzL1eTwym",
     "AI_GATEWAY_ID": "job-hunt",
+    "AI_GATEWAY_NAME": "default-gateway",
     "CAREER_NOTEBOOKLM_ID": "ae2a743f-231b-4b05-ab98-683d01dd5c65", //  https: //notebooklm.google.com/notebook/ae2a743f-231b-4b05-ab98-683d01dd5c65
     "MODEL_CHAT": "@cf/openai/gpt-oss-120b",
     "MODEL_EXTRACT": "@cf/openai/gpt-oss-120b",
     "MODEL_DRAFT": "@cf/openai/gpt-oss-120b",
     "MODEL_ANALYZE": "@cf/moonshotai/kimi-k2.5",
+    "MODEL_TRIAGE": "@cf/openai/gpt-oss-120b",
+    "MODEL_EMBED_JOBS": "gemini-embedding-001",
     "MODEL_TRANSCRIBE": "@cf/openai/whisper-large-v3-turbo",
     "BUCKET_NAME_AUDIO": "core-resumes-audio",
     "BUCKET_NAME_FILES": "core-resumes-files",
     "ROLE_PODCAST_POLL_INTERVAL": "5 minutes",
     "ROLE_PODCAST_MAX_POLLS": "36",
     "ROLE_PODCAST_SOURCE_WAIT_SECS": "300",
-    "ALLOWED_EMAILS": [
-      "justin@126colby.com",
-      "jmbish04@gmail.com"
-    ],
-    "WORKER_EMAIL_INBOX": "job-pipeline@hacolby.app"
+    "GREENHOUSE_API_BASE": "https://boards-api.greenhouse.io/v1/boards",
+    "VECTORIZE_INDEX_NAME": "greenhouse-jobs",
+    "VECTORIZE_DIMENSIONS": "768",
+    "DEFAULT_BOARD_TOKENS": "cloudflare,vercel,anthropic,headway",
+    "ALLOWED_EMAILS": ["justin@126colby.com", "jmbish04@gmail.com"],
+    "WORKER_EMAIL_INBOX": "job-pipeline@hacolby.app",
   },
   "triggers": {
-    /* Health check cron */
-    "crons": ["0 */4 * * *"],
+    /* Health check cron + Greenhouse pipeline cron */
+    "crons": ["0 */4 * * *", "0 */6 * * *"],
   },
   "secrets": {
     "required": [
@@ -245,13 +282,22 @@
       "binding": "GOOGLE_MAPS_API",
       "store_id": "8c42fa70938644e0a8a109744467375f",
       "secret_name": "GOOGLE_MAPS_API",
-    },    
-    
+    },
+    {
+      "binding": "GEMINI_API_KEY",
+      "store_id": "8c42fa70938644e0a8a109744467375f",
+      "secret_name": "GEMINI_API_KEY",
+    },
   ],
   "vectorize": [
     {
       "binding": "VECTORIZE_CAREER_MEMORY",
       "index_name": "core-resumes-career-memory",
+      "remote": true,
+    },
+    {
+      "binding": "VECTORIZE_JOBS",
+      "index_name": "core-resumes-greenhouse-jobs",
       "remote": true,
     },
   ],
