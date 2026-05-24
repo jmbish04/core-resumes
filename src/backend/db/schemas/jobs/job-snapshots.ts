@@ -83,7 +83,7 @@ export const jobSnapshots = sqliteTable(
     sessionUuid: text("session_uuid"),
 
     // Full AI response blob
-    rawAssessmentJson: text("raw_assessment_json"),
+    rawAssessmentJson: text("raw_assessment_json", { mode: "json" }).$type<Record<string, unknown>>(),
 
     // Fielded assessment columns
     matchScore: integer("match_score"),
