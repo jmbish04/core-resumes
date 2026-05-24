@@ -34,6 +34,7 @@ def send_progress(worker_url, worker_key, status, current=None, total=None, mess
             json=payload,
             timeout=30
         )
+        requests.post(        
             url,
             headers={
                 "Content-Type": "application/json",
