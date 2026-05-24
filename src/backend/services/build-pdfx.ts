@@ -1,27 +1,26 @@
-
-    // NOTE: This export registers remote font files from jsDelivr via Font.register().
+// NOTE: This export registers remote font files from jsDelivr via Font.register().
 // For locked-down or offline production environments, self-host these fonts or switch to built-in fonts.
 
-import { Font } from '@react-pdf/renderer';
+import { Font } from "@react-pdf/renderer";
 
-const FONT_CDN = 'https://cdn.jsdelivr.net/npm/@fontsource';
+const FONT_CDN = "https://cdn.jsdelivr.net/npm/@fontsource";
 
 function fontSrc(
   pkg: string,
   family: string,
   weight: number,
-  style: 'normal' | 'italic' = 'normal'
+  style: "normal" | "italic" = "normal",
 ): string {
   return `${FONT_CDN}/${pkg}@4/files/${family}-latin-${weight}-${style}.woff`;
 }
 
 Font.register({
-  family: 'Roboto',
+  family: "Roboto",
   fonts: [
-      { src: fontSrc('roboto', 'roboto', 400, 'normal'), fontWeight: 400 },
-      { src: fontSrc('roboto', 'roboto', 400, 'italic'), fontWeight: 400, fontStyle: 'italic' },
-      { src: fontSrc('roboto', 'roboto', 500, 'normal'), fontWeight: 500 },
-      { src: fontSrc('roboto', 'roboto', 700, 'normal'), fontWeight: 700 }
+    { src: fontSrc("roboto", "roboto", 400, "normal"), fontWeight: 400 },
+    { src: fontSrc("roboto", "roboto", 400, "italic"), fontWeight: 400, fontStyle: "italic" },
+    { src: fontSrc("roboto", "roboto", 500, "normal"), fontWeight: 500 },
+    { src: fontSrc("roboto", "roboto", 700, "normal"), fontWeight: 700 },
   ],
 });
 
@@ -65,8 +64,8 @@ interface PdfxTheme {
     componentGap: number;
   };
   page: {
-    size: 'A4' | 'LETTER' | 'LEGAL';
-    orientation: 'portrait' | 'landscape';
+    size: "A4" | "LETTER" | "LEGAL";
+    orientation: "portrait" | "landscape";
   };
 }
 
@@ -79,8 +78,8 @@ export const theme: PdfxTheme = {
       base: 15,
       lg: 18,
       xl: 22,
-      '2xl': 28,
-      '3xl': 36,
+      "2xl": 28,
+      "3xl": 36,
     },
     spacing: {
       0: 0,

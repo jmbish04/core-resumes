@@ -12,7 +12,7 @@
  * Embedding model: @cf/baai/bge-large-en-v1.5 (1024 dimensions)
  */
 
-import { and, count, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, count, desc, eq, sql } from "drizzle-orm";
 
 import { getDb } from "../db";
 import { careerMemory, type CareerMemoryRow } from "../db/schema";
