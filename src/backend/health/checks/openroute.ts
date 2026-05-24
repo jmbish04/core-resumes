@@ -3,7 +3,6 @@ import { z } from "zod";
 
 import type { HealthStepResult } from "@/backend/health/types";
 
-import { AiProvider } from "@/backend/ai/providers";
 import { BrowserRendering } from "@/backend/ai/tools/browser-rendering";
 import { getDb } from "@/backend/db";
 import { scoringRubrics } from "@/backend/db/schema";
@@ -130,6 +129,7 @@ export async function checkOpenRoute(env: Env): Promise<HealthStepResult> {
   // 3. Extract Location Info via AI
   let locationData;
   try {
+    const { AiProvider } = await import("@/backend/ai/providers/index");
     locationData = await new AiProvider(env).generateStructuredOutput({
       messages: [
         {
