@@ -15,7 +15,8 @@ export const COMPANIES_COLUMN_DESCRIPTIONS: Record<string, string> = {
   name: "Display name of the company (e.g. 'Stripe').",
   url: "Company website URL used for brand color extraction.",
   description: "Brief description of the company.",
-  greenhouse_token: "Greenhouse Job Board token (e.g. 'stripe' from boards.greenhouse.io/stripe). Auto-populated from job scrape; editable on the company page.",
+  greenhouse_token:
+    "Greenhouse Job Board token (e.g. 'stripe' from boards.greenhouse.io/stripe). Auto-populated from job scrape; editable on the company page.",
   color_primary: "Primary brand hex color used for headings, borders, and name styling.",
   color_accent: "Accent brand hex color used for role title and company name styling.",
   logo_url: "Absolute URL to the company logo image, typically hosted on Cloudflare Images.",

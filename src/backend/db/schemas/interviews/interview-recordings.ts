@@ -1,8 +1,8 @@
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
+import { roles } from "../applications/roles";
 import { interviewNotes } from "./interview-notes";
-import { roles } from "./roles";
 
 // ---------------------------------------------------------------------------
 // Table & column documentation (consumed by /api/docs/schema)

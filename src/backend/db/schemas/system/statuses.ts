@@ -14,10 +14,14 @@ export const STATUSES_COLUMN_DESCRIPTIONS: Record<string, string> = {
   id: "Unique slug identifier for the status (e.g. 'preparing', 'negotiating'). Used as FK value in roles.status.",
   name: "Human-readable display label for the status.",
   description: "Full definition of what this status means in the application lifecycle.",
-  group: "Classification group: 'active' (in-progress), 'terminal' (final state), or 'system' (internal-only, hidden from UI).",
-  sort_order: "Integer used to order statuses in the stepper and dropdown. Lower numbers appear first.",
-  is_active: "Whether this status is visible in the frontend dropdown and stepper. System statuses like processing_error are set to false.",
-  requires_notes_prompt: "When true, transitioning to this status opens a TipTap rich-text notes modal in the frontend.",
+  group:
+    "Classification group: 'active' (in-progress), 'terminal' (final state), or 'system' (internal-only, hidden from UI).",
+  sort_order:
+    "Integer used to order statuses in the stepper and dropdown. Lower numbers appear first.",
+  is_active:
+    "Whether this status is visible in the frontend dropdown and stepper. System statuses like processing_error are set to false.",
+  requires_notes_prompt:
+    "When true, transitioning to this status opens a TipTap rich-text notes modal in the frontend.",
   created_at: "Unix timestamp (seconds) of when this status definition was created.",
 };
 
