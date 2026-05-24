@@ -51,7 +51,9 @@ export async function handleScanUpwork(
     let searchSkills = params.skills;
     let searchQuery = params.query;
     if (!searchQuery && !searchSkills) {
-      searchSkills = env.FREELANCE_SCAN_SKILLS || "React,TypeScript,Node.js";
+      const profile = await service.getProfile();
+      const dbSkills = typeof profile.skills === "string" ? profile.skills : (profile.skills as string[] | undefined)?.join(",");
+      searchSkills = dbSkills || env.FREELANCE_SCAN_SKILLS || "React,TypeScript,Node.js";
     }
 
     const searchParams: UpworkSearchParams = {

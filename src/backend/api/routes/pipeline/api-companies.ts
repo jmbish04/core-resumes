@@ -140,12 +140,13 @@ apiCompaniesRouter.openapi(
       }
 
       let insertedCount = 0;
-      for (let i = 0; i < newTokens.length; i += INSERT_CHUNK) {
-        const chunk = newTokens.slice(i, i + INSERT_CHUNK);
-        const insertedRows = await db
-          .insert(apiCompanies)
-          .values(
-            chunk.map((t) => ({
+      const INSERT_BATCH_SIZE = 50;
+      for (let i = 0; i < newTokens.length; i += INSERT_BATCH_SIZE) {
+        const chunk = newTokens.slice(i, i + INSERT_BATCH_SIZE);
+        const insertStmts = chunk.map((t) =>
+          db
+            .insert(apiCompanies)
+            .values({
               jobBoardToken: t.token,
               system: t.system,
               source: t.source,
@@ -153,11 +154,15 @@ apiCompaniesRouter.openapi(
               timestampAdded: now,
               isRecommended: t.isRecommended ?? false,
               recommendationReason: t.recommendationReason ?? null,
-            })),
-          )
-          .onConflictDoNothing()
-          .returning({ id: apiCompanies.id });
-        insertedCount += insertedRows.length;
+            })
+            .onConflictDoNothing()
+            .returning({ id: apiCompanies.id })
+        );
+
+        if (insertStmts.length > 0) {
+          const results = await db.batch(insertStmts as any);
+          insertedCount += results.filter((r) => Array.isArray(r) && r.length > 0).length;
+        }
       }
 
       // Update recommendation status for recommended companies in the sync payload
@@ -200,15 +205,27 @@ apiCompaniesRouter.openapi(
 
       // Batch insert the recommended jobs into the database
       let jobsInserted = 0;
-      const JOB_INSERT_CHUNK = 10; // 5 fields * 10 = 50 parameters (well within 100 limit)
-      for (let i = 0; i < allRecommendedJobs.length; i += JOB_INSERT_CHUNK) {
-        const chunk = allRecommendedJobs.slice(i, i + JOB_INSERT_CHUNK);
-        const rows = await db
-          .insert(jobsPostings)
-          .values(chunk)
-          .onConflictDoNothing()
-          .returning({ id: jobsPostings.id });
-        jobsInserted += rows.length;
+      const JOB_BATCH_SIZE = 50;
+      for (let i = 0; i < allRecommendedJobs.length; i += JOB_BATCH_SIZE) {
+        const chunk = allRecommendedJobs.slice(i, i + JOB_BATCH_SIZE);
+        const insertStmts = chunk.map((job) =>
+          db
+            .insert(jobsPostings)
+            .values({
+              jobSiteId: job.jobSiteId,
+              jobTitle: job.jobTitle,
+              company: job.company,
+              triagePassed: job.triagePassed,
+              triageReason: job.triageReason,
+            })
+            .onConflictDoNothing()
+            .returning({ id: jobsPostings.id })
+        );
+
+        if (insertStmts.length > 0) {
+          const results = await db.batch(insertStmts as any);
+          jobsInserted += results.filter((r) => Array.isArray(r) && r.length > 0).length;
+        }
       }
 
       if (jobsInserted > 0) {
@@ -769,32 +786,56 @@ apiCompaniesRouter.openapi(
     const logger = new Logger(c.env);
 
     try {
-      // 1. Update the company to be recommended
-      await db
-        .update(apiCompanies)
-        .set({
-          isRecommended: true,
-          recommendationReason: body.recommendationReason,
-        })
-        .where(eq(apiCompanies.jobBoardToken, body.token));
+      // 1. Upsert/Update the company
+      const existing = await db
+        .select({ id: apiCompanies.id })
+        .from(apiCompanies)
+        .where(eq(apiCompanies.jobBoardToken, body.token))
+        .limit(1);
+
+      if (existing.length > 0) {
+        await db
+          .update(apiCompanies)
+          .set({
+            isRecommended: true,
+            recommendationReason: body.recommendationReason,
+            isActive: true,
+            timestampInactive: null,
+          })
+          .where(eq(apiCompanies.id, existing[0].id));
+      } else {
+        await db
+          .insert(apiCompanies)
+          .values({
+            jobBoardToken: body.token,
+            system: body.system,
+            source: body.source,
+            isActive: true,
+            isRecommended: true,
+            recommendationReason: body.recommendationReason,
+            timestampAdded: now,
+          });
+      }
 
       // 2. Ingest any recommended jobs directly
       let jobsInserted = 0;
       if (body.jobs && body.jobs.length > 0) {
-        const jobValues = body.jobs.map((job) => ({
-          jobSiteId: job.id.toString(),
-          jobTitle: job.title,
-          company: body.token,
-          triagePassed: true,
-          triageReason: `Discovered and matched during real-time REST API recommend push: '${job.title}' in '${job.location}'`,
-        }));
+        const insertPromises = body.jobs.map((job) =>
+          db
+            .insert(jobsPostings)
+            .values({
+              jobSiteId: job.id.toString(),
+              jobTitle: job.title,
+              company: body.token,
+              triagePassed: true,
+              triageReason: `Discovered and matched during real-time REST API recommend push: '${job.title}' in '${job.location}'`,
+            })
+            .onConflictDoNothing()
+            .returning({ id: jobsPostings.id })
+        );
 
-        const rows = await db
-          .insert(jobsPostings)
-          .values(jobValues)
-          .onConflictDoNothing()
-          .returning({ id: jobsPostings.id });
-        jobsInserted = rows.length;
+        const results = await db.batch(insertPromises as any);
+        jobsInserted = results.filter((r) => Array.isArray(r) && r.length > 0).length;
       }
 
       await logger.info(`[Aggregator Sync] Saved real-time matching recommendation for ${body.token} (${jobsInserted} jobs).`, {

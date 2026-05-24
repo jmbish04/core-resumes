@@ -10,6 +10,7 @@ import { PromoteCompaniesEditor } from "@/components/config/PromoteCompaniesEdit
 import { PromptEditor } from "@/components/config/PromptEditor";
 import { ResumeBulletsEditor } from "@/components/config/ResumeBulletsEditor";
 import { ScoringRubricsEditor } from "@/components/config/ScoringRubricsEditor";
+import { FreelanceConfigEditor } from "@/components/config/FreelanceConfigEditor";
 import { TemplateIdsEditor } from "@/components/config/TemplateIdsEditor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryParam } from "@/hooks/use-query-param";
@@ -35,6 +36,7 @@ export function ConfigTabs() {
         <TabsTrigger value="doc-templates">Doc Templates</TabsTrigger>
         <TabsTrigger value="notebooklm">NotebookLM</TabsTrigger>
         <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+        <TabsTrigger value="freelance">Freelance</TabsTrigger>
       </TabsList>
 
       <TabsContent value="prompts" className="space-y-5">
@@ -76,6 +78,10 @@ export function ConfigTabs() {
         <PipelineRulesEditor />
         <PromoteCompaniesEditor />
         <PipelineConfigEditor />
+      </TabsContent>
+
+      <TabsContent value="freelance" className="space-y-5">
+        <FreelanceConfigEditor />
       </TabsContent>
     </Tabs>
   );
