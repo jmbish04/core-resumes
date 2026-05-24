@@ -36,6 +36,8 @@ export function PipelineOperations() {
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const timeoutSecs = 90000;
+
   // Clear timeout on unmount
   useEffect(() => {
     return () => {
@@ -60,7 +62,7 @@ export function PipelineOperations() {
         
         nextSteps[0].status = "failed";
         nextSteps[0].logs.push(
-          "CRITICAL ERROR: Remote Action connection timeout after 90 seconds."
+          `CRITICAL ERROR: Remote Action connection timeout after ${timeoutSecs / 1000} seconds.`
         );
         nextSteps[0].logs.push(
           "Please verify that your GitHub Repository has secrets.WORKER_API_KEY set correctly, matches the Worker's active secret, and that the runner is not queued or blocked."
@@ -71,7 +73,7 @@ export function PipelineOperations() {
         toast({ title: "Sync Connection Timeout", variant: "destructive" });
         return nextSteps;
       });
-    }, 90000);
+    }, timeoutSecs);
   };
 
   // Safely formats timestamps without throwing RangeErrors
