@@ -1,4 +1,4 @@
-CREATE TABLE `notebooklm_blobs` (
+CREATE TABLE IF NOT EXISTS `notebooklm_blobs` (
 	`id` text PRIMARY KEY NOT NULL,
 	`role_id` text NOT NULL,
 	`notebooklm_id` text NOT NULL,
@@ -18,13 +18,13 @@ CREATE TABLE `notebooklm_blobs` (
 	FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE INDEX `notebooklm_blobs_role_id_idx` ON `notebooklm_blobs` (`role_id`);--> statement-breakpoint
-CREATE INDEX `notebooklm_blobs_type_idx` ON `notebooklm_blobs` (`notebooklm_type`);--> statement-breakpoint
-CREATE INDEX `notebooklm_blobs_source_uuid_idx` ON `notebooklm_blobs` (`notebooklm_source_uuid`);--> statement-breakpoint
-CREATE INDEX `notebooklm_blobs_md5_idx` ON `notebooklm_blobs` (`md5`);--> statement-breakpoint
-CREATE INDEX `notebooklm_blobs_active_idx` ON `notebooklm_blobs` (`is_active`);--> statement-breakpoint
-CREATE INDEX `notebooklm_blobs_doc_type_idx` ON `notebooklm_blobs` (`pipeline_doc_type`);--> statement-breakpoint
-CREATE TABLE `notebooklm_podcast_transcript` (
+CREATE INDEX IF NOT EXISTS `notebooklm_blobs_role_id_idx` ON `notebooklm_blobs` (`role_id`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `notebooklm_blobs_type_idx` ON `notebooklm_blobs` (`notebooklm_type`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `notebooklm_blobs_source_uuid_idx` ON `notebooklm_blobs` (`notebooklm_source_uuid`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `notebooklm_blobs_md5_idx` ON `notebooklm_blobs` (`md5`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `notebooklm_blobs_active_idx` ON `notebooklm_blobs` (`is_active`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `notebooklm_blobs_doc_type_idx` ON `notebooklm_blobs` (`pipeline_doc_type`);--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS `notebooklm_podcast_transcript` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`role_id` text NOT NULL,
 	`notebooklm_msg_id` text,
@@ -38,6 +38,6 @@ CREATE TABLE `notebooklm_podcast_transcript` (
 	FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE INDEX `nlm_podcast_transcript_role_id_idx` ON `notebooklm_podcast_transcript` (`role_id`);--> statement-breakpoint
-CREATE INDEX `nlm_podcast_transcript_podcast_id_idx` ON `notebooklm_podcast_transcript` (`podcast_id`);--> statement-breakpoint
-CREATE INDEX `nlm_podcast_transcript_order_idx` ON `notebooklm_podcast_transcript` (`podcast_id`,`line_order`);
+CREATE INDEX IF NOT EXISTS `nlm_podcast_transcript_role_id_idx` ON `notebooklm_podcast_transcript` (`role_id`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `nlm_podcast_transcript_podcast_id_idx` ON `notebooklm_podcast_transcript` (`podcast_id`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `nlm_podcast_transcript_order_idx` ON `notebooklm_podcast_transcript` (`podcast_id`,`line_order`);

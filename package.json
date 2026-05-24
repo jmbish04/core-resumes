@@ -19,7 +19,7 @@
     "fmt": "oxfmt",
     "lint": "oxlint",
     "check": "oxlint && oxfmt",
-    "db:generate": "drizzle-kit generate",
+    "db:generate": "drizzle-kit generate && node scripts/post-drizzle.mjs",
     "db:studio": "drizzle-kit studio",
     "migrate:local": "pnpm run db:generate && wrangler d1 migrations apply DB --local",
     "migrate:remote": "pnpm run db:generate && wrangler d1 migrations apply DB --remote",

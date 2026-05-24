@@ -23,9 +23,9 @@ CREATE TABLE IF NOT EXISTS  `role_podcasts` (
 	FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE INDEX `role_podcasts_role_id_idx` ON `role_podcasts` (`role_id`);--> statement-breakpoint
-CREATE INDEX `role_podcasts_status_idx` ON `role_podcasts` (`status`);--> statement-breakpoint
-CREATE INDEX `role_podcasts_notebooklm_artifact_id_idx` ON `role_podcasts` (`notebooklm_artifact_id`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `role_podcasts_role_id_idx` ON `role_podcasts` (`role_id`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `role_podcasts_status_idx` ON `role_podcasts` (`status`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `role_podcasts_notebooklm_artifact_id_idx` ON `role_podcasts` (`notebooklm_artifact_id`);--> statement-breakpoint
 PRAGMA foreign_keys=OFF;--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS  `__new_transcription_jobs` (
 	`id` text PRIMARY KEY NOT NULL,
@@ -52,7 +52,7 @@ INSERT INTO `__new_transcription_jobs`("id", "recording_id", "podcast_id", "role
 DROP TABLE `transcription_jobs`;--> statement-breakpoint
 ALTER TABLE `__new_transcription_jobs` RENAME TO `transcription_jobs`;--> statement-breakpoint
 PRAGMA foreign_keys=ON;--> statement-breakpoint
-CREATE INDEX `transcription_jobs_recording_id_idx` ON `transcription_jobs` (`recording_id`);--> statement-breakpoint
-CREATE INDEX `transcription_jobs_podcast_id_idx` ON `transcription_jobs` (`podcast_id`);--> statement-breakpoint
-CREATE INDEX `transcription_jobs_role_id_idx` ON `transcription_jobs` (`role_id`);--> statement-breakpoint
-CREATE INDEX `transcription_jobs_status_idx` ON `transcription_jobs` (`status`);
+CREATE INDEX IF NOT EXISTS `transcription_jobs_recording_id_idx` ON `transcription_jobs` (`recording_id`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `transcription_jobs_podcast_id_idx` ON `transcription_jobs` (`podcast_id`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `transcription_jobs_role_id_idx` ON `transcription_jobs` (`role_id`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `transcription_jobs_status_idx` ON `transcription_jobs` (`status`);

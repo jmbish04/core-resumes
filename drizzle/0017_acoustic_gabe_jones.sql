@@ -13,5 +13,5 @@ CREATE TABLE IF NOT EXISTS  `role_insights` (
 	FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE INDEX `role_insights_role_type_idx` ON `role_insights` (`role_id`,`type`);--> statement-breakpoint
-CREATE INDEX `role_insights_hash_idx` ON `role_insights` (`input_hash`);
+CREATE INDEX IF NOT EXISTS `role_insights_role_type_idx` ON `role_insights` (`role_id`,`type`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `role_insights_hash_idx` ON `role_insights` (`input_hash`);

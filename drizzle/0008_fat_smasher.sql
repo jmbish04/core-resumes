@@ -11,5 +11,5 @@ CREATE TABLE IF NOT EXISTS  `companies` (
 	`updated_at` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE INDEX `companies_name_idx` ON `companies` (`name`);--> statement-breakpoint
-CREATE INDEX `companies_greenhouse_token_idx` ON `companies` (`greenhouse_token`);
+CREATE INDEX IF NOT EXISTS `companies_name_idx` ON `companies` (`name`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `companies_greenhouse_token_idx` ON `companies` (`greenhouse_token`);

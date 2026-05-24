@@ -1,4 +1,4 @@
-CREATE TABLE `statuses` (
+CREATE TABLE IF NOT EXISTS `statuses` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
 	`description` text,
@@ -9,7 +9,7 @@ CREATE TABLE `statuses` (
 	`created_at` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `role_status_log` (
+CREATE TABLE IF NOT EXISTS `role_status_log` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`role_id` text NOT NULL,
 	`previous_status` text,
@@ -21,10 +21,10 @@ CREATE TABLE `role_status_log` (
 	FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE INDEX `role_status_log_role_idx` ON `role_status_log` (`role_id`);--> statement-breakpoint
-CREATE INDEX `role_status_log_status_idx` ON `role_status_log` (`new_status`);--> statement-breakpoint
-CREATE INDEX `role_status_log_created_idx` ON `role_status_log` (`created_at`);--> statement-breakpoint
-CREATE TABLE `role_logs` (
+CREATE INDEX IF NOT EXISTS `role_status_log_role_idx` ON `role_status_log` (`role_id`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `role_status_log_status_idx` ON `role_status_log` (`new_status`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `role_status_log_created_idx` ON `role_status_log` (`created_at`);--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS `role_logs` (
 	`id` text PRIMARY KEY NOT NULL,
 	`role_id` text,
 	`category` text NOT NULL,
@@ -35,6 +35,6 @@ CREATE TABLE `role_logs` (
 	FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE INDEX `role_logs_role_idx` ON `role_logs` (`role_id`);--> statement-breakpoint
-CREATE INDEX `role_logs_category_idx` ON `role_logs` (`category`);--> statement-breakpoint
-CREATE INDEX `role_logs_created_idx` ON `role_logs` (`created_at`);
+CREATE INDEX IF NOT EXISTS `role_logs_role_idx` ON `role_logs` (`role_id`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `role_logs_category_idx` ON `role_logs` (`category`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `role_logs_created_idx` ON `role_logs` (`created_at`);
