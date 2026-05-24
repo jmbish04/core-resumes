@@ -21,3 +21,6 @@ export * from "./role-status-log";
 export * from "./role-logs";
 export * from "./scoring-rubrics";
 export * from "./companies";
+export * from "./salary-stats";
+export * from "./market-insights";
+

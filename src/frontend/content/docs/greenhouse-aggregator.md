@@ -127,3 +127,74 @@ Fetches a list of the 50 most recent sync runs for the execution table.
 - **Broadcasting Agent**: [sync-broadcast/index.ts](file:///Volumes/Projects/workers/core-resumes/src/backend/ai/agents/sync-broadcast/index.ts) - Durable Object managing WebSockets.
 - **Dashboard Component**: [PipelineOperations.tsx](file:///Volumes/Projects/workers/core-resumes/src/frontend/components/pipeline/PipelineOperations.tsx) - Renders run tables and sync dispatch buttons.
 - **Promote Tab UI**: [PromoteCompaniesEditor.tsx](file:///Volumes/Projects/workers/core-resumes/src/frontend/components/config/PromoteCompaniesEditor.tsx) - Manages HITL promotion and sorting controls.
+
+---
+
+## <a id="recommendation-engine"></a>Recommendation Engine & Matching Algorithms
+
+To automate the discovery of high-value opportunities without overwhelming active crawlers, Pipeline A integrates a lightweight **AI/JSON-based Recommendation Engine**. This system acts as a heuristic vetting filter before any board token is added to the active scanning profile (Pipeline B).
+
+### 1. Vetting Algorithms & Keyword Rules
+
+During a sync run, the GitHub Action sync client crawls untracked boards to inspect public job listings against a strict set of candidate preference criteria.
+
+#### **Job Title Matching**
+The engine performs case-insensitive keyword scanning against the job title. Highly relevant keywords include:
+*   `software engineer` / `software developer`
+*   `frontend` / `front-end`
+*   `backend` / `back-end`
+*   `fullstack` / `full-stack`
+*   `platform` / `infrastructure`
+*   `devops` / `sre` / `site reliability`
+*   `systems engineer`
+
+#### **Geographic Location Filtering**
+To ensure high quality matching, the location field must satisfy specific geographical criteria:
+*   **Remote-first**: Matches `remote`, `us-remote`, `telecommute`, or `distributed`.
+*   **San Francisco Bay Area**: Matches `san francisco`, `sf`, `oakland`, `south san francisco`, `mountain view`, `palo alto`, `sunnyvale`, `san jose`, or `bay area`.
+
+> [!NOTE]
+> Postings matching both title keywords AND location criteria are cataloged as high-confidence recommendations. Unmatched postings are ignored.
+
+---
+
+## Vetting & Human-in-the-Loop (HITL) Intake Flow
+
+When a recommended company or role is identified, it enters a structured **Human-in-the-Loop Review Queue** to ensure high-fidelity data extraction and allow user validation before committing to the main system.
+
+```
+Discovered Match (Pipeline A)
+       │
+       ▼
+Triage Verification (AI Triage evaluates title, description, and seniority)
+       │
+       ▼ Passed Triage
+Review Queue (Shown in Frontend Config / Pipeline Dashboard)
+       │
+       ▼ Click Intake
+Intake Modal (Runs Pass H + A + B Scraper and presents structured fields)
+       │
+       ▼ User Confirms details are correct
+Role Confirmation (POST /api/intake/confirm)
+       │
+       ├─► Saves as a fully-fledged "Greenhouse Scan" Role
+       └─► Option to instantly "Track Company" (promotes to Pipeline B)
+```
+
+### 1. AI Triage Verification
+Before appearing in the review queue, matched postings are evaluated by the fast triage model (`MODEL_TRIAGE`) through the AI Gateway. This assesses suitability (seniority level, tech stack compatibility, and responsibilities) and outputs a verdict (`High`, `Medium`, or `Low`) along with a structured matching rationale.
+
+### 2. Intake Modal Scraper (Pass H + A + B)
+When the user clicks the **Intake** button on a matching role:
+1.  The system opens the **Intake Modal** and runs the robust 3-pass extraction pipeline.
+2.  **Pass H (Heuristics)**: Direct Harvest API call to fetch raw structured metadata.
+3.  **Pass A (AI Parser)**: Generative extraction of atomic skills, years of experience, and location metrics.
+4.  **Pass B (Browser Rendering)**: High-fidelity DOM scrape using full-browser rendering for detailed salary ranges and RTO policies.
+
+### 3. Persisted Role Origin & Origin Badging
+Upon clicking **Confirm Role**:
+*   The payload including `source: "greenhouse_scan"` and the `sourceSnapshotId` is sent to the `/api/intake/confirm` endpoint.
+*   The backend saves the role and attaches the scanner origin to the SQLite table.
+*   Both the **Roles List page** and the **Roles Viewport header** dynamically render a high-fidelity `"Greenhouse Scan"` or `"Sourced from Discovery Pipeline"` badge, showing exactly where the application originated.
+*   If the company's Greenhouse board token is not currently tracked for scheduled crawls, a prominent **Track Company** button appears in the UI, allowing the user to promote it to Pipeline B with a single click.
+

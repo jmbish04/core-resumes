@@ -21,7 +21,11 @@ import {
   roles,
   roleBullets,
   scoringRubrics,
+  marketSalarySnapshots,
+  marketSalaryStats,
+  marketCompanySalaries,
 } from "@/backend/db/schema";
+import { sql } from "drizzle-orm";
 import { OpenRouteService } from "@/backend/services/openroute";
 
 // ---------------------------------------------------------------------------
@@ -328,6 +332,78 @@ export class RoleInsightsService {
 
     const compensationBaseline = configRow?.value as Record<string, unknown> | null;
 
+    // Get applicant profile config for locations and target roles
+    const [profileRow] = await db
+      .select()
+      .from(globalConfig)
+      .where(eq(globalConfig.key, "applicant_profile"))
+      .limit(1);
+
+    const profile = (profileRow?.value as any) || {
+      location: "San Francisco Bay Area",
+      locations: ["san francisco", "bay area", "sf"],
+      hubs: ["San Francisco", "New York", "Seattle", "Austin"],
+      target_roles: ["software engineer", "frontend", "backend", "fullstack", "devops"],
+    };
+
+    // Find the closest matching target role keyword
+    const jobTitleLower = role.jobTitle.toLowerCase();
+    let matchingRoleType = profile.target_roles[0] || "software engineer";
+    for (const type of profile.target_roles) {
+      if (jobTitleLower.includes(type.toLowerCase())) {
+        matchingRoleType = type;
+        break;
+      }
+    }
+
+    // Fetch the latest successful snapshot ID and matching stats
+    const [latestSnapshot] = await db
+      .select({ id: marketSalarySnapshots.id })
+      .from(marketSalarySnapshots)
+      .where(eq(marketSalarySnapshots.status, "success"))
+      .orderBy(desc(marketSalarySnapshots.runTimestamp))
+      .limit(1);
+
+    let marketStatsText = "No live market salary statistics found in local database.";
+    if (latestSnapshot) {
+      const stats = await db
+        .select()
+        .from(marketSalaryStats)
+        .where(
+          sql`${marketSalaryStats.snapshotId} = ${latestSnapshot.id} AND LOWER(${marketSalaryStats.roleType}) = ${matchingRoleType.toLowerCase()}`
+        );
+
+      if (stats.length > 0) {
+        marketStatsText = stats
+          .map(
+            (s) =>
+              `- ${s.metricLabel} (${s.metricKey}): 25th=$${s.p25.toLocaleString()}, median=$${s.median.toLocaleString()}, 75th=$${s.p75.toLocaleString()} (based on ${s.sampleSize} listings)`
+          )
+          .join("\n");
+      }
+
+      // Check for company H1B data
+      if (role.companyName) {
+        const cleanCompany = role.companyName.toLowerCase().replace(/, inc\.?| inc\.?| l\.?l\.?c\.?/g, "").trim();
+        const companySalaries = await db
+          .select()
+          .from(marketCompanySalaries)
+          .where(
+            sql`${marketCompanySalaries.snapshotId} = ${latestSnapshot.id} AND LOWER(${marketCompanySalaries.companyName}) LIKE ${"%" + cleanCompany + "%"}`
+          );
+
+        if (companySalaries.length > 0) {
+          const compText = companySalaries
+            .map(
+              (c) =>
+                `  * Title: ${c.jobTitle} (${c.seniority} seniority) — 25th=$${c.p25.toLocaleString()}, median=$${c.median.toLocaleString()}, 75th=$${c.p75.toLocaleString()} (${c.sampleSize} certified H1B applications)`
+            )
+            .join("\n");
+          marketStatsText += `\n\nCompany H1B Certified Salaries for ${role.companyName}:\n${compText}`;
+        }
+      }
+    }
+
     const rubricText = rubrics
       .map((r) => `- ${r.criteria}: ${r.scoreRangeMin}–${r.scoreRangeMax}`)
       .join("\n");
@@ -354,10 +430,13 @@ export class RoleInsightsService {
       ? JSON.stringify(compensationBaseline, null, 2)
       : "No compensation baseline configured.";
 
-    const systemPrompt = `You are an expert career compensation analyst for Justin, evaluating a role's compensation against his historical Google compensation.
+    const systemPrompt = `You are an expert career compensation analyst for Justin, evaluating a role's compensation against his historical Google compensation and live market statistics.
 
 Justin's Google Compensation Baseline:
 ${baselineText}
+
+Live Aggregated Market Statistics (for matching role type '${matchingRoleType}'):
+${marketStatsText}
 
 Scoring rubrics:
 ${rubricText}
@@ -365,10 +444,11 @@ ${rubricText}
 Analyze the role's compensation and provide:
 1. A score (0–100) based on the rubrics
 2. Where Justin could negotiate within the advertised range
-3. How the compensation compares to his Google TC (~$260,672)
+3. How the compensation compares to his Google TC (~$260,672) and live market percentiles for his local job market (${profile.location}) and remote roles.
 4. Net delta vs Google (positive means role pays more)
 
 You must respond with a valid JSON object matching the requested schema. DO NOT wrap your response in markdown fences.`;
+
 
     const userPrompt = `Role: ${role.jobTitle} at ${role.companyName}
 Salary Range: ${role.salaryMin ? `$${role.salaryMin.toLocaleString()}` : "Not disclosed"} – ${role.salaryMax ? `$${role.salaryMax.toLocaleString()}` : "Not disclosed"}

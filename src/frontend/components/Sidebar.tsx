@@ -34,19 +34,13 @@ import { siteConfig } from "@/lib/config";
 // Navigation data
 // ---------------------------------------------------------------------------
 
-/** Top-level application pages dynamically populated from siteConfig.navItems. */
-const mainLinks = siteConfig.navItems
-  .filter(
-    (item) =>
-      !item.href.startsWith("/docs") &&
-      !["/openapi.json", "/scalar", "/swagger"].includes(item.href)
-  )
-  .map((item) => ({
-    href: item.href,
-    label: item.label,
-    icon: (LucideIcons as any)[item.icon || "BookOpen"] || LucideIcons.BookOpen,
-    badgeKey: item.href === "/emails" ? ("emails" as const) : undefined,
-  }));
+/** Top-level application pages dynamically populated from siteConfig.sidebarItems. */
+const mainLinks = siteConfig.sidebarItems.map((item) => ({
+  href: item.href,
+  label: item.label,
+  icon: (LucideIcons as any)[item.icon || "BookOpen"] || LucideIcons.BookOpen,
+  badgeKey: item.href === "/emails" ? ("emails" as const) : undefined,
+}));
 
 /**
  * Grouped sub-navigation items rendered inside the collapsible "Docs" section.
@@ -79,6 +73,7 @@ const docsSublinks = [
       { href: "/docs/role-intake", label: "Role Intake" },
       { href: "/docs/role-insights", label: "Role Insights" },
       { href: "/docs/greenhouse-pipeline", label: "Greenhouse Pipeline" },
+      { href: "/docs/freelance-pipeline", label: "Freelance Pipeline" },
     ],
   },
   {
@@ -100,14 +95,8 @@ const docsSublinks = [
   },
 ];
 
-/** External tool links displayed at the bottom of the sidebar. */
-const bottomLinks = siteConfig.navItems
-  .filter((item) => ["/openapi.json", "/scalar", "/swagger"].includes(item.href))
-  .map((item) => ({
-    href: item.href,
-    label: item.label,
-    icon: (LucideIcons as any)[item.icon || "FileJson"] || LucideIcons.FileJson,
-  }));
+/** External tool links completely removed from sidebar. */
+const bottomLinks: any[] = [];
 
 // ---------------------------------------------------------------------------
 // Component

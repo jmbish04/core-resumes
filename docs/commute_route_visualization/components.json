@@ -1,0 +1,144 @@
+# Commute Route Visualization — Location Analysis Overhaul
+
+Redesign the `LocationAnalysis` section in the Role Viewport's Analysis tab to be a premium, map-centered commute visualization with live route data and AI-powered metrics charts.
+
+## Context
+
+The user wants the entire location analysis section to showcase the commute journey from **126 Colby St, San Francisco** (Point A) to **the employer's office** (Point B) using a zoomed-in interactive map with the actual driving route, plus AI-populated metric charts — all in one cohesive component. Credits to contributors are also requested.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **mapcn (MapLibre GL)** will be used as the map library. It's installed via `npx shadcn@latest add @mapcn/map` and provides `Map`, `MapRoute`, `MapMarker`, `MarkerContent`, `MarkerLabel`, `MapControls` — all composable React components styled with Tailwind that fit perfectly with the existing shadcn dark UI.
+
+> [!IMPORTANT]
+> **OSRM** (Open Source Routing Machine — `router.project-osrm.org`) is used client-side for the route GeoJSON. This is a free, open, and publicly-available routing API that returns actual road geometry — no API key needed. The existing OpenRoute/Google Maps backend service provides the *metrics* (distance, duration) but not the geometry; OSRM fills that gap beautifully on the frontend.
+
+> [!IMPORTANT]
+> **OpenRoute Service (HeiGIT)** will supply geocoding on the backend via the existing `OpenRouteService.geocode()` method. A new API endpoint (`GET /api/roles/:roleId/commute-route`) will return the start/end coordinates and precomputed metrics so the frontend can fetch the OSRM geometry and display the route.
+
+## Current Status
+
+All tasks have been completed. The visual commute route feature is fully integrated with backend routing, map component rendering, and inline metric displays.
+
+## Task Checklist
+
+### Phase 1: Preparation (Completed)
+- [x] Analyze `LocationAnalysis.tsx` and `CommuteModal.tsx`.
+- [x] Investigate how `OpenRouteService` geocoding currently maps location addresses.
+- [x] Install `mapcn` and its underlying dependencies (`maplibre-gl`).
+
+### Phase 2: API & Routing (Completed)
+- [x] Create `GET /api/roles/:roleId/commute-route`.
+- [x] Map role's location (destination) and `126 Colby St` (origin) to geocoordinates.
+- [x] Retrieve commute distance, duration, and route data via OpenRouteService and OSRM API.
+
+### Phase 3: CommuteRouteMap Component (Completed)
+- [x] Build `CommuteRouteMap.tsx` integrating `mapcn` Map, MapRoute, and MapMarker.
+- [x] Construct API call to the new Hono endpoint.
+- [x] Fetch OSRM `driving` path geometries and map them to the component.
+
+### Phase 4: UI Integration (Completed)
+- [x] Refactor `LocationAnalysis.tsx` to display `CommuteRouteMap` as the main visualization.
+- [x] Extract commute charts from `CommuteModal.tsx` and display them inline alongside the route visualization.
+- [x] Update `CommuteModal` to serve purely as the tabular Deep Dive entry point.
+- [x] Add comprehensive attributions (OpenRouteService, OSRM, Carto, MapLibre, mapcn, Google Maps, AI).
+
+## Proposed Changes
+
+### Backend — New Commute Route API Endpoint
+
+Adds a lightweight API endpoint that returns geocoded start/end coordinates plus cached distance/duration so the frontend can render the map route without needing its own API keys.
+
+#### [NEW] [commute-route.ts](file:///Volumes/Projects/workers/core-resumes/src/backend/api/routes/commute-route.ts)
+
+New Hono route: `GET /api/roles/:roleId/commute-route`
+
+Returns:
+```json
+{
+  "start": { "name": "126 Colby St", "lng": -122.405, "lat": 37.711 },
+  "end": { "name": "Company HQ, City", "lng": -122.0842, "lat": 37.4220 },
+  "distanceMiles": 33.2,
+  "durationMinutes": 38,
+  "source": "openroute"
+}
+```
+
+Logic:
+1. Reads the role's metadata to determine `location` (same `caLocations` → `rawLocation` fallback used by `role-insights.ts`)
+2. Uses `OpenRouteService.geocode()` to resolve both start/end coordinates
+3. Uses `OpenRouteService.getCommuteSummary()` for distance/duration
+4. Returns JSON with all data needed by the frontend
+
+---
+
+#### [MODIFY] [index.ts](file:///Volumes/Projects/workers/core-resumes/src/backend/api/index.ts)
+
+Mount the new `commuteRouteRouter` at `/api/roles` alongside the existing insights router.
+
+---
+
+### Frontend — Install mapcn
+
+#### Install mapcn Map Component
+
+```bash
+npx shadcn@latest add @mapcn/map
+```
+
+This adds `maplibre-gl` and the `Map` component suite to `src/frontend/components/ui/map.tsx`.
+
+---
+
+### Frontend — New `CommuteRouteMap` Component
+
+#### [NEW] [CommuteRouteMap.tsx](file:///Volumes/Projects/workers/core-resumes/src/frontend/components/role/CommuteRouteMap.tsx)
+
+A full-width, premium commute visualization with:
+
+1. **Interactive MapLibre map** — dark-themed tiles (Carto Dark Matter), zoomed and auto-bounded to fit the route
+2. **OSRM driving route** — rendered as a glowing animated line from Point A to Point B
+3. **Custom markers** — 🏠 at 126 Colby (green) and 🏢 at employer (blue) with labeled tooltips
+4. **Floating metrics overlay** — glassmorphism cards positioned over the map showing:
+   - Distance (miles)
+   - Drive time (minutes)
+   - Data source badge (OpenRoute / Google Maps)
+5. **Credits footer** — Attribution to contributors: HeiGIT/OpenRouteService (routing data), OSRM (route geometry), Carto (map tiles), MapLibre GL (renderer), mapcn by Anmol Saini (component library), Google Maps API (fallback provider), and Antigravity (prior revisions of this analysis UI)
+
+---
+
+### Frontend — Redesigned `LocationAnalysis` Component
+
+#### [MODIFY] [LocationAnalysis.tsx](file:///Volumes/Projects/workers/core-resumes/src/frontend/components/role/LocationAnalysis.tsx)
+
+The existing component will be restructured to feature the map as the hero element:
+
+1. **Map Section** — Full-width `CommuteRouteMap` at the top of the card, taking center stage
+2. **Score Radial + Metadata** — Moved below the map in a compact horizontal strip (score gauge + location/workplace badges + RTO policy)
+3. **Commute Metrics Charts** — The existing `CommuteModal` line charts (morning/evening duration) are promoted to be inline within the card (no longer hidden behind a dialog), showing the AI-generated data directly
+4. **AI Insight** — The collapsible rationale stays as the footer
+
+---
+
+### Frontend — Updated `CommuteModal` (Enriched Detail View)
+
+#### [MODIFY] [CommuteModal.tsx](file:///Volumes/Projects/workers/core-resumes/src/frontend/components/role/CommuteModal.tsx)
+
+Keep the existing dialog for the "deep dive" pivot table and departure time breakdown. No structural changes — only the trigger button text updates to "Deep Dive: Departure Time Breakdown" since the charts are now inline.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- `pnpm run build` — verify compilation succeeds with the new mapcn dependency and all new/modified components
+- Manually test the `GET /api/roles/:roleId/commute-route` endpoint via curl against dev server
+
+### Manual Verification
+- Open a role in the Analysis tab
+- Verify the map renders with a dark theme, route line, and A/B markers
+- Verify metrics overlay shows distance and duration from the API
+- Verify commute duration charts render inline
+- Verify the credits footer shows all contributor attributions
+- Verify the "Deep Dive" dialog still opens with the pivot table

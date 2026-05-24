@@ -87,7 +87,17 @@ const defaultConfig = [
     key: "pipeline_b_rules",
     value: { minSalary: 120000, locations: ["Remote", "New York", "San Francisco"] },
   },
+  {
+    key: "applicant_profile",
+    value: {
+      location: "San Francisco Bay Area",
+      locations: ["san francisco", "bay area", "sf", "oakland", "san jose", "california", "ca"],
+      hubs: ["San Francisco", "New York", "Seattle", "Austin"],
+      target_roles: ["software engineer", "frontend", "backend", "fullstack", "devops"]
+    },
+  },
 ];
+
 
 export const configRouter = new OpenAPIHono<{ Bindings: Env }>();
 export const adminRouter = new OpenAPIHono<{ Bindings: Env }>();

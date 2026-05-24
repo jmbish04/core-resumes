@@ -5,5 +5,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg python3-
 
 # Copy the audio chunker script
 COPY scripts/container_src/process_audio.py /workspace/process_audio.py
+COPY scripts/container_src/salary_analysis.py /workspace/salary_analysis.py
 
 EXPOSE 8080

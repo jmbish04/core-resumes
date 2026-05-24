@@ -37,7 +37,7 @@ export const ROLES_COLUMN_DESCRIPTIONS: Record<string, string> = {
   role_instructions:
     "Role-specific AI instructions that override or supplement global agent_rules.",
   source:
-    "Where this role originated. One of: manual (user-created), greenhouse_scan (scanned from Greenhouse), email (ingested from inbound email).",
+    "Where this role originated. One of: manual (user-created), greenhouse_scan (scanned from Greenhouse), email (ingested from inbound email), freelance_upwork (promoted from Upwork opportunity), freelance_freelancer (promoted from Freelancer.com opportunity).",
   source_snapshot_id:
     "If source is greenhouse_scan, references the job_snapshot row that seeded this role. Null for manual or email sources.",
   created_at: "Unix timestamp (seconds) of when the role was created.",
@@ -86,7 +86,7 @@ export const roles = sqliteTable(
     metadata: text("metadata", { mode: "json" }).$type<Record<string, unknown>>(),
     roleInstructions: text("role_instructions"),
     source: text("source", {
-      enum: ["manual", "greenhouse_scan", "email"],
+      enum: ["manual", "greenhouse_scan", "email", "freelance_upwork", "freelance_freelancer"],
     })
       .notNull()
       .default("manual"),
@@ -110,4 +110,4 @@ export type Role = typeof roles.$inferSelect;
 export type NewRole = typeof roles.$inferInsert;
 
 /** Discriminated union for the `source` column on `roles`. */
-export type RoleSource = "manual" | "greenhouse_scan" | "email";
+export type RoleSource = "manual" | "greenhouse_scan" | "email" | "freelance_upwork" | "freelance_freelancer";

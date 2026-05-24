@@ -30,6 +30,8 @@ export type RoleRow = {
   salaryCurrency: string | null;
   metadata: Record<string, unknown> | null;
   driveFolderId: string | null;
+  source: "manual" | "greenhouse_scan" | "email";
+  sourceSnapshotId: number | null;
   createdAt: string;
   updatedAt: string;
 };

@@ -7,6 +7,7 @@ import {
   ChevronDownIcon,
   TrendingUpIcon,
   AlertTriangleIcon,
+  Building as BuildingIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -58,6 +59,37 @@ interface RoleInsight {
   createdAt: string;
 }
 
+interface MarketData {
+  jobTitle: string;
+  companyName: string | null;
+  matchingRoleType: string;
+  stats: Array<{
+    id: number;
+    metricKey: string;
+    metricLabel: string;
+    p25: number;
+    median: number;
+    p75: number;
+    sampleSize: number;
+  }>;
+  companySalaries: Array<{
+    id: number;
+    companyName: string;
+    jobTitle: string;
+    seniority: string;
+    p25: number;
+    median: number;
+    p75: number;
+    sampleSize: number;
+  }>;
+  profile: {
+    location: string;
+    locations: string[];
+    hubs: string[];
+    target_roles: string[];
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Score & formatting helpers
 // ---------------------------------------------------------------------------
@@ -103,20 +135,32 @@ function DataUnavailable({ label }: { label: string }) {
 
 export function CompensationAnalysis({ roleId }: { roleId: string }) {
   const [insight, setInsight] = useState<RoleInsight | null>(null);
+  const [marketData, setMarketData] = useState<MarketData | null>(null);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
 
   const load = useCallback(async () => {
     try {
-      const data = await apiGet<RoleInsight>(`/api/roles/${roleId}/insights?type=compensation`);
+      const [data, mData] = await Promise.all([
+        apiGet<RoleInsight>(`/api/roles/${roleId}/insights?type=compensation`),
+        apiGet<MarketData>(`/api/roles/${roleId}/insights/market-compensation`)
+      ]);
       setInsight(data);
+      setMarketData(mData);
     } catch {
+      try {
+        const mData = await apiGet<MarketData>(`/api/roles/${roleId}/insights/market-compensation`);
+        setMarketData(mData);
+      } catch {
+        setMarketData(null);
+      }
       setInsight(null);
     } finally {
       setLoading(false);
     }
   }, [roleId]);
+
 
   useEffect(() => {
     void load();
@@ -383,6 +427,113 @@ export function CompensationAnalysis({ roleId }: { roleId: string }) {
               </div>
             </div>
           )}
+
+          {/* Live Market Benchmarks Scorecard */}
+          {marketData && marketData.stats.length > 0 && (
+            <div className="mt-4 border rounded-md p-4 bg-muted/10 w-full space-y-4">
+              <div>
+                <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-1.5">
+                  <TrendingUpIcon className="size-4 text-emerald-400" />
+                  Live Market Percentiles &amp; Scorecards
+                </h4>
+                <p className="text-xs text-muted-foreground/60 mt-1">
+                  Comparing this role's advertised midpoint or target against aggregated market statistics (matching role type: '{marketData.matchingRoleType}').
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {marketData.stats.map((stat) => {
+                  const midpoint = payload?.advertisedMin && payload?.advertisedMax
+                    ? Math.round((payload.advertisedMin + payload.advertisedMax) / 2)
+                    : (payload?.negotiationTarget || 150000);
+                  
+                  const diffPercent = ((midpoint - stat.median) / stat.median) * 100;
+                  const diffText = diffPercent >= 0 
+                    ? `+${diffPercent.toFixed(1)}% above median` 
+                    : `${diffPercent.toFixed(1)}% below median`;
+                  const diffColor = diffPercent >= 0 ? "text-green-500 font-semibold" : "text-amber-500 font-semibold";
+
+                  return (
+                    <div key={stat.id} className="rounded-lg border border-border/50 bg-background/50 p-3 flex flex-col justify-between">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/80">
+                          {stat.metricLabel}
+                        </span>
+                        <div className="text-lg font-mono font-bold text-foreground mt-1">
+                          {formatShortCurrency(stat.median, currency)}
+                          <span className="text-[10px] text-muted-foreground font-normal ml-1.5 font-sans">
+                            (median)
+                          </span>
+                        </div>
+                      </div>
+                      <div className="mt-2 pt-1 border-t border-border/20 flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground/60">Rating vs Role:</span>
+                        <span className={`font-semibold ${diffColor}`}>{diffText}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Expected remote discount assessment */}
+              {(() => {
+                const local = marketData.stats.find(s => s.metricKey === "local_market");
+                const remote = marketData.stats.find(s => s.metricKey === "remote");
+                if (local && remote && local.median > remote.median) {
+                  const loss = ((local.median - remote.median) / local.median) * 100;
+                  return (
+                    <div className="rounded-md border border-sky-500/20 bg-sky-500/5 px-3.5 py-2.5 text-xs text-sky-300">
+                      <span className="font-semibold block mb-0.5">💡 Remote Discount Assessment:</span>
+                      Market statistics suggest remote roles carry a <strong className="text-sky-200">{loss.toFixed(1)}% discount</strong> compared to local {marketData.profile?.location || "SF"} equivalents. Consider this differential if negotiating workplace flexibility vs compensation.
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+            </div>
+          )}
+
+          {/* Company Certified H1B Salaries */}
+          {marketData && marketData.companySalaries.length > 0 && (
+            <div className="mt-4 border rounded-md p-4 bg-muted/10 w-full space-y-3">
+              <div>
+                <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-1.5">
+                  <BuildingIcon className="size-4 text-emerald-400" />
+                  {marketData.companyName || "Company"} H1B Certified Salaries
+                </h4>
+                <p className="text-xs text-muted-foreground/60 mt-1">
+                  Certified base salaries filed by this employer with the Department of Labor for engineering hires.
+                </p>
+              </div>
+
+              <div className="rounded-md border border-border/50 overflow-hidden text-xs">
+                <div className="grid grid-cols-[2fr_1.2fr_1.5fr] bg-muted/50 font-medium px-3 py-2 border-b border-border/50 text-muted-foreground">
+                  <span>Job Title / Seniority</span>
+                  <span>Sample Size</span>
+                  <span className="text-right">Median Base Salary</span>
+                </div>
+                <div className="divide-y divide-border/30">
+                  {marketData.companySalaries.slice(0, 4).map((sal) => (
+                    <div key={sal.id} className="grid grid-cols-[2fr_1.2fr_1.5fr] px-3 py-2 bg-background/30 capitalize hover:bg-muted/10 transition-colors">
+                      <span className="font-medium truncate pr-2">
+                        {sal.jobTitle}
+                        <span className="text-[10px] text-muted-foreground block lowercase mt-0.5 font-normal">
+                          {sal.seniority} seniority
+                        </span>
+                      </span>
+                      <span className="text-muted-foreground self-center">
+                        {sal.sampleSize} files
+                      </span>
+                      <span className="font-mono font-bold text-emerald-400 text-right self-center">
+                        {formatShortCurrency(sal.median, currency)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
 

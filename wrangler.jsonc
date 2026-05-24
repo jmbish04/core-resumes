@@ -148,6 +148,14 @@
         "name": "ROLE_CHAT_AGENT",
         "class_name": "RoleChatAgent",
       },
+      {
+        "name": "FREELANCE_SCANNER_AGENT",
+        "class_name": "FreelanceScannerAgent",
+      },
+      {
+        "name": "SALARY_AGENT",
+        "class_name": "SalaryAgent",
+      },
     ],
   },
   "migrations": [
@@ -173,6 +181,10 @@
       "tag": "v6",
       "new_sqlite_classes": ["RoleChatAgent"],
     },
+    {
+      "tag": "v7",
+      "new_sqlite_classes": ["FreelanceScannerAgent", "SalaryAgent"],
+    },
   ],
   "vars": {
     "DEFAULT_MODEL_EMBEDDING": "@cf/baai/bge-large-en-v1.5",
@@ -181,6 +193,8 @@
     "AI_GATEWAY_ID": "job-hunt",
     "AI_GATEWAY_NAME": "default-gateway",
     "CAREER_NOTEBOOKLM_ID": "ae2a743f-231b-4b05-ab98-683d01dd5c65", //  https: //notebooklm.google.com/notebook/ae2a743f-231b-4b05-ab98-683d01dd5c65
+    "NOTEBOOKLM_FASTAPI_URL": "http://127.0.0.1:8789",
+    "NOTEBOOKLM_FASTAPI_KEY": "colby-notebooklm-bridge-key-2026",
     "MODEL_CHAT": "@cf/openai/gpt-oss-120b",
     "MODEL_EXTRACT": "@cf/openai/gpt-oss-120b",
     "MODEL_DRAFT": "@cf/openai/gpt-oss-120b",
@@ -199,10 +213,21 @@
     "DEFAULT_BOARD_TOKENS": "cloudflare,vercel,anthropic,headway",
     "ALLOWED_EMAILS": ["justin@126colby.com", "jmbish04@gmail.com"],
     "WORKER_EMAIL_INBOX": "job-pipeline@hacolby.app",
+    "RAPIDAPI_HOST_UPWORK": "upwork-jobs-api3.p.rapidapi.com",
+    "RAPIDAPI_HOST_FREELANCER": "upwork-jobs-search-api.p.rapidapi.com",
+    "FREELANCE_SCAN_SKILLS": "React,TypeScript,Node.js,Next.js,Cloudflare Workers",
+    "FREELANCE_DEFAULT_HOURLY_MIN": "50",
+    "FREELANCE_DEFAULT_EXPERIENCE": "expert",
   },
+  "vpc_services": [ 
+    {
+      "binding": "VPC_SERVICE",
+      "service_id": "019df0c3-7091-7613-895a-dd8995045be5",
+    },
+  ],
   "triggers": {
-    /* Health check cron + Greenhouse pipeline cron */
-    "crons": ["0 */4 * * *", "0 */6 * * *"],
+    /* Health check cron + Greenhouse pipeline cron + Freelance pipeline cron */
+    "crons": ["0 */4 * * *", "0 */6 * * *", "0 */12 * * *"],
   },
   "secrets": {
     "required": [
@@ -210,6 +235,7 @@
       "R2_ACCESS_KEY_ID",
       "R2_SECRET_ACCESS_KEY",
       "OPENROUTE_API_KEY",
+      "RAPIDAPI_KEY",
     ],
   },
   "secrets_store_secrets": [

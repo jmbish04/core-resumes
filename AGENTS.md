@@ -161,6 +161,16 @@ NotebookLM uses the [notebooklm-sdk](https://github.com/agmmnn/notebooklm-sdk) w
 - **Response Evaluation:** Same task evaluates NotebookLM responses for completeness and generates automatic follow-up queries if gaps detected.
 - **Memory Integration:** Every NotebookLM consultation stores the full exchange (query, answer, references, metadata) in career memory.
 
+## NotebookLM FastAPI Bridge & VPC Tunneling
+
+To bypass Google edge bot detection and prevent 1-hour session cookie expirations, all NotebookLM SDK calls can be offloaded to a local background FastAPI bridge server (`scripts/notebooklm_fastapi_server.py`) running on the host GUI session and securely tunneled via a private **VPC Service binding**.
+
+### Architecture & Bindings
+* **VPC Service Binding (`VPC_SERVICE`)**: Binds the Cloudflare Worker to the Cloudflare Tunnel private endpoint, allowing secure HTTP requests to private local endpoints.
+* **Worker Factory Interceptor**: `createNotebookClient` automatically returns a transparent `NotebookLMFastAPIProxy` that proxies all method invocations over the VPC fetch client whenever `env.NOTEBOOKLM_FASTAPI_URL` is set in `wrangler.jsonc`.
+* **Cookie Self-Healing**: The FastAPI bridge pins its cookie state path to the single canonical state `/Users/126colby/.notebooklm/storage_state.json`. On any auth failure, it automatically invokes `sync-cookies.py` to extract fresh decrypted session cookies from Chrome Profile 6, copies them to the canonical state file, and auto-retries the failed query loop zero-touch.
+* **VPC Connection health check**: The `notebooklm_credentials` health module runs an active connection test to `${NOTEBOOKLM_FASTAPI_URL}/health` over `env.VPC_SERVICE`. If the connection fails, it wraps the error in a detailed troubleshooting prompt in the `aiSuggestion` parameter to guide coding agents in debugging plist or tunnel configurations.
+
 ## Resume Pipeline (Google Docs & ATS-Backed)
 
 - **Task:** `src/backend/ai/tasks/draft-with-notebook.ts` — 4-phase pipeline + Real-time ATS Dashboard.

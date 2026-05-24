@@ -13,6 +13,7 @@ import { getActiveBullets } from "@/backend/ai/tasks";
 import { enforceTokenLimit } from "@/backend/ai/utils/token-estimator";
 import { getDb } from "@/backend/db";
 import { roles } from "@/backend/db/schema";
+import { SalaryAgent } from "@/backend/ai/agents/salary";
 
 export class RoleChatAgent extends AIChatAgent<Env> {
   static docsMetadata() {
@@ -110,6 +111,7 @@ You have access to the following tools. Use them proactively when they would hel
 - **draftDocument**: Trigger the resume or cover letter generation pipeline. Use this when the user asks you to draft, create, or generate a resume or cover letter.
 - **generateMockInterview**: Generate a fresh set of mock interview Q&A pairs tailored to this role and persist them. Use this when the user asks for interview prep or practice questions.
 - **scrapeJob**: Extract job posting content from a URL. Use this when the user provides a job URL to analyze.
+- **consultSalaryAgent**: Ask the SalaryAgent for specific salary trends, remote discount rates, local premium deltas, negotiation strategies, corporate H1B filings, or custom python calculations/simulations. Use this for ALL salary-related queries.
 
 When using tools, explain what you're doing and share the results in a clear, actionable format.`);
 
@@ -325,6 +327,28 @@ When using tools, explain what you're doing and share the results in a clear, ac
               return {
                 status: "error",
                 message: `Scraping failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+              };
+            }
+          },
+        }),
+
+        consultSalaryAgent: tool({
+          description:
+            "Ask the stateful SalaryAgent for salary statistics, remote discounts, geographic premiums, cost-of-living adjustments, corporate H1B records, or custom Python calculations/simulations.",
+          inputSchema: zodSchema(
+            z.object({
+              query: z.string().describe("The salary, benchmark, or simulation question to ask the SalaryAgent"),
+            }),
+          ) as any,
+          execute: async ({ query }) => {
+            try {
+              const agent = (await getAgentByName(this.env.SALARY_AGENT as any, "global")) as any;
+              const result = await agent.answerSalaryQuestion(query, roleId ?? undefined);
+              return { success: true, answer: result };
+            } catch (err) {
+              return {
+                success: false,
+                error: `SalaryAgent consultation failed: ${err instanceof Error ? err.message : String(err)}`,
               };
             }
           },

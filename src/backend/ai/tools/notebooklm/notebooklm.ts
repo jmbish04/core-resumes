@@ -334,6 +334,14 @@ async function getOrFetchAuth(env: Env, cookieString: string): Promise<CachedAut
  * was detected as non-browser access by Google.
  */
 export async function createNotebookClient(env: Env): Promise<NotebookLMClient> {
+  const fastapiUrl = (env as any).NOTEBOOKLM_FASTAPI_URL;
+  const fastapiKey = (env as any).NOTEBOOKLM_FASTAPI_KEY;
+
+  if (fastapiUrl) {
+    console.info(`[createNotebookClient] Proxying NotebookLM calls to FastAPI server at ${fastapiUrl}`);
+    return new NotebookLMFastAPIProxy(env, fastapiUrl, fastapiKey) as unknown as NotebookLMClient;
+  }
+
   const cookieString = await getNotebookLMCookies(env);
 
   if (!cookieString || cookieString.length < 10) {
@@ -470,4 +478,154 @@ export async function checkNotebookLMSession(env: Env): Promise<SessionCheckResu
   }
 
   return { available: false, source: "none" };
+}
+
+// ---------------------------------------------------------------------------
+// FastAPI Proxy Interceptor Client
+// ---------------------------------------------------------------------------
+
+class NotebookLMFastAPIProxy {
+  private url: string;
+  private apiKey: string;
+  private fetchFn: typeof fetch;
+
+  constructor(env: Env, url: string, apiKey: string) {
+    this.url = url.endsWith("/") ? url.slice(0, -1) : url;
+    this.apiKey = apiKey;
+    this.fetchFn = (env as any).VPC_SERVICE
+      ? (env as any).VPC_SERVICE.fetch.bind((env as any).VPC_SERVICE)
+      : fetch;
+  }
+
+  get notebooks() { return this.createNamespaceProxy("notebooks"); }
+  get chat() { return this.createNamespaceProxy("chat"); }
+  get sources() { return this.createNamespaceProxy("sources"); }
+  get artifacts() { return this.createNamespaceProxy("artifacts"); }
+  get research() { return this.createNamespaceProxy("research"); }
+  get notes() { return this.createNamespaceProxy("notes"); }
+  get settings() { return this.createNamespaceProxy("settings"); }
+  get sharing() { return this.createNamespaceProxy("sharing"); }
+
+  private uint8ArrayToBase64(uint8: Uint8Array): string {
+    let binary = "";
+    const len = uint8.byteLength;
+    const chunkSize = 8192;
+    for (let i = 0; i < len; i += chunkSize) {
+      const chunk = uint8.subarray(i, i + chunkSize);
+      binary += String.fromCharCode.apply(null, chunk as unknown as number[]);
+    }
+    return btoa(binary);
+  }
+
+  private createNamespaceProxy(namespace: string) {
+    const self = this;
+    return new Proxy({} as any, {
+      get(target, prop) {
+        if (typeof prop !== "string") return undefined;
+
+        return async (...args: any[]) => {
+          // Check for raw binary download methods
+          const isDownload = namespace === "artifacts" && (
+            prop === "downloadAudio" ||
+            prop === "downloadVideo" ||
+            prop === "downloadSlideDeck" ||
+            prop === "downloadInfographic"
+          );
+
+          if (isDownload) {
+            const notebookId = args[0];
+            const artifactId = args[1];
+            const format = prop === "downloadSlideDeck" ? args[2] : undefined;
+            
+            const kind = prop.replace("download", "").replace(/^[A-Z]/, (c) => c.toLowerCase());
+            const queryParams = format ? `?output_format=${format}` : "";
+            
+            const downloadUrl = `${self.url}/notebooks/${notebookId}/artifacts/download-raw/${kind}/${artifactId}${queryParams}`;
+            
+            const response = await self.fetchFn(downloadUrl, {
+              method: "GET",
+              headers: {
+                ...(self.apiKey ? { "x-api-key": self.apiKey } : {}),
+              },
+            });
+
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(`FastAPI Proxy download failed (${response.status}): ${errorText}`);
+            }
+
+            const arrayBuffer = await response.arrayBuffer();
+            return new Uint8Array(arrayBuffer);
+          }
+
+          // Check for raw buffer upload methods
+          if (namespace === "sources" && prop === "addFileBuffer") {
+            const notebookId = args[0];
+            const buffer = args[1];
+            const fileName = args[2];
+            const mimeType = args[3];
+
+            let contentBase64: string;
+            if (buffer instanceof Uint8Array || ArrayBuffer.isView(buffer)) {
+              contentBase64 = self.uint8ArrayToBase64(new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength));
+            } else if (buffer instanceof ArrayBuffer) {
+              contentBase64 = self.uint8ArrayToBase64(new Uint8Array(buffer));
+            } else if (typeof buffer === "string") {
+              contentBase64 = btoa(buffer);
+            } else if (buffer && typeof (buffer as any).toString === "function") {
+              contentBase64 = (buffer as any).toString("base64");
+            } else {
+              throw new Error("addFileBuffer: unsupported buffer argument type");
+            }
+
+            const uploadUrl = `${self.url}/notebooks/${notebookId}/sources/file-buffer`;
+            const response = await self.fetchFn(uploadUrl, {
+              method: "POST",
+              headers: {
+                "content-type": "application/json",
+                ...(self.apiKey ? { "x-api-key": self.apiKey } : {}),
+              },
+              body: JSON.stringify({
+                content_base64: contentBase64,
+                file_name: fileName,
+                mime_type: mimeType,
+              }),
+            });
+
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(`FastAPI Proxy addFileBuffer failed (${response.status}): ${errorText}`);
+            }
+
+            const payload = (await response.json()) as any;
+            return payload.source;
+          }
+
+          // Fallback: convert JS camelCase to Python snake_case
+          const methodSnake = prop.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+          const rpcUrl = `${self.url}/rpc/${namespace}/${methodSnake}`;
+
+          const response = await self.fetchFn(rpcUrl, {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              ...(self.apiKey ? { "x-api-key": self.apiKey } : {}),
+            },
+            body: JSON.stringify({
+              args: args,
+              kwargs: {},
+            }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`FastAPI Proxy RPC failed (${response.status}): ${errorText}`);
+          }
+
+          const payload = (await response.json()) as any;
+          return payload.result;
+        };
+      },
+    });
+  }
 }

@@ -9,6 +9,7 @@ import {
   ExternalLink,
   FileText,
   Handshake,
+  Loader2,
   LogOut,
   Mic,
   Send,
@@ -38,7 +39,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Stepper, StepperItem } from "@/components/ui/stepper";
-import { apiDelete, apiPatch, toast } from "@/lib/api-client";
+import { apiDelete, apiGet, apiPatch, apiPost, toast } from "@/lib/api-client";
+
+const GREENHOUSE_PATTERN =
+  /^https?:\/\/(?:job-boards|boards)\.greenhouse\.io\/(?:embed\/job_app\?.*?(?:token=([^&]+).*?id=([^&]+)|id=([^&]+).*?token=([^&]+))|([^/]+)\/jobs\/(\d+))/i;
+
+function parseGreenhouseToken(url: string | null): string | null {
+  if (!url) return null;
+  const match = url.match(GREENHOUSE_PATTERN);
+  if (!match) return null;
+  if (match[5]) return match[5];
+  return match[1] || match[4] || null;
+}
 
 import type { RoleRow } from "../dashboard/types";
 
@@ -192,6 +204,9 @@ export function RoleHeader({ role }: { role: RoleRow }) {
     toLabel: string;
   } | null>(null);
 
+  const [trackedTokens, setTrackedTokens] = useState<Set<string>>(new Set());
+  const [promotingToken, setPromotingToken] = useState<string | null>(null);
+
   useEffect(() => {
     async function fetchAnalysis() {
       try {
@@ -204,6 +219,13 @@ export function RoleHeader({ role }: { role: RoleRow }) {
       }
     }
     fetchAnalysis();
+
+    apiGet<{ tokens: { token: string }[] }>("/api/pipeline/board-tokens")
+      .then((res) => {
+        const tokens = new Set(res.tokens.map((t) => t.token));
+        setTrackedTokens(tokens);
+      })
+      .catch(() => {});
   }, [current.id]);
 
   const handleRoleUpdate = useCallback((updated: RoleRow) => {
@@ -273,6 +295,14 @@ export function RoleHeader({ role }: { role: RoleRow }) {
               <StatusIcon className="mr-1 size-3" />
               {meta.label}
             </Badge>
+            {current.source === "greenhouse_scan" && (
+              <Badge
+                variant="outline"
+                className="border-blue-500/30 text-blue-400 bg-blue-500/10 text-xs flex items-center"
+              >
+                Sourced from Discovery Pipeline
+              </Badge>
+            )}
           </div>
           <p className="mt-1 text-lg text-muted-foreground">{current.jobTitle}</p>
 
@@ -333,6 +363,55 @@ export function RoleHeader({ role }: { role: RoleRow }) {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
+          {(() => {
+            const token = parseGreenhouseToken(current.jobUrl);
+            if (token && !trackedTokens.has(token)) {
+              return (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 border-amber-500/30 text-amber-500 hover:bg-amber-500/10 font-medium transition-colors"
+                  disabled={promotingToken === token}
+                  onClick={async () => {
+                    setPromotingToken(token);
+                    try {
+                      await apiPost("/api/pipeline/board-tokens", {
+                        token,
+                        companyName: current.companyName,
+                        isActive: true,
+                      });
+                      setTrackedTokens((prev) => {
+                        const next = new Set(prev);
+                        next.add(token);
+                        return next;
+                      });
+                      toast({
+                        title: "Tracking Activated",
+                        description: `Added '${current.companyName}' to active scans in Pipeline B tracker.`,
+                      });
+                    } catch (err) {
+                      toast({
+                        title: "Promotion Failed",
+                        description: err instanceof Error ? err.message : "Unknown error",
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setPromotingToken(null);
+                    }
+                  }}
+                >
+                  {promotingToken === token ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Award className="size-4" />
+                  )}
+                  Track Company in Pipeline B
+                </Button>
+              );
+            }
+            return null;
+          })()}
+
           {/* Actions menu */}
           <RoleActionsDialog role={current} onRoleUpdate={handleRoleUpdate} />
 

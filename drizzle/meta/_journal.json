@@ -232,6 +232,34 @@
       "when": 1779617805786,
       "tag": "0032_red_solo",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "6",
+      "when": 1779625004012,
+      "tag": "0033_chubby_ken_ellis",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "6",
+      "when": 1779625488112,
+      "tag": "0034_perpetual_norman_osborn",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "6",
+      "when": 1779625794512,
+      "tag": "0035_fluffy_peter_quill",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "6",
+      "when": 1779626435378,
+      "tag": "0036_daffy_cloak",
+      "breakpoints": true
     }
   ]
 }

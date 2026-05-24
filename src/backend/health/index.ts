@@ -61,6 +61,7 @@ import { checkSTT } from "@/backend/health/checks/stt";
 import { checkTTS } from "@/backend/health/checks/tts";
 import { checkVectorizeJobs } from "@/backend/health/checks/vectorize-jobs";
 import { checkSecrets, checkEnvVars } from "@/backend/utils/health";
+import { checkSalarySandbox } from "@/backend/health/checks/salary-sandbox";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -75,6 +76,7 @@ const PER_CHECK_TIMEOUT_MS = 30_000;
 function getTimeoutOverrides(trigger: HealthTrigger): Record<string, number> {
   const base: Record<string, number> = {
     agent_notebooklm: 45_000,
+    salary_sandbox: 45_000,
     google_drive_lifecycle: 45_000,
     extraction_fidelity: 120_000,
     openroute_commute: 90_000,
@@ -152,6 +154,11 @@ function buildCheckRegistry(
       name: "agent_transcription",
       category: "agents",
       fn: () => checkTranscriptionAgentRPC(env) as Promise<HealthStepResult>,
+    },
+    {
+      name: "salary_sandbox",
+      category: "agents",
+      fn: () => checkSalarySandbox(env),
     },
 
     // API / Pipeline

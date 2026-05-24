@@ -35,6 +35,8 @@ import { NotebookLMMcpAgent } from "./backend/ai/agents/notebooklm-mcp";
 import { OrchestratorAgent } from "./backend/ai/agents/orchestrator";
 import { SyncBroadcastAgent } from "./backend/ai/agents/sync-broadcast";
 import { TranscriptionAgent } from "./backend/ai/agents/transcription";
+import { SalaryAgent } from "./backend/ai/agents/salary";
+import { FreelanceScannerAgent } from "./backend/ai/agents/job/freelance-scanner";
 import { app as honoApp } from "./backend/api";
 import { handleInboundEmail } from "./backend/email/handler";
 import { HealthCoordinator } from "./backend/health";
@@ -47,6 +49,8 @@ export {
   JobAnalysisAgent,
   SyncBroadcastAgent,
   RoleChatAgent,
+  SalaryAgent,
+  FreelanceScannerAgent,
 };
 
 /**
@@ -107,13 +111,31 @@ export function createExports(manifest: any) {
   };
 
   /**
-   * Cron-triggered health screening handler.
+   * Cron-triggered handler.
    *
-   * Runs every 4 hours (configured in `wrangler.jsonc` triggers.crons).
-   * Executes the full modular health screening, persists results to D1,
-   * and logs the aggregate status.
+   * - `0 *\/4 * * *` — 4-hour health check.
+   * - `0 *\/6 * * *` — 6-hour Greenhouse pipeline scan.
+   * - `0 *\/12 * * *` — 12-hour freelance pipeline scan.
    */
-  const scheduled = async (_controller: any, env: any, _ctx: any) => {
+  const scheduled = async (controller: any, env: any, ctx: any) => {
+    const cronExpression = controller.cron ?? "";
+
+    // 12-hour freelance pipeline scan
+    if (cronExpression === "0 */12 * * *") {
+      try {
+        const { getAgentByName } = await import("agents");
+        const agent = await getAgentByName(env.FREELANCE_SCANNER_AGENT, "global");
+        const sessionIds = await (agent as any).scanAll();
+        console.log(
+          `[cron:freelance] Scan triggered — ${sessionIds.length} session(s) started`,
+        );
+      } catch (e) {
+        console.error("[cron:freelance] Failed to trigger freelance scan:", e);
+      }
+      return;
+    }
+
+    // Default: health check (4-hour cron)
     try {
       const coordinator = new HealthCoordinator(env);
       const { run } = await coordinator.runAllChecks("scheduled");
@@ -137,6 +159,8 @@ export function createExports(manifest: any) {
     JobAnalysisAgent,
     SyncBroadcastAgent,
     RoleChatAgent,
+    SalaryAgent,
+    FreelanceScannerAgent,
     Sandbox,
   };
 }

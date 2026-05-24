@@ -48,3 +48,10 @@ export * from "./job-saved-list-items";
 // External ATS references
 export * from "./api-companies";
 export * from "./api-company-sync-stats";
+
+// Freelance Pipeline
+export * from "./freelance-opportunities";
+export * from "./freelance-triage";
+export * from "./freelance-proposals";
+export * from "./freelance-scan-runs";
+export * from "./freelance-profile";

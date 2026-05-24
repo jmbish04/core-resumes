@@ -22,7 +22,82 @@ export async function checkNotebookLMCredentials(env: Env): Promise<HealthStepRe
   }
   details.notebookId = env.CAREER_NOTEBOOKLM_ID || "missing";
 
-  // Check KV session
+  const fastapiUrl = (env as any).NOTEBOOKLM_FASTAPI_URL;
+  const fastapiKey = (env as any).NOTEBOOKLM_FASTAPI_KEY;
+
+  if (fastapiUrl) {
+    details.fastapiUrl = fastapiUrl;
+    details.connectionMode = (env as any).VPC_SERVICE ? "VPC Service Binding" : "Direct Fetch";
+
+    const fetchFn = (env as any).VPC_SERVICE
+      ? (env as any).VPC_SERVICE.fetch.bind((env as any).VPC_SERVICE)
+      : fetch;
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000); // 4-second timeout
+
+      const response = await fetchFn(`${fastapiUrl}/health`, {
+        method: "GET",
+        headers: {
+          ...(fastapiKey ? { "x-api-key": fastapiKey } : {}),
+        },
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error Status ${response.status}`);
+      }
+
+      const body = await response.json() as any;
+      details.fastapiHealth = body;
+      details.kvSessionPresent = true; // Simulated for credentials compatibility
+      details.sessionSource = "fastapi_bridge";
+
+      if (body.ok) {
+        return {
+          status: "ok",
+          latencyMs: Date.now() - start,
+          details,
+        };
+      } else {
+        issues.push(`FastAPI reported unhealthy: ${JSON.stringify(body)}`);
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      issues.push(`FastAPI Bridge Connection Failed: ${errorMsg}`);
+      
+      // Wrap the failure in a troubleshooting prompt for a coding agent to fix it
+      const aiPrompt = `
+[FastAPI VPC Connection Health Failure]
+The Cloudflare Worker attempted to connect to the local NotebookLM FastAPI bridge server via the private VPC/Tunnel but failed.
+
+Connection Details:
+- Target URL: ${fastapiUrl}
+- Connection Mode: ${details.connectionMode}
+- Error: ${errorMsg}
+
+Troubleshooting Steps for Agent:
+1. Verify the LaunchAgent daemon is loaded and running on the host machine:
+   'launchctl list | grep colby'
+2. View background uvicorn stderr logs for startup exceptions or port-binding blockages:
+   'cat /Users/126colby/.notebooklm/launchd-stderr.log'
+3. Confirm the Cloudflare Tunnel is running and properly forwarding private traffic to the host port 8789.
+4. If in local development, ensure you are testing the Worker under local dev vars matching 'http://127.0.0.1:8789'.
+      `;
+      
+      return {
+        status: "fail",
+        latencyMs: Date.now() - start,
+        error: issues.join("; "),
+        details,
+        aiSuggestion: aiPrompt,
+      };
+    }
+  }
+
+  // Fallback to original KV session cookie checking if no FastAPI bridge is configured
   let kvSessionPresent = false;
   try {
     const kvSession = await env.KV.get("ACTIVE_NOTEBOOKLM_SESSION");

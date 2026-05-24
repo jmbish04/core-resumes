@@ -397,6 +397,22 @@ export async function getOpenRouteApiKey(env: Env): Promise<string> {
 }
 
 /**
+ * RapidAPI Key
+ * Helper to fetch the RAPIDAPI_KEY from worker secret
+ * (e.g. via 'wrangler secret put RAPIDAPI_KEY').
+ * Used for Upwork Jobs API and Freelancer.com Jobs API.
+ */
+export async function getRapidApiKey(env: Env): Promise<string> {
+  if (env.RAPIDAPI_KEY) {
+    return env.RAPIDAPI_KEY;
+  }
+  throw new Error(
+    "Missing env.RAPIDAPI_KEY in Worker Secret Bindings. " +
+      "Set via 'wrangler secret put RAPIDAPI_KEY' or add to .dev.vars for local dev.",
+  );
+}
+
+/**
  * Helper to fetch the Google Maps API Key.
  * Maps to GOOGLE_MAPS_API in this worker secret binding.
  */

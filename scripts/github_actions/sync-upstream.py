@@ -16,6 +16,9 @@ Required Environment Variables:
 import atexit
 import os
 import sys
+import gzip
+import json
+import io
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
@@ -431,6 +434,254 @@ def fetch_upstream(worker_url, worker_key):
     return company_list, files_processed
 
 
+def fetch_and_sync_salary_stats(worker_url, worker_key):
+    """
+    Downloads raw jobboard salary datasets from job-board-aggregator:
+    1. salary_lookup.json (granular company H1B statistics).
+    2. jobs_chunk_*.json.gz (raw Open Ashby/Lever/Greenhouse job listings).
+    
+    Filters them by target roles in the candidate profile, aggregates remote/local/hub/national
+    salary ranges, and uploads the compiled stats snapshot to the Worker D1 database.
+    """
+    print("\n--- Commencing Market Salary Statistics Sync ---")
+    send_progress(worker_url, worker_key, "salary_sync", message="Syncing market salary statistics...")
+
+    headers = {
+        "Authorization": f"Bearer {worker_key}",
+        "User-Agent": "Core-Resumes-Aggregator-Sync"
+    }
+
+    # 1. Fetch applicant profile config
+    print("Fetching applicant profile configurations from worker...")
+    try:
+        res = requests.get(f"{worker_url.rstrip('/')}/api/config/applicant_profile", headers=headers, timeout=10)
+        res.raise_for_status()
+        profile = res.json().get("value", {})
+    except Exception as e:
+        print(f"Warning: Failed to fetch applicant profile, using defaults: {e}")
+        profile = {
+            "location": "San Francisco Bay Area",
+            "locations": ["san francisco", "sf", "bay area", "oakland", "san jose", "california", "ca"],
+            "hubs": ["San Francisco", "New York", "Seattle", "Austin"],
+            "target_roles": ["software engineer", "frontend", "backend", "fullstack", "devops"]
+        }
+
+    target_roles = [r.lower() for r in profile.get("target_roles", [])]
+    local_keywords = [l.lower() for l in profile.get("locations", [])]
+    hubs = [h.lower() for h in profile.get("hubs", [])]
+
+    # Map target role to lists for Remote, Local, Top Hubs, National
+    # Each list holds dicts: {"p25": int, "median": int, "p75": int, "n": int}
+    role_aggregates = {
+        role: {
+            "remote": [],
+            "local_market": [],
+            "top_hubs": [],
+            "national": []
+        }
+        for role in target_roles
+    }
+
+    # Helper function to download and aggregate a single chunk
+    def process_chunk_url(chunk_name, chunk_url):
+        print(f"Processing chunk: {chunk_name}...")
+        try:
+            req = requests.get(chunk_url, headers={"User-Agent": "Core-Resumes-Aggregator-Sync"}, timeout=20)
+            req.raise_for_status()
+            with gzip.GzipFile(fileobj=io.BytesIO(req.content)) as f:
+                jobs = json.loads(f.read().decode('utf-8'))
+                
+                local_matches = 0
+                for job in jobs:
+                    title = str(job.get("title", "")).lower()
+                    
+                    # Match role type
+                    matched_role = None
+                    for role in target_roles:
+                        if role in title:
+                            matched_role = role
+                            break
+                    
+                    if not matched_role:
+                        continue
+                    
+                    salary = job.get("salary")
+                    if not salary or not isinstance(salary, dict):
+                        continue
+                    
+                    p25 = salary.get("p25")
+                    median = salary.get("median")
+                    p75 = salary.get("p75")
+                    n = salary.get("n", 1)
+                    
+                    if p25 is None or median is None or p75 is None:
+                        continue
+                        
+                    data_point = {"p25": p25, "median": median, "p75": p75, "n": n}
+                    location = str(job.get("location", "")).lower()
+                    
+                    # National (all matching US/generally)
+                    role_aggregates[matched_role]["national"].append(data_point)
+                    
+                    # Remote
+                    if "remote" in location:
+                        role_aggregates[matched_role]["remote"].append(data_point)
+                    
+                    # Local (SF Bay Area)
+                    if any(kw in location for kw in local_keywords):
+                        role_aggregates[matched_role]["local_market"].append(data_point)
+                    
+                    # Top Hubs (e.g. NYC, Seattle, Austin)
+                    if any(hub in location for hub in hubs):
+                        role_aggregates[matched_role]["top_hubs"].append(data_point)
+                        
+                    local_matches += 1
+                return local_matches
+        except Exception as e:
+            print(f"Error processing chunk {chunk_name}: {e}")
+            return 0
+
+    # 2. Get list of chunk files from GitHub API
+    print("Fetching chunk files listing from upstream...")
+    try:
+        chunks_api_url = "https://api.github.com/repos/Feashliaa/job-board-aggregator/contents/data/chunks"
+        req = requests.get(chunks_api_url, headers={"User-Agent": "Core-Resumes-Aggregator-Sync"}, timeout=10)
+        req.raise_for_status()
+        contents = req.json()
+        chunk_files = [item for item in contents if item["type"] == "file" and item["name"].endswith(".json.gz")]
+    except Exception as e:
+        print(f"Failed to fetch chunk files list: {e}")
+        # Fall back to standard chunks list (0 to 53) if API fails
+        chunk_files = [
+            {
+                "name": f"jobs_chunk_{i}.json.gz",
+                "download_url": f"https://raw.githubusercontent.com/Feashliaa/job-board-aggregator/main/data/chunks/jobs_chunk_{i}.json.gz"
+            }
+            for i in range(54)
+        ]
+
+    # Process first 30 chunks concurrently for quick and light run, or scan all if needed.
+    scan_chunks = chunk_files
+    print(f"Aggregating from {len(scan_chunks)} job chunk files concurrently...")
+
+    total_matched = 0
+    with ThreadPoolExecutor(max_workers=10, thread_name_prefix="salary-aggregator") as executor:
+        futures = [
+            executor.submit(process_chunk_url, c["name"], c["download_url"])
+            for c in scan_chunks
+        ]
+        for fut in futures:
+            total_matched += fut.result()
+
+    print(f"Extracted and categorized {total_matched:,} matching job postings from chunks.")
+
+    # 3. Compute weighted percentiles for D1 stats sync
+    sync_stats = []
+    for role, metrics in role_aggregates.items():
+        for key, points in metrics.items():
+            if not points:
+                continue
+            
+            # Compute weighted averages
+            total_n = sum(p["n"] for p in points)
+            if total_n == 0:
+                continue
+            
+            w_p25 = sum(p["p25"] * p["n"] for p in points) / total_n
+            w_median = sum(p["median"] * p["n"] for p in points) / total_n
+            w_p75 = sum(p["p75"] * p["n"] for p in points) / total_n
+            
+            # Formatting labels
+            label_map = {
+                "remote": "Remote",
+                "local_market": profile.get("location", "San Francisco Bay Area"),
+                "top_hubs": "Top Tech Hubs",
+                "national": "National Average"
+            }
+            
+            sync_stats.append({
+                "roleType": role,
+                "metricKey": key,
+                "metricLabel": label_map.get(key, key.title()),
+                "p25": int(w_p25),
+                "median": int(w_median),
+                "p75": int(w_p75),
+                "sampleSize": total_n
+            })
+
+    # 4. Fetch company-specific H1B certified salaries from salary_lookup.json
+    print("Downloading and parsing salary_lookup.json H1B data...")
+    sync_companies = []
+    try:
+        lookup_url = "https://raw.githubusercontent.com/Feashliaa/job-board-aggregator/refs/heads/main/data/salary/salary_lookup.json"
+        lookup_res = requests.get(lookup_url, headers={"User-Agent": "Core-Resumes-Aggregator-Sync"}, timeout=15)
+        lookup_res.raise_for_status()
+        lookup_data = lookup_res.json()
+        primary = lookup_data.get("primary", {})
+        
+        # Format of key: "company|job title|seniority"
+        # We only keep rows where the job title matches any of our target roles
+        for key, stats in primary.items():
+            parts = key.split("|")
+            if len(parts) < 3:
+                continue
+            company, title, seniority = parts[0], parts[1], parts[2]
+            
+            # Check title match
+            matched_title = False
+            for role in target_roles:
+                if role in title:
+                    matched_title = True
+                    break
+            
+            if matched_title:
+                sync_companies.append({
+                    "companyName": company.lower(),
+                    "jobTitle": title.lower(),
+                    "seniority": seniority,
+                    "p25": stats.get("p25", 0),
+                    "median": stats.get("median", 0),
+                    "p75": stats.get("p75", 0),
+                    "sampleSize": stats.get("n", 1)
+                })
+        print(f"Extracted {len(sync_companies):,} company-specific lookup entries for matching roles.")
+    except Exception as e:
+        print(f"Warning: Failed to fetch salary_lookup.json H1B data: {e}")
+
+    # 5. POST to Worker REST API
+    sync_url = f"{worker_url.rstrip('/')}/api/pipeline/api-companies/salary-stats/sync"
+    print(f"Uploading market stats snapshot to Worker D1: {sync_url}")
+    
+    try:
+        payload = {
+            "status": "success",
+            "metadata": {
+                "totalJobsMatched": total_matched,
+                "chunksProcessed": len(scan_chunks),
+                "h1bRowsCount": len(sync_companies)
+            },
+            "stats": sync_stats,
+            "companySalaries": sync_companies
+        }
+        res = requests.post(sync_url, headers=headers, json=payload, timeout=30)
+        res.raise_for_status()
+        res_data = res.json()
+        print("Market stats snapshot synchronized successfully!")
+        print(f"Snapshot ID: {res_data.get('snapshotId')}")
+        print(f"Aggregated Stats Inserted: {res_data.get('statsInserted')}")
+        print(f"H1B Company Salaries Inserted: {res_data.get('companySalariesInserted')}")
+        
+        send_progress(
+            worker_url,
+            worker_key,
+            "salary_sync_complete",
+            message=f"Market salary sync complete! Snapshot #{res_data.get('snapshotId')} created."
+        )
+    except Exception as e:
+        print(f"Error posting stats to Worker REST API: {e}")
+        send_progress(worker_url, worker_key, "salary_sync_failed", message=f"Salary sync failed: {e}")
+
+
 def main():
     worker_url = os.environ.get("WORKER_API_URL")
     worker_key = os.environ.get("WORKER_API_KEY")
@@ -485,6 +736,9 @@ def main():
             "completed", 
             message=f"Sync complete. Inserted: {result.get('inserted', 0):,}, Reactivated: {result.get('reactivated', 0):,}, Deactivated: {result.get('deactivated', 0):,}"
         )
+
+        # Sync Market Salary stats as the final step in the pipeline
+        fetch_and_sync_salary_stats(worker_url, worker_key)
         
     except requests.exceptions.HTTPError as e:
         print(f"HTTP Error during sync: {e}")
@@ -499,3 +753,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

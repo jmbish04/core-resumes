@@ -1,0 +1,4 @@
+# Non-production directories excluded from formatting
+docs/
+tmp/
+ai-workflow/

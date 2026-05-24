@@ -17,6 +17,7 @@ import { healthRouter } from "./health";
 import { insightsRouter } from "./insights";
 import { jobsRouter } from "./jobs";
 import { statsRouter } from "./stats";
+import { salaryStatsRouter } from "./salary-stats";
 
 // ---------------------------------------------------------------------------
 // Composed Router
@@ -30,3 +31,5 @@ pipelineRouter.route("/", apiCompaniesRouter);
 pipelineRouter.route("/", healthRouter);
 pipelineRouter.route("/", insightsRouter);
 pipelineRouter.route("/", jobsRouter);
+pipelineRouter.route("/", salaryStatsRouter);
+

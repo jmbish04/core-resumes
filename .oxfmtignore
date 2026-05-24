@@ -1,0 +1,5 @@
+# Non-production directories with HTML/JSON files that reference incorrect paths
+docs/
+tmp/
+ai-workflow/
+scripts/

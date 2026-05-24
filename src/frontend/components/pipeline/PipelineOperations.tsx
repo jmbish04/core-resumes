@@ -6,6 +6,7 @@ import {
   Github,
   Loader2,
   RefreshCw,
+  ScrollText,
   Terminal,
   Wifi,
   WifiOff,
@@ -413,8 +414,15 @@ Please review the logs above, isolate the failure in the system execution layer,
               <CardTitle className="text-xl">Pipeline A (Aggregator Sync)</CardTitle>
               {getWsStatusBadge()}
             </div>
-            <CardDescription>
-              Sync upstream jobs data from GitHub to populate API companies list in D1
+            <CardDescription className="flex flex-col gap-1.5">
+              <span>Sync upstream jobs data from GitHub to populate API companies list in D1</span>
+              <a
+                href="/docs/greenhouse-aggregator#recommendation-engine"
+                className="text-xs text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1 mt-1 font-medium w-fit"
+              >
+                <ScrollText className="size-3" />
+                How are roles and companies evaluated for recommendations? View Documentation
+              </a>
             </CardDescription>
           </div>
           <Button

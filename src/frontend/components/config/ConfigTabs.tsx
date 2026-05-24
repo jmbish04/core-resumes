@@ -1,6 +1,7 @@
 import { AgentRulesEditor } from "@/components/config/AgentRulesEditor";
 import { CareerStoriesEditor } from "@/components/config/CareerStoriesEditor";
 import { CompensationEditor } from "@/components/config/CompensationEditor";
+import { ApplicantProfileEditor } from "@/components/config/ApplicantProfileEditor";
 import { NotebookLMPromptEditor } from "@/components/config/NotebookLMPromptEditor";
 import { NotebookSessionManager } from "@/components/config/NotebookSessionManager";
 import { PipelineConfigEditor } from "@/components/config/PipelineConfigEditor";
@@ -41,10 +42,12 @@ export function ConfigTabs() {
           <PromptEditor />
           <div className="space-y-5">
             <CompensationEditor />
+            <ApplicantProfileEditor />
             <CareerStoriesEditor />
           </div>
         </div>
       </TabsContent>
+
 
       <TabsContent value="resume-data" className="space-y-5">
         <ResumeBulletsEditor />

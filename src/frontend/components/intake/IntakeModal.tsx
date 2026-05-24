@@ -133,8 +133,25 @@ export function IntakeModal() {
   });
   const abortRef = useRef<AbortController | null>(null);
 
+  const [source, setSource] = useState<string>("manual");
+  const [sourceSnapshotId, setSourceSnapshotId] = useState<number | null>(null);
+
   useEffect(() => {
-    function onOpen() {
+    function onOpen(e: Event) {
+      const customEvent = e as CustomEvent<{ url?: string; source?: string; sourceSnapshotId?: number }>;
+      if (customEvent?.detail?.url) {
+        setUrl(customEvent.detail.url);
+      }
+      if (customEvent?.detail?.source) {
+        setSource(customEvent.detail.source);
+      } else {
+        setSource("manual");
+      }
+      if (customEvent?.detail?.sourceSnapshotId) {
+        setSourceSnapshotId(customEvent.detail.sourceSnapshotId);
+      } else {
+        setSourceSnapshotId(null);
+      }
       setOpen(true);
     }
 
@@ -157,6 +174,8 @@ export function IntakeModal() {
     setSubmissionPhase("idle");
     setCreatedRole(null);
     setLogs({ scraping: [], extracting: [], mapping: [] });
+    setSource("manual");
+    setSourceSnapshotId(null);
   }
 
   function handleClose() {
@@ -306,6 +325,8 @@ export function IntakeModal() {
       const payload = {
         ...draft,
         roleBullets: bullets.filter((b) => b.content.trim()),
+        source,
+        sourceSnapshotId,
       };
       const role = await apiPost<RoleResponse>("/api/intake/confirm", payload);
       setCreatedRole(role);
