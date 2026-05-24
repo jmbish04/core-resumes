@@ -34,7 +34,7 @@
     "seed:all:local": "pnpm run seed:local && pnpm run seed:rubrics:local && pnpm run seed:global-config:local && pnpm run seed:resume-bullets:local",
     "seed:all:remote": "pnpm run seed:remote && pnpm run seed:rubrics:remote && pnpm run seed:global-config:remote && pnpm run seed:resume-bullets:remote",
     "deploy": "pnpm run verify-sandbox && pnpm run build && cp .assetsignore dist/.assetsignore && pnpm run migrate:remote && wrangler deploy",
-    "deploy:preview": "pnpm run verify-sandbox && pnpm run build && cp .assetsignore dist/.assetsignore && wrangler deploy --env preview",
+    "deploy:preview": "pnpm run verify-sandbox && pnpm run build && cp .assetsignore dist/.assetsignore && pnpm run migrate:remote --env preview && wrangler deploy --env preview",
     "deploy:tail": "pnpm run deploy && pnpm run tail",
     "verify-sandbox": "node scripts/verify-sandbox-version.mjs",
     "session:sync": "scripts/.venv/bin/python3 scripts/sync-cookies.py",
