@@ -145,7 +145,7 @@ export function PipelineOperations() {
             if (activeIdx === -1) activeIdx = 2; // fallback to Step 3
 
             nextSteps[activeIdx].status = "failed";
-            const errMsg = payload.error || msgText || "An unexpected execution failure occurred.";
+            const errMsg = msgText || "An unexpected execution failure occurred.";
             nextSteps[activeIdx].logs.push(`CRITICAL ERROR: ${errMsg}`);
             
             // Set all subsequent steps to idle
