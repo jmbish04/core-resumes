@@ -750,6 +750,16 @@ apiCompaniesRouter.openapi(
           },
         },
       },
+      500: {
+        description: "Server Error",
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+            }),
+          },
+        },
+      },
     },
   }),
   async (c) => {
