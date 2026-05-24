@@ -199,6 +199,25 @@ def check_company_jobs(token, system, search_terms):
                             return True, f"Found match: '{job.get('title')}' in '{cat_obj.get('location') if isinstance(cat_obj, dict) else ''}'"
         except Exception:
             pass
+
+    elif system == "ashby":
+        url = f"https://api.ashbyhq.com/posting-api/job-board/{token}"
+        try:
+            res = requests.get(url, timeout=5, headers={"User-Agent": "Core-Resumes-Aggregator-Sync"})
+            if res.status_code == 200:
+                data = res.json()
+                jobs = data.get("jobs", [])
+                for job in jobs:
+                    title = str(job.get("title", "")).lower()
+                    location = str(job.get("location", "")).lower()
+                    
+                    title_match = any(t in title for t in titles_lower)
+                    location_match = any(l in location for l in locations_lower)
+                    
+                    if title_match and location_match:
+                        return True, f"Found match: '{job.get('title')}' in '{job.get('location')}'"
+        except Exception:
+            pass
             
     return False, ""
 
