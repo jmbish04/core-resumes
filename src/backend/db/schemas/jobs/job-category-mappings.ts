@@ -18,16 +18,23 @@ export const JOB_CATEGORY_MAPPINGS_COLUMN_DESCRIPTIONS: Record<string, string> =
   ai_rationale: "AI-generated reasoning for assigning this category.",
 };
 
-export const jobCategoryMappings = sqliteTable("job_category_mappings", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  jobCategoryId: integer("job_category_id")
-    .notNull()
-    .references(() => jobCategories.id, { onDelete: "cascade" }),
-  jobSnapshotId: integer("job_snapshot_id")
-    .notNull()
-    .references(() => jobSnapshots.id, { onDelete: "cascade" }),
-  aiRationale: text("ai_rationale"),
-});
+export const jobCategoryMappings = sqliteTable(
+  "job_category_mappings",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    jobCategoryId: integer("job_category_id")
+      .notNull()
+      .references(() => jobCategories.id, { onDelete: "cascade" }),
+    jobSnapshotId: integer("job_snapshot_id")
+      .notNull()
+      .references(() => jobSnapshots.id, { onDelete: "cascade" }),
+    aiRationale: text("ai_rationale"),
+  },
+  (table) => ({
+    categoryIdx: index("job_category_mappings_category_id_idx").on(table.jobCategoryId),
+    snapshotIdx: index("job_category_mappings_snapshot_id_idx").on(table.jobSnapshotId),
+  }),
+);
 
 export const insertJobCategoryMappingSchema = createInsertSchema(jobCategoryMappings);
 export const selectJobCategoryMappingSchema = createSelectSchema(jobCategoryMappings);
