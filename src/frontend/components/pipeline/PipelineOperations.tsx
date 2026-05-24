@@ -69,7 +69,7 @@ export function PipelineOperations() {
         );
 
         setSyncing(false);
-        setSyncError("Remote Action connection timeout. Verify GitHub workflow runner is online and authenticated.");
+        setSyncError(`Remote Action connection timeout after ${timeoutSecs / 1000} seconds. Verify GitHub workflow runner is online and authenticated.`);
         toast({ title: "Sync Connection Timeout", variant: "destructive" });
         return nextSteps;
       });
@@ -296,7 +296,7 @@ export function PipelineOperations() {
         return next;
       });
 
-      // Start the 45-second self-healing timeout listener
+      // Start the self-healing timeout listener
       startSyncTimeout();
 
       toast({ title: "GitHub Action triggered!", description: "Connecting to live logs..." });
