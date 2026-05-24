@@ -11,6 +11,7 @@
     "type": "git",
     "url": "https://github.com/jmbish04/core-resumes"
   },
+  "packageManager": "pnpm@10.33.0",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
