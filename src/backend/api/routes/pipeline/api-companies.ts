@@ -9,6 +9,7 @@ import { and, eq, inArray, notInArray } from "drizzle-orm";
 import { getDb } from "@/backend/db";
 import { apiCompanies, apiCompanySyncStats } from "@/backend/db/schema";
 import { getGithubToken } from "@/backend/utils/secrets";
+import { Logger } from "@/backend/lib/logger";
 
 import { syncApiCompaniesBody, syncProgressBody } from "./types";
 
@@ -116,6 +117,14 @@ apiCompaniesRouter.openapi(
       companiesDeactivated: deactivated.length,
       companiesReactivated: reactivated.length,
       status: "success",
+    });
+
+    const logger = new Logger(c.env);
+    await logger.info("[Aggregator Sync Completed] Discovered and processed company records in D1.", {
+      status: "completed",
+      added: insertedCount,
+      deactivated: deactivated.length,
+      reactivated: reactivated.length,
     });
 
     return c.json(
@@ -250,12 +259,19 @@ apiCompaniesRouter.openapi(
     },
   }),
   async (c) => {
+    const logger = new Logger(c.env);
     const token = await getGithubToken(c.env);
     if (!token) {
+      await logger.error("[Aggregator Sync Trigger] Failed: GITHUB_PERSONAL_ACCESS_TOKEN is missing in secret store.");
       return c.json({ error: "Missing GITHUB_PERSONAL_ACCESS_TOKEN" }, 500);
     }
 
     // Call GitHub API to trigger repository dispatch
+    await logger.info("[Aggregator Sync Trigger] Dispatching repository_dispatch to upstream GitHub repo...", {
+      repo: GITHUB_DISPATCH_REPO,
+      event_type: "trigger-sync"
+    });
+
     const res = await fetch(`https://api.github.com/repos/${GITHUB_DISPATCH_REPO}/dispatches`, {
       method: "POST",
       headers: {
@@ -271,10 +287,72 @@ apiCompaniesRouter.openapi(
 
     if (!res.ok) {
       const errText = await res.text();
+      await logger.error(`[Aggregator Sync Trigger] GitHub Action trigger failed: HTTP ${res.status}`, {
+        status: res.status,
+        response: errText
+      });
       return c.json({ error: `GitHub API error: ${res.status} ${errText}` }, 500);
     }
 
-    return c.json({ success: true }, 200);
+    // Verification Phase: Verify that GitHub Actions successfully registered the dispatch 
+    // and spawned a workflow run.
+    await logger.info("[Aggregator Sync Trigger] Verifying repository dispatch registered on GitHub Actions...");
+
+    let workflowRunFound = false;
+    let recentRun: any = null;
+    const now = new Date();
+
+    // Poll the GitHub runs API up to 2 times with a 1.5s delay to allow GitHub to register the dispatch event
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      try {
+        const runsRes = await fetch(`https://api.github.com/repos/${GITHUB_DISPATCH_REPO}/actions/runs?event=repository_dispatch&per_page=5`, {
+          method: "GET",
+          headers: {
+            Accept: "application/vnd.github.v3+json",
+            Authorization: `token ${token}`,
+            "User-Agent": "Core-Resumes-Worker",
+          },
+        });
+
+        if (runsRes.ok) {
+          const data: any = await runsRes.json();
+          const runs = data.workflow_runs || [];
+          
+          // Find a run triggered by repository_dispatch that was created within the last 45 seconds
+          recentRun = runs.find((run: any) => {
+            const createdAt = new Date(run.created_at);
+            const diffMs = Math.abs(now.getTime() - createdAt.getTime());
+            return diffMs < 45000; // 45 seconds threshold
+          });
+
+          if (recentRun) {
+            workflowRunFound = true;
+            break;
+          }
+        }
+      } catch (e) {
+        // Log query failure but continue polling attempts
+        await logger.warn(`[Aggregator Sync Trigger] Poll attempt #${attempt} failed: ${String(e)}`);
+      }
+    }
+
+    if (!workflowRunFound || !recentRun) {
+      const dispatchError = "GitHub Action dispatch failed to spawn a workflow run. " + 
+        "Please check if the sync workflow configuration is committed under .github/workflows/ and has the trigger-sync repository_dispatch event.";
+      await logger.error(`[Aggregator Sync Trigger] ${dispatchError}`, {
+        status: "failed",
+      });
+      return c.json({ error: dispatchError }, 500);
+    }
+
+    await logger.info(`[Aggregator Sync Trigger] GitHub Action sync successfully dispatched and validated!`, {
+      status: "dispatching",
+      message: `Verified workflow run #${recentRun.run_number} is spawned (Status: ${recentRun.status}). Run URL: ${recentRun.html_url}`,
+    });
+
+    return c.json({ success: true, runId: recentRun.id, runUrl: recentRun.html_url }, 200);
   },
 );
 
@@ -297,23 +375,69 @@ apiCompaniesRouter.openapi(
   }),
   async (c) => {
     const body = c.req.valid("json");
+    const logger = new Logger(c.env);
 
-    // Fan-out to all connected Pipeline dashboard WebSocket clients.
-    //
-    // Worker → Agent DO RPC. `wrangler types` emits the namespace with a
-    // generic referencing the agent class, so `getAgentByName` returns a
-    // fully-typed stub and `reportProgress` checks against its actual signature.
-    //
-    // @callable() is for WebSocket RPC from external clients (browsers/mobile) only.
-    // Worker → Agent calls use direct method invocation, no @callable needed.
-    // See: https://developers.cloudflare.com/agents/api-reference/callable-methods/
-    try {
-      const agent = await getAgentByName(c.env.SYNC_BROADCAST_AGENT, "global");
-      await agent.reportProgress(body);
-    } catch (e) {
-      console.error("[sync-progress] Failed to reach SyncBroadcastAgent", e);
+    // Centralized Logging: Logs to console + inserts D1 row + fans-out to WebSocket.
+    const logMetadata = {
+      status: body.status,
+      current: body.current ?? undefined,
+      total: body.total ?? undefined,
+      message: body.message ?? undefined,
+    };
+
+    const logMessage = body.message || `Sync progress update: ${body.status}`;
+
+    if (body.status === "failed" || body.status === "error") {
+      await logger.error(logMessage, logMetadata);
+    } else {
+      await logger.info(logMessage, logMetadata);
     }
 
     return c.json({ success: true }, 200);
   },
 );
+
+/**
+ * GET /api-companies/steps — Get synchronization workflow steps (single source of truth).
+ */
+apiCompaniesRouter.openapi(
+  createRoute({
+    method: "get",
+    path: "/api-companies/steps",
+    operationId: "getApiCompaniesSyncSteps",
+    responses: {
+      200: {
+        description: "List of sync workflow steps",
+        content: {
+          "application/json": {
+            schema: z.object({
+              steps: z.array(
+                z.object({
+                  step: z.number(),
+                  title: z.string(),
+                  status: z.string(),
+                  logs: z.array(z.string()),
+                }),
+              ),
+            }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    return c.json(
+      {
+        steps: [
+          { step: 1, title: "Dispatch Sync Workflow", status: "idle", logs: [] },
+          { step: 2, title: "Load Upstream Repositories", status: "idle", logs: [] },
+          { step: 3, title: "Scrape and Extract Metadata", status: "idle", logs: [] },
+          { step: 4, title: "Update Local Databases", status: "idle", logs: [] },
+          { step: 5, title: "Finalize & Broadcast Stats", status: "idle", logs: [] },
+        ],
+      },
+      200,
+    );
+  },
+);
+

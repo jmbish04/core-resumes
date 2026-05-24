@@ -1,0 +1,37 @@
+name: Sync Upstream Companies
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run daily at midnight
+  workflow_dispatch: # Allow manual trigger
+  repository_dispatch:
+    types: [trigger-sync]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+          npm install -g wrangler
+
+      - name: Run Sync Script
+        env:
+          WORKER_API_URL: https://${{ github.event.repository.name }}.hacolby.workers.dev
+          WORKER_API_KEY: ${{ secrets.WORKER_API_KEY }}
+        run: python scripts/github_actions/sync-upstream.py
