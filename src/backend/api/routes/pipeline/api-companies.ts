@@ -4,7 +4,7 @@
 
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { getAgentByName } from "agents";
-import { and, eq, inArray, notInArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 import { getDb } from "@/backend/db";
 import { apiCompanies, apiCompanySyncStats } from "@/backend/db/schema";
@@ -55,44 +55,60 @@ apiCompaniesRouter.openapi(
     const body = c.req.valid("json");
     const upstreamTokens = body.companies;
     const now = new Date();
+    const logger = new Logger(c.env);
 
     if (upstreamTokens.length === 0) {
       return c.json({ inserted: 0, deactivated: 0, reactivated: 0 }, 200);
     }
 
-    const tokenStrings = upstreamTokens.map((t) => t.token);
+    // D1 caps bound parameters at 100 per query — diff in memory and update by id
+    // in chunks instead of passing the full token list into inArray/notInArray.
+    const CHUNK = 100;
+    const upstreamSet = new Set(upstreamTokens.map((t) => t.token));
 
-    // 1. Mark active companies inactive if not in upstream
-    const deactivated = await db
-      .update(apiCompanies)
-      .set({ isActive: false, timestampInactive: now })
-      .where(
-        and(eq(apiCompanies.isActive, true), notInArray(apiCompanies.jobBoardToken, tokenStrings)),
-      )
-      .returning();
+    try {
+      const allCompanies = await db
+        .select({
+          id: apiCompanies.id,
+          token: apiCompanies.jobBoardToken,
+          isActive: apiCompanies.isActive,
+        })
+        .from(apiCompanies);
 
-    // 2. Mark previously inactive companies active if in upstream
-    const reactivated = await db
-      .update(apiCompanies)
-      .set({ isActive: true, timestampInactive: null })
-      .where(
-        and(eq(apiCompanies.isActive, false), inArray(apiCompanies.jobBoardToken, tokenStrings)),
-      )
-      .returning();
+      const existingTokenSet = new Set(allCompanies.map((c) => c.token));
+      const toDeactivateIds = allCompanies
+        .filter((c) => c.isActive && !upstreamSet.has(c.token))
+        .map((c) => c.id);
+      const toReactivateIds = allCompanies
+        .filter((c) => !c.isActive && upstreamSet.has(c.token))
+        .map((c) => c.id);
+      const newTokens = upstreamTokens.filter((t) => !existingTokenSet.has(t.token));
 
-    // 3. Find and insert new tokens
-    const existingTokens = await db
-      .select({ token: apiCompanies.jobBoardToken })
-      .from(apiCompanies);
-    const existingTokenSet = new Set(existingTokens.map((t) => t.token));
+      let deactivatedCount = 0;
+      for (let i = 0; i < toDeactivateIds.length; i += CHUNK) {
+        const chunk = toDeactivateIds.slice(i, i + CHUNK);
+        const rows = await db
+          .update(apiCompanies)
+          .set({ isActive: false, timestampInactive: now })
+          .where(inArray(apiCompanies.id, chunk))
+          .returning({ id: apiCompanies.id });
+        deactivatedCount += rows.length;
+      }
 
-    const newTokens = upstreamTokens.filter((t) => !existingTokenSet.has(t.token));
-    let insertedCount = 0;
+      let reactivatedCount = 0;
+      for (let i = 0; i < toReactivateIds.length; i += CHUNK) {
+        const chunk = toReactivateIds.slice(i, i + CHUNK);
+        const rows = await db
+          .update(apiCompanies)
+          .set({ isActive: true, timestampInactive: null })
+          .where(inArray(apiCompanies.id, chunk))
+          .returning({ id: apiCompanies.id });
+        reactivatedCount += rows.length;
+      }
 
-    if (newTokens.length > 0) {
-      const chunkSize = 100;
-      for (let i = 0; i < newTokens.length; i += chunkSize) {
-        const chunk = newTokens.slice(i, i + chunkSize);
+      let insertedCount = 0;
+      for (let i = 0; i < newTokens.length; i += CHUNK) {
+        const chunk = newTokens.slice(i, i + CHUNK);
         const insertedRows = await db
           .insert(apiCompanies)
           .values(
@@ -105,36 +121,57 @@ apiCompaniesRouter.openapi(
             })),
           )
           .onConflictDoNothing()
-          .returning();
+          .returning({ id: apiCompanies.id });
         insertedCount += insertedRows.length;
       }
+
+      await db.insert(apiCompanySyncStats).values({
+        runTimestamp: now,
+        filesProcessed: 0,
+        companiesAdded: insertedCount,
+        companiesDeactivated: deactivatedCount,
+        companiesReactivated: reactivatedCount,
+        status: "success",
+      });
+
+      await logger.info(
+        "[Aggregator Sync Completed] Discovered and processed company records in D1.",
+        {
+          status: "completed",
+          added: insertedCount,
+          deactivated: deactivatedCount,
+          reactivated: reactivatedCount,
+        },
+      );
+
+      return c.json(
+        {
+          inserted: insertedCount,
+          deactivated: deactivatedCount,
+          reactivated: reactivatedCount,
+        },
+        200,
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await logger.error(`[Aggregator Sync Failed] ${message}`, {
+        status: "failed",
+        upstreamCount: upstreamTokens.length,
+      });
+      await db
+        .insert(apiCompanySyncStats)
+        .values({
+          runTimestamp: now,
+          filesProcessed: 0,
+          companiesAdded: 0,
+          companiesDeactivated: 0,
+          companiesReactivated: 0,
+          status: "failed",
+          error: message,
+        })
+        .catch(() => {});
+      throw err;
     }
-    // 4. Log the sync stats
-    await db.insert(apiCompanySyncStats).values({
-      runTimestamp: now,
-      filesProcessed: 0, // We don't have filesProcessed from the script in this endpoint, but we can set it to upstreamTokens.length as an approximation or leave 0
-      companiesAdded: insertedCount,
-      companiesDeactivated: deactivated.length,
-      companiesReactivated: reactivated.length,
-      status: "success",
-    });
-
-    const logger = new Logger(c.env);
-    await logger.info("[Aggregator Sync Completed] Discovered and processed company records in D1.", {
-      status: "completed",
-      added: insertedCount,
-      deactivated: deactivated.length,
-      reactivated: reactivated.length,
-    });
-
-    return c.json(
-      {
-        inserted: insertedCount,
-        deactivated: deactivated.length,
-        reactivated: reactivated.length,
-      },
-      200,
-    );
   },
 );
 
