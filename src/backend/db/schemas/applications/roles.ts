@@ -90,7 +90,7 @@ export const roles = sqliteTable(
     })
       .notNull()
       .default("manual"),
-    sourceSnapshotId: text("source_snapshot_id"),
+    sourceSnapshotId: integer("source_snapshot_id"),
     createdAt: integer("created_at", { mode: "timestamp" })
       .notNull()
       .$defaultFn(() => new Date()),
