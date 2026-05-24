@@ -14,7 +14,6 @@ import type { RoleInsightType, RoleInsight } from "@/backend/db/schemas/applicat
 
 import { runLocationAnalysisAgents } from "@/ai/tasks/analyze/location";
 import { getModelRegistry } from "@/backend/ai/models";
-import { AiProvider } from "@/backend/ai/providers";
 import { getDb } from "@/backend/db";
 import {
   globalConfig,
@@ -375,6 +374,7 @@ You must respond with a valid JSON object matching the requested schema. DO NOT 
 Salary Range: ${role.salaryMin ? `$${role.salaryMin.toLocaleString()}` : "Not disclosed"} – ${role.salaryMax ? `$${role.salaryMax.toLocaleString()}` : "Not disclosed"}
 Currency: ${role.salaryCurrency ?? "USD"}`;
 
+    const { AiProvider } = await import("@/backend/ai/providers/index");
     let result = await new AiProvider(env).generateStructuredOutput({
       messages: [
         { role: "system", content: systemPrompt },
@@ -424,6 +424,7 @@ You MUST provide non-null values for ALL of these fields:
 If salary data is "Not disclosed", estimate based on market data for the role title and company, and note the estimate in your rationale.
 </STRICT_COMPLETENESS_REQUIREMENT>`;
 
+        const { AiProvider } = await import("@/backend/ai/providers/index");
         const retryResult = await new AiProvider(env).generateStructuredOutput({
           messages: [
             { role: "system", content: retrySystemPrompt },
@@ -559,6 +560,7 @@ You must respond with a valid JSON object matching the requested schema. DO NOT 
     const userPrompt = `Role: ${role.jobTitle} at ${role.companyName}
 Synthesize the location and compensation analyses into a single value assessment.`;
 
+    const { AiProvider } = await import("@/backend/ai/providers/index");
     let result: { score: number; rationale: string };
     try {
       result = await new AiProvider(env).generateStructuredOutput({
@@ -714,6 +716,7 @@ Factual Commute Data: ${commuteFactualData}
 
 Provide a comprehensive location analysis with the commute table covering all requested departure times and transportation modes.`;
 
+    const { AiProvider } = await import("@/backend/ai/providers/index");
     return await new AiProvider(env).generateStructuredOutput({
       messages: [
         { role: "system", content: systemPrompt },

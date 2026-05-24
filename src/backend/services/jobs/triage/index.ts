@@ -4,7 +4,6 @@ import { z } from "zod";
 /**
  * @fileoverview Triage service for evaluating discovered jobs.
  */
-import { AiProvider } from "@/backend/ai/providers";
 import { getDb } from "@/backend/db";
 import { globalConfig } from "@/backend/db/schema";
 
@@ -44,6 +43,7 @@ export async function triageBatch(env: Env, jobs: any[]) {
 2. Thresholds (Pipeline B): If possible to determine, the job should align with locations: ${locations}.
 Exclude jobs that are clearly outside the software engineering domain. If salary or location are unknown, assume Include if the role matches the keywords.`;
 
+  const { AiProvider } = await import("@/backend/ai/providers/index");
   const result = await new AiProvider(env).generateStructuredOutput({
     messages: [
       {
