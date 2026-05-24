@@ -36,6 +36,8 @@ export type ProcessingTask = {
   id: string;
   type: string;
   status: "pending" | "running" | "complete" | "failed";
+  stage?: string;
+  stagePercent?: number;
   error?: string;
   roleId?: string;
 };
@@ -111,21 +113,54 @@ export function RoleProcessingStatus({ roleId }: { roleId: string }) {
           type?: string;
           stage?: string;
           task?: ProcessingTask;
+          payload?: { roleId?: string; status?: string; percent?: number };
         };
 
         if (data.type === "task" && data.task) {
+          const task = data.task;
+          const stage = data.stage;
+          const stagePercent = stage ? computeStagePercent(task.type, stage) : undefined;
+
           setTasks((prev) => {
-            const existing = prev.find((t) => t.id === data.task!.id);
+            const incoming: ProcessingTask = {
+              ...task,
+              ...(stage ? { stage } : {}),
+              ...(stagePercent !== undefined ? { stagePercent } : {}),
+            };
+
+            const existing = prev.find((t) => t.id === task.id);
             if (existing) {
               return prev.map((t) =>
-                t.id === data.task!.id
-                  ? { ...t, status: data.task!.status, error: data.task!.error }
+                t.id === task.id
+                  ? {
+                      ...t,
+                      status: incoming.status,
+                      error: incoming.error,
+                      ...(incoming.stage ? { stage: incoming.stage } : {}),
+                      ...(incoming.stagePercent !== undefined
+                        ? { stagePercent: incoming.stagePercent }
+                        : {}),
+                    }
                   : t,
               );
             }
             // New task enqueued (e.g. auto-chained after job_extract)
-            return [...prev, data.task!];
+            return [...prev, incoming];
           });
+        }
+
+        // Optional: workflow progress broadcast from OrchestratorAgent.handleWorkflowProgress()
+        if (data.type === "WORKFLOW_PROGRESS" && data.payload?.roleId === roleId) {
+          const percent = typeof data.payload.percent === "number" ? data.payload.percent : undefined;
+          if (percent === undefined) return;
+
+          setTasks((prev) =>
+            prev.map((t) => {
+              if (t.status !== "running") return t;
+              if (t.type !== "role_analysis" && t.type !== "role_assets") return t;
+              return { ...t, stagePercent: Math.max(0, Math.min(100, percent)) };
+            }),
+          );
         }
       } catch {
         // non-JSON messages are fine
@@ -257,6 +292,8 @@ function TaskRow({
   onRetry: () => void;
 }) {
   const badgeInfo = STATUS_BADGES[task.status] ?? STATUS_BADGES.pending;
+  const stageLabel =
+    task.stage && task.stage !== task.status ? formatStageLabel(task.stage) : undefined;
 
   return (
     <Collapsible>
@@ -269,9 +306,23 @@ function TaskRow({
         )}
       >
         {STATUS_ICONS[task.status]}
-        <span className="flex-1 font-medium">
-          {TASK_LABELS[task.type] ?? task.type}
-        </span>
+        <div className="flex-1">
+          <div className="font-medium">{TASK_LABELS[task.type] ?? task.type}</div>
+          {stageLabel && (
+            <div className="text-xs text-muted-foreground">
+              {stageLabel}
+              {typeof task.stagePercent === "number" && ` · ${Math.round(task.stagePercent)}%`}
+            </div>
+          )}
+          {task.status === "running" && typeof task.stagePercent === "number" && (
+            <div className="mt-1 h-1 w-full overflow-hidden rounded bg-muted">
+              <div
+                className="h-full bg-blue-400"
+                style={{ width: `${Math.max(0, Math.min(100, task.stagePercent))}%` }}
+              />
+            </div>
+          )}
+        </div>
         <Badge variant={badgeInfo.variant} className="text-xs">
           {badgeInfo.label}
         </Badge>
@@ -308,4 +359,33 @@ function TaskRow({
       )}
     </Collapsible>
   );
+}
+
+function formatStageLabel(stage: string) {
+  return stage.replaceAll("_", " ").replaceAll("-", " ").trim();
+}
+
+/**
+ * Computes the progress percentage for a given task stage.
+ * Only applies to resume and cover letter drafting tasks that have defined stages.
+ * Task types match backend definitions in orchestrator/types.ts:
+ * - "resume_review" for resume drafting
+ * - "cover_letter_draft" for cover letter drafting
+ */
+function computeStagePercent(taskType: string, stage: string): number | undefined {
+  if (taskType !== "resume_review" && taskType !== "cover_letter_draft") return undefined;
+
+  const map: Record<string, number> = {
+    planning: 5,
+    consulting: 20,
+    drafting: 45,
+    accuracy_review: 65,
+    strategic_review: 75,
+    evaluating: 85,
+    improving: 92,
+    creating_doc: 97,
+    complete: 100,
+  };
+
+  return map[stage];
 }
