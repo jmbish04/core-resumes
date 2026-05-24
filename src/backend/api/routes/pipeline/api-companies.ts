@@ -4,10 +4,10 @@
 
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { getAgentByName } from "agents";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 
 import { getDb } from "@/backend/db";
-import { apiCompanies, apiCompanySyncStats } from "@/backend/db/schema";
+import { apiCompanies, apiCompanySyncStats, jobsPostings } from "@/backend/db/schema";
 import { getGithubToken } from "@/backend/utils/secrets";
 import { Logger } from "@/backend/lib/logger";
 
@@ -61,22 +61,29 @@ apiCompaniesRouter.openapi(
       return c.json({ inserted: 0, deactivated: 0, reactivated: 0 }, 200);
     }
 
-    // D1 caps bound parameters at 100 per query — diff in memory and update by id
-    // in chunks instead of passing the full token list into inArray/notInArray.
-    // Setting CHUNK to 10 keeps maximum parameters at 70 (10 * 7) for inserts and 12 (10 + 2) for updates.
-    const CHUNK = 10;
+    // D1 caps bound parameters at 100 per query.
+    // Setting INSERT_CHUNK to 10 keeps maximum parameters at 70 (10 * 7) for inserts.
+    // Setting UPDATE_CHUNK to 90 keeps update parameter allocations well below the 100 limit (90 + 2).
+    const INSERT_CHUNK = 10;
+    const UPDATE_CHUNK = 90;
     const upstreamSet = new Set(upstreamTokens.map((t) => t.token));
 
     try {
       const existingTokenSet = new Set<string>();
       const toReactivateIds: number[] = [];
 
-      // 1. Query D1 in selective, parameter-safe chunks of 90 matching tokens
-      // to identify existing tokens and reactivations without loading all 100k+ rows.
-      const SELECT_CHUNK = 90;
+      // 1. Query D1 in selective, parameter-safe chunks of 2,000 matching tokens
+      // using raw SQL IN-list to bypass the 100-parameter cap while avoiding OOM.
+      const SELECT_CHUNK = 2000;
       for (let i = 0; i < upstreamTokens.length; i += SELECT_CHUNK) {
         const chunk = upstreamTokens.slice(i, i + SELECT_CHUNK);
         const tokensInChunk = chunk.map((t) => t.token);
+
+        // Sanitize and escape single quotes to prevent any SQL injection,
+        // then build a raw comma-separated list of quoted string literals.
+        const sqlChunk = tokensInChunk
+          .map((t) => `'${t.replace(/'/g, "''")}'`)
+          .join(",");
 
         const dbMatches = await db
           .select({
@@ -85,7 +92,7 @@ apiCompaniesRouter.openapi(
             isActive: apiCompanies.isActive,
           })
           .from(apiCompanies)
-          .where(inArray(apiCompanies.jobBoardToken, tokensInChunk));
+          .where(sql`job_board_token IN (${sql.raw(sqlChunk)})`);
 
         for (const match of dbMatches) {
           existingTokenSet.add(match.token);
@@ -111,8 +118,8 @@ apiCompaniesRouter.openapi(
       const newTokens = upstreamTokens.filter((t) => !existingTokenSet.has(t.token));
 
       let deactivatedCount = 0;
-      for (let i = 0; i < toDeactivateIds.length; i += CHUNK) {
-        const chunk = toDeactivateIds.slice(i, i + CHUNK);
+      for (let i = 0; i < toDeactivateIds.length; i += UPDATE_CHUNK) {
+        const chunk = toDeactivateIds.slice(i, i + UPDATE_CHUNK);
         const rows = await db
           .update(apiCompanies)
           .set({ isActive: false, timestampInactive: now })
@@ -122,8 +129,8 @@ apiCompaniesRouter.openapi(
       }
 
       let reactivatedCount = 0;
-      for (let i = 0; i < toReactivateIds.length; i += CHUNK) {
-        const chunk = toReactivateIds.slice(i, i + CHUNK);
+      for (let i = 0; i < toReactivateIds.length; i += UPDATE_CHUNK) {
+        const chunk = toReactivateIds.slice(i, i + UPDATE_CHUNK);
         const rows = await db
           .update(apiCompanies)
           .set({ isActive: true, timestampInactive: null })
@@ -133,8 +140,8 @@ apiCompaniesRouter.openapi(
       }
 
       let insertedCount = 0;
-      for (let i = 0; i < newTokens.length; i += CHUNK) {
-        const chunk = newTokens.slice(i, i + CHUNK);
+      for (let i = 0; i < newTokens.length; i += INSERT_CHUNK) {
+        const chunk = newTokens.slice(i, i + INSERT_CHUNK);
         const insertedRows = await db
           .insert(apiCompanies)
           .values(
@@ -155,8 +162,8 @@ apiCompaniesRouter.openapi(
 
       // Update recommendation status for recommended companies in the sync payload
       const recommendedTokens = upstreamTokens.filter((t) => t.isRecommended);
-      for (let i = 0; i < recommendedTokens.length; i += CHUNK) {
-        const chunk = recommendedTokens.slice(i, i + CHUNK);
+      for (let i = 0; i < recommendedTokens.length; i += UPDATE_CHUNK) {
+        const chunk = recommendedTokens.slice(i, i + UPDATE_CHUNK);
         for (const t of chunk) {
           await db
             .update(apiCompanies)
@@ -166,6 +173,49 @@ apiCompaniesRouter.openapi(
             })
             .where(eq(apiCompanies.jobBoardToken, t.token));
         }
+      }
+
+      // Extract all recommended jobs from the payload
+      const allRecommendedJobs: {
+        jobSiteId: string;
+        jobTitle: string;
+        company: string;
+        triagePassed: boolean;
+        triageReason: string;
+      }[] = [];
+
+      for (const t of upstreamTokens) {
+        if (t.recommendedJobs && t.recommendedJobs.length > 0) {
+          for (const job of t.recommendedJobs) {
+            allRecommendedJobs.push({
+              jobSiteId: job.id.toString(),
+              jobTitle: job.title,
+              company: t.token, // Store company token as the company name
+              triagePassed: true,
+              triageReason: `Discovered and matched during aggregator sync: '${job.title}' in '${job.location}'`,
+            });
+          }
+        }
+      }
+
+      // Batch insert the recommended jobs into the database
+      let jobsInserted = 0;
+      const JOB_INSERT_CHUNK = 10; // 5 fields * 10 = 50 parameters (well within 100 limit)
+      for (let i = 0; i < allRecommendedJobs.length; i += JOB_INSERT_CHUNK) {
+        const chunk = allRecommendedJobs.slice(i, i + JOB_INSERT_CHUNK);
+        const rows = await db
+          .insert(jobsPostings)
+          .values(chunk)
+          .onConflictDoNothing()
+          .returning({ id: jobsPostings.id });
+        jobsInserted += rows.length;
+      }
+
+      if (jobsInserted > 0) {
+        await logger.info(`[Aggregator Sync] Automatically processed and saved ${jobsInserted} matching jobs into the system.`, {
+          status: "completed",
+          jobsAdded: jobsInserted,
+        });
       }
 
       await db.insert(apiCompanySyncStats).values({

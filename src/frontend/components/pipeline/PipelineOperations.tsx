@@ -147,9 +147,16 @@ export function PipelineOperations() {
               }
             };
 
+            // Deduplicating log appender helper
+            const appendLog = (stepIdx: number, text: string) => {
+              if (text && !nextSteps[stepIdx].logs.includes(text)) {
+                nextSteps[stepIdx].logs.push(text);
+              }
+            };
+
             if (status === "dispatching" || status === "trigger-sync") {
               nextSteps[0].status = "active";
-              if (msgText) nextSteps[0].logs.push(msgText);
+              if (msgText) appendLog(0, msgText);
             } else if (
               status === "initializing" ||
               status === "fetching_upstream" ||
@@ -157,7 +164,7 @@ export function PipelineOperations() {
             ) {
               completeUpTo(2);
               nextSteps[1].status = "active";
-              if (msgText) nextSteps[1].logs.push(msgText);
+              if (msgText) appendLog(1, msgText);
             } else if (
               status === "scraping" ||
               status === "parsing" ||
@@ -166,7 +173,7 @@ export function PipelineOperations() {
             ) {
               completeUpTo(3);
               nextSteps[2].status = "active";
-              if (msgText) nextSteps[2].logs.push(msgText);
+              if (msgText) appendLog(2, msgText);
             } else if (
               status === "saving_db" ||
               status === "ingesting" ||
@@ -175,7 +182,7 @@ export function PipelineOperations() {
             ) {
               completeUpTo(4);
               nextSteps[3].status = "active";
-              if (msgText) nextSteps[3].logs.push(msgText);
+              if (msgText) appendLog(3, msgText);
             } else if (status === "completed" || status === "success") {
               // Complete all steps
               for (let i = 0; i < 4; i++) {
@@ -185,8 +192,8 @@ export function PipelineOperations() {
                 }
               }
               nextSteps[4].status = "completed";
-              nextSteps[4].logs.push("Upstream repository synchronization completed successfully.");
-              nextSteps[4].logs.push(`Added, deactivated, and reactivated companies matching D1.`);
+              appendLog(4, "Upstream repository synchronization completed successfully.");
+              appendLog(4, "Added, deactivated, and reactivated companies matching D1.");
               setSyncing(false);
               setSyncError(null);
               toast({ title: "GitHub Sync Completed", variant: "default" });
@@ -198,7 +205,7 @@ export function PipelineOperations() {
 
               nextSteps[activeIdx].status = "failed";
               const errMsg = msgText || "An unexpected execution failure occurred.";
-              nextSteps[activeIdx].logs.push(`CRITICAL ERROR: ${errMsg}`);
+              appendLog(activeIdx, `CRITICAL ERROR: ${errMsg}`);
               
               // Set all subsequent steps to idle
               for (let i = activeIdx + 1; i < nextSteps.length; i++) {

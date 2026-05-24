@@ -153,12 +153,18 @@ def check_company_jobs(token, system, search_terms):
     """
     Queries the public job board for a company and checks if any jobs
     match the title and location keywords.
+    
+    Returns:
+        list[dict]: A list of dictionaries representing matching jobs:
+                   {"id": str, "title": str, "location": str}
     """
     titles = search_terms.get("titles", [])
     locations = search_terms.get("locations", [])
     
     titles_lower = [t.lower() for t in titles]
     locations_lower = [l.lower() for l in locations]
+    
+    matching_jobs = []
     
     if system == "greenhouse":
         url = f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs"
@@ -170,13 +176,18 @@ def check_company_jobs(token, system, search_terms):
                 for job in jobs:
                     title = str(job.get("title", "")).lower()
                     loc_obj = job.get("location") or {}
-                    location = str(loc_obj.get("name", "")).lower() if isinstance(loc_obj, dict) else str(loc_obj).lower()
+                    location_name = loc_obj.get("name") if isinstance(loc_obj, dict) else loc_obj
+                    location = str(location_name).lower()
                     
                     title_match = any(t in title for t in titles_lower)
                     location_match = any(l in location for l in locations_lower)
                     
                     if title_match and location_match:
-                        return True, f"Found match: '{job.get('title')}' in '{loc_obj.get('name') if isinstance(loc_obj, dict) else loc_obj}'"
+                        matching_jobs.append({
+                            "id": f"gh-{token}-{job.get('id')}",
+                            "title": job.get("title"),
+                            "location": location_name
+                        })
         except Exception:
             pass
             
@@ -190,13 +201,18 @@ def check_company_jobs(token, system, search_terms):
                     for job in jobs:
                         title = str(job.get("title", "")).lower()
                         cat_obj = job.get("categories") or {}
-                        location = str(cat_obj.get("location", "")).lower() if isinstance(cat_obj, dict) else ""
+                        location_name = cat_obj.get("location") if isinstance(cat_obj, dict) else ""
+                        location = str(location_name).lower()
                         
                         title_match = any(t in title for t in titles_lower)
                         location_match = any(l in location for l in locations_lower)
                         
                         if title_match and location_match:
-                            return True, f"Found match: '{job.get('title')}' in '{cat_obj.get('location') if isinstance(cat_obj, dict) else ''}'"
+                            matching_jobs.append({
+                                "id": f"lv-{token}-{job.get('id')}",
+                                "title": job.get("title"),
+                                "location": location_name
+                            })
         except Exception:
             pass
 
@@ -209,17 +225,22 @@ def check_company_jobs(token, system, search_terms):
                 jobs = data.get("jobs", [])
                 for job in jobs:
                     title = str(job.get("title", "")).lower()
-                    location = str(job.get("location", "")).lower()
+                    location_name = job.get("location")
+                    location = str(location_name).lower()
                     
                     title_match = any(t in title for t in titles_lower)
                     location_match = any(l in location for l in locations_lower)
                     
                     if title_match and location_match:
-                        return True, f"Found match: '{job.get('title')}' in '{job.get('location')}'"
+                        matching_jobs.append({
+                            "id": f"as-{token}-{job.get('id')}",
+                            "title": job.get("title"),
+                            "location": location_name
+                        })
         except Exception:
             pass
             
-    return False, ""
+    return matching_jobs
 
 
 def fetch_upstream(worker_url, worker_key):
@@ -275,7 +296,8 @@ def fetch_upstream(worker_url, worker_key):
                         "system": system,
                         "source": source,
                         "isRecommended": False,
-                        "recommendationReason": None
+                        "recommendationReason": None,
+                        "recommendedJobs": []
                     })
         except Exception as e:
             print(f"Failed to parse {source}: {e}")
@@ -324,12 +346,19 @@ def fetch_upstream(worker_url, worker_key):
         for future in futures:
             company = futures[future]
             try:
-                is_recommended, reason = future.result()
-                if is_recommended:
+                matching_jobs = future.result()
+                if matching_jobs:
                     company["isRecommended"] = True
-                    company["recommendationReason"] = reason
+                    company["recommendedJobs"] = matching_jobs
+                    
+                    # Generate a concise reason string listing the jobs
+                    job_descriptions = [f"'{j['title']}' in '{j['location']}'" for j in matching_jobs]
+                    company["recommendationReason"] = f"Found {len(matching_jobs)} matching job(s): {', '.join(job_descriptions[:3])}"
+                    if len(matching_jobs) > 3:
+                        company["recommendationReason"] += f" and {len(matching_jobs) - 3} more"
+                    
                     matches_found += 1
-                    print(f"[recommendation] matched {company['token']}: {reason}")
+                    print(f"[recommendation] matched {company['token']}: {company['recommendationReason']}")
             except Exception as scan_err:
                 print(f"[recommendation] error checking {company['token']}: {scan_err}")
                 
