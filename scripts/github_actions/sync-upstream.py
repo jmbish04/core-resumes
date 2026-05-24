@@ -333,6 +333,9 @@ def main():
         print("Please configure them before running this script.")
         sys.exit(1)
         
+    # Signal that the remote action script has connected and started execution
+    send_progress(worker_url, worker_key, "initializing", message="GitHub Action runner connected. Commencing sync pipeline...")
+    
     try:
         tokens, files_processed = fetch_upstream(worker_url, worker_key)
     except Exception as e:

@@ -63,8 +63,8 @@ apiCompaniesRouter.openapi(
 
     // D1 caps bound parameters at 100 per query — diff in memory and update by id
     // in chunks instead of passing the full token list into inArray/notInArray.
-    // Setting CHUNK to 15 keeps maximum parameters at 75 (15 * 5) for inserts and 17 (15 + 2) for updates.
-    const CHUNK = 15;
+    // Setting CHUNK to 10 keeps maximum parameters at 70 (10 * 7) for inserts and 12 (10 + 2) for updates.
+    const CHUNK = 10;
     const upstreamSet = new Set(upstreamTokens.map((t) => t.token));
 
     try {

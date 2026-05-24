@@ -60,7 +60,7 @@ export function PipelineOperations() {
         
         nextSteps[0].status = "failed";
         nextSteps[0].logs.push(
-          "CRITICAL ERROR: Remote Action connection timeout after 45 seconds."
+          "CRITICAL ERROR: Remote Action connection timeout after 90 seconds."
         );
         nextSteps[0].logs.push(
           "Please verify that your GitHub Repository has secrets.WORKER_API_KEY set correctly, matches the Worker's active secret, and that the runner is not queued or blocked."
@@ -71,7 +71,7 @@ export function PipelineOperations() {
         toast({ title: "Sync Connection Timeout", variant: "destructive" });
         return nextSteps;
       });
-    }, 45000);
+    }, 90000);
   };
 
   // Safely formats timestamps without throwing RangeErrors
