@@ -414,7 +414,6 @@ apiCompaniesRouter.openapi(
     const body = c.req.valid("json");
     const logger = new Logger(c.env);
 
-    // Centralized Logging: Logs to console + inserts D1 row + fans-out to WebSocket.
     const logMetadata = {
       status: body.status,
       current: body.current ?? undefined,
@@ -428,6 +427,19 @@ apiCompaniesRouter.openapi(
       await logger.error(logMessage, logMetadata);
     } else {
       await logger.info(logMessage, logMetadata);
+    }
+
+    // Fan out to every open Pipeline dashboard WebSocket via SyncBroadcastAgent.
+    // Failures here must not 500 the GitHub Action — log and swallow.
+    try {
+      const agent = await getAgentByName(c.env.SYNC_BROADCAST_AGENT, "global");
+      await agent.reportProgress(body);
+    } catch (e) {
+      await logger.warn(
+        `[Aggregator Sync Progress] Failed to broadcast to SyncBroadcastAgent: ${
+          e instanceof Error ? e.message : String(e)
+        }`,
+      );
     }
 
     return c.json({ success: true }, 200);
