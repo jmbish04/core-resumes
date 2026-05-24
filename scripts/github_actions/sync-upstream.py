@@ -271,7 +271,7 @@ def fetch_upstream(worker_url, worker_key):
         "processing",
         current=files_processed,
         total=total_files,
-        message=f"Fetched {len(company_list)} unique tokens from {files_processed} upstream files."
+        message=f"Fetched {len(company_list):,} unique tokens from {files_processed} upstream files."
     )
 
     # -------------------------------------------------------------------------
@@ -343,7 +343,7 @@ def main():
         send_progress(worker_url, worker_key, "failed", message=f"Failed to fetch upstream: {e}")
         sys.exit(1)
         
-    print(f"Fetched {len(tokens)} unique tokens from {files_processed} upstream files.")
+    print(f"Fetched {len(tokens):,} unique tokens from {files_processed} upstream files.")
     
     sync_url = f"{worker_url.rstrip('/')}/api/pipeline/api-companies/sync"
     print(f"Syncing to worker API: {sync_url}")
@@ -352,7 +352,7 @@ def main():
         worker_url,
         worker_key,
         "saving_db",
-        message=f"Syncing {len(tokens)} unique companies to local database..."
+        message=f"Syncing {len(tokens):,} unique companies to local database..."
     )
     
     try:
@@ -376,7 +376,7 @@ def main():
             worker_url, 
             worker_key, 
             "completed", 
-            message=f"Sync complete. Inserted: {result.get('inserted', 0)}, Reactivated: {result.get('reactivated', 0)}, Deactivated: {result.get('deactivated', 0)}"
+            message=f"Sync complete. Inserted: {result.get('inserted', 0):,}, Reactivated: {result.get('reactivated', 0):,}, Deactivated: {result.get('deactivated', 0):,}"
         )
         
     except requests.exceptions.HTTPError as e:
