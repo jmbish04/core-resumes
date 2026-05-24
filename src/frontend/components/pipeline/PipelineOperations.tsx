@@ -186,9 +186,11 @@ export function PipelineOperations() {
         setSteps(res.steps);
       } else {
         setSteps(fallbackSteps);
+        setSyncError("Failed to load custom workflow configuration from the server. Using local layout fallback.");
       }
-    } catch {
+    } catch (e: any) {
       setSteps(fallbackSteps);
+      setSyncError(`Failed to load sync steps from server: ${e.message || "Server unresponsive"}. Using local layout fallback.`);
     }
   };
 
@@ -207,9 +209,13 @@ export function PipelineOperations() {
         const res: any = await apiGet("/api/pipeline/api-companies/steps");
         if (res.steps) {
           initialSteps = res.steps;
+        } else {
+          throw new Error("Invalid steps payload returned by the server.");
         }
-      } catch {
-        // Fallback
+      } catch (e: any) {
+        const fetchError = `Failed to retrieve sync workflow configuration: ${e.message || "Server unresponsive"}.`;
+        setSyncError(fetchError);
+        throw new Error(fetchError);
       }
 
       // Reset progress steps to default active/idle state before starting sync
@@ -232,8 +238,10 @@ export function PipelineOperations() {
       
       setSteps((prev) => {
         const next = [...prev].map((s) => ({ ...s, logs: [...s.logs] }));
-        next[0].logs.push("GitHub repository dispatch successfully triggered.");
-        next[0].logs.push("Waiting for remote GitHub Action runner to establish socket callback...");
+        if (next[0]) {
+          next[0].logs.push("GitHub repository dispatch successfully triggered.");
+          next[0].logs.push("Waiting for remote GitHub Action runner to establish socket callback...");
+        }
         return next;
       });
 
@@ -243,9 +251,12 @@ export function PipelineOperations() {
       setSyncError(e.message || "An error occurred while dispatching the repository sync run.");
       
       setSteps((prev) => {
-        const next = [...prev].map((s) => ({ ...s, logs: [...s.logs] }));
-        next[0].status = "failed";
-        next[0].logs.push(`CRITICAL ERROR: ${e.message || "Failed to dispatch sync workflow."}`);
+        const source = prev.length > 0 ? prev : fallbackSteps;
+        const next = source.map((s) => ({ ...s, logs: [...s.logs] }));
+        if (next[0]) {
+          next[0].status = "failed";
+          next[0].logs.push(`CRITICAL ERROR: ${e.message || "Failed to dispatch sync workflow."}`);
+        }
         return next;
       });
 
