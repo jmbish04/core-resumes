@@ -146,7 +146,7 @@ def main():
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {worker_key}"
             },
-            json={"companies": tokens}
+            json={"companies": tokens, "files_processed": files_processed}
         )
         res.raise_for_status()
         
