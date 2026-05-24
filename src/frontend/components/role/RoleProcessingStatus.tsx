@@ -7,24 +7,13 @@
  */
 
 import { useAgent } from "agents/react";
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
-  Loader2,
-  RefreshCw,
-  RotateCcw,
-} from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Loader2, RefreshCw, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { apiGet, apiPost, toast } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
@@ -36,8 +25,6 @@ export type ProcessingTask = {
   id: string;
   type: string;
   status: "pending" | "running" | "complete" | "failed";
-  stage?: string;
-  stagePercent?: number;
   error?: string;
   roleId?: string;
 };
@@ -71,7 +58,10 @@ const STATUS_ICONS: Record<string, React.ReactNode> = {
   failed: <AlertTriangle className="size-4 text-destructive" />,
 };
 
-const STATUS_BADGES: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const STATUS_BADGES: Record<
+  string,
+  { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+> = {
   pending: { label: "Pending", variant: "outline" },
   running: { label: "Running", variant: "default" },
   complete: { label: "Complete", variant: "secondary" },
@@ -113,54 +103,21 @@ export function RoleProcessingStatus({ roleId }: { roleId: string }) {
           type?: string;
           stage?: string;
           task?: ProcessingTask;
-          payload?: { roleId?: string; status?: string; percent?: number };
         };
 
         if (data.type === "task" && data.task) {
-          const task = data.task;
-          const stage = data.stage;
-          const stagePercent = stage ? computeStagePercent(task.type, stage) : undefined;
-
           setTasks((prev) => {
-            const incoming: ProcessingTask = {
-              ...task,
-              ...(stage ? { stage } : {}),
-              ...(stagePercent !== undefined ? { stagePercent } : {}),
-            };
-
-            const existing = prev.find((t) => t.id === task.id);
+            const existing = prev.find((t) => t.id === data.task!.id);
             if (existing) {
               return prev.map((t) =>
-                t.id === task.id
-                  ? {
-                      ...t,
-                      status: incoming.status,
-                      error: incoming.error,
-                      ...(incoming.stage ? { stage: incoming.stage } : {}),
-                      ...(incoming.stagePercent !== undefined
-                        ? { stagePercent: incoming.stagePercent }
-                        : {}),
-                    }
+                t.id === data.task!.id
+                  ? { ...t, status: data.task!.status, error: data.task!.error }
                   : t,
               );
             }
             // New task enqueued (e.g. auto-chained after job_extract)
-            return [...prev, incoming];
+            return [...prev, data.task!];
           });
-        }
-
-        // Optional: workflow progress broadcast from OrchestratorAgent.handleWorkflowProgress()
-        if (data.type === "WORKFLOW_PROGRESS" && data.payload?.roleId === roleId) {
-          const percent = typeof data.payload.percent === "number" ? data.payload.percent : undefined;
-          if (percent === undefined) return;
-
-          setTasks((prev) =>
-            prev.map((t) => {
-              if (t.status !== "running") return t;
-              if (t.type !== "role_analysis" && t.type !== "role_assets") return t;
-              return { ...t, stagePercent: Math.max(0, Math.min(100, percent)) };
-            }),
-          );
         }
       } catch {
         // non-JSON messages are fine
@@ -190,7 +147,10 @@ export function RoleProcessingStatus({ roleId }: { roleId: string }) {
     setRetrying("all");
     try {
       await apiPost(`/api/roles/${roleId}/reprocess`, {});
-      toast({ title: "Retrying all failed tasks", description: "All failed tasks have been re-queued." });
+      toast({
+        title: "Retrying all failed tasks",
+        description: "All failed tasks have been re-queued.",
+      });
     } catch (err) {
       toast({
         title: "Retry failed",
@@ -220,8 +180,8 @@ export function RoleProcessingStatus({ roleId }: { roleId: string }) {
         </CardHeader>
         <CardContent>
           <p className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
-            No processing tasks found for this role. Tasks are created when a role is submitted
-            or reprocessed.
+            No processing tasks found for this role. Tasks are created when a role is submitted or
+            reprocessed.
           </p>
         </CardContent>
       </Card>
@@ -292,8 +252,6 @@ function TaskRow({
   onRetry: () => void;
 }) {
   const badgeInfo = STATUS_BADGES[task.status] ?? STATUS_BADGES.pending;
-  const stageLabel =
-    task.stage && task.stage !== task.status ? formatStageLabel(task.stage) : undefined;
 
   return (
     <Collapsible>
@@ -306,23 +264,7 @@ function TaskRow({
         )}
       >
         {STATUS_ICONS[task.status]}
-        <div className="flex-1">
-          <div className="font-medium">{TASK_LABELS[task.type] ?? task.type}</div>
-          {stageLabel && (
-            <div className="text-xs text-muted-foreground">
-              {stageLabel}
-              {typeof task.stagePercent === "number" && ` · ${Math.round(task.stagePercent)}%`}
-            </div>
-          )}
-          {task.status === "running" && typeof task.stagePercent === "number" && (
-            <div className="mt-1 h-1 w-full overflow-hidden rounded bg-muted">
-              <div
-                className="h-full bg-blue-400"
-                style={{ width: `${Math.max(0, Math.min(100, task.stagePercent))}%` }}
-              />
-            </div>
-          )}
-        </div>
+        <span className="flex-1 font-medium">{TASK_LABELS[task.type] ?? task.type}</span>
         <Badge variant={badgeInfo.variant} className="text-xs">
           {badgeInfo.label}
         </Badge>
@@ -359,33 +301,4 @@ function TaskRow({
       )}
     </Collapsible>
   );
-}
-
-function formatStageLabel(stage: string) {
-  return stage.replaceAll("_", " ").replaceAll("-", " ").trim();
-}
-
-/**
- * Computes the progress percentage for a given task stage.
- * Only applies to resume and cover letter drafting tasks that have defined stages.
- * Task types match backend definitions in orchestrator/types.ts:
- * - "resume_review" for resume drafting
- * - "cover_letter_draft" for cover letter drafting
- */
-function computeStagePercent(taskType: string, stage: string): number | undefined {
-  if (taskType !== "resume_review" && taskType !== "cover_letter_draft") return undefined;
-
-  const map: Record<string, number> = {
-    planning: 5,
-    consulting: 20,
-    drafting: 45,
-    accuracy_review: 65,
-    strategic_review: 75,
-    evaluating: 85,
-    improving: 92,
-    creating_doc: 97,
-    complete: 100,
-  };
-
-  return map[stage];
 }

@@ -94,7 +94,10 @@ export function DocumentsList({ roleId }: { roleId: string }) {
           <div className="h-24 rounded-md bg-muted/50" />
         ) : rows.length === 0 ? (
           <p className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
-            No documents are linked yet. {syncing ? "Scanning folder..." : "Click \"Sync from Drive\" to import files from the Google Drive folder."}
+            No documents are linked yet.{" "}
+            {syncing
+              ? "Scanning folder..."
+              : 'Click "Sync from Drive" to import files from the Google Drive folder.'}
           </p>
         ) : (
           <div className="grid gap-2">

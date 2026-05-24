@@ -13,6 +13,7 @@ import type { ModelDescriptor } from "../providers/base";
 
 import { aura_1 } from "./aura-1";
 import { bge_large_en_v1_5 } from "./bge-large-en-v1-5";
+import { gemini_embedding_001 } from "./gemini-embedding-001";
 import { gpt_oss_120b } from "./gpt-oss-120b";
 import { kimi_k2_5 } from "./kimi-k2.5";
 import { kimi_k2_6 } from "./kimi-k2.6";
@@ -36,6 +37,7 @@ const MODEL_MAP: Record<string, ModelDescriptor<any, any>> = {
   "@cf/meta/llama-3.1-8b-instruct": llama_3_1_8b,
   "@cf/moonshotai/kimi-k2.5": kimi_k2_5,
   "@cf/moonshotai/kimi-k2.6": kimi_k2_6,
+  "gemini-embedding-001": gemini_embedding_001,
 };
 
 // ---------------------------------------------------------------------------
@@ -65,6 +67,7 @@ export function getModelRegistry(env: Env) {
     analyze: resolveModel(env.MODEL_ANALYZE ?? kimi_k2_5.id, kimi_k2_5),
     draft: resolveModel(env.MODEL_DRAFT, kimi_k2_5),
     embed: withModelId(modelRegistry.embed, env.DEFAULT_MODEL_EMBEDDING),
+    embedJobs: resolveModel(env.MODEL_EMBED_JOBS ?? gemini_embedding_001.id, gemini_embedding_001),
   } as const;
 }
 

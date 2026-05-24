@@ -17,7 +17,7 @@ import { z } from "zod";
 
 import type { FilteredParagraph } from "../../tools/role/html-bullet-parser";
 
-import { generateStructuredAnalysis } from "../../providers";
+import { AiProvider } from "../../providers";
 
 // ---------------------------------------------------------------------------
 // Field enum + Zod schema
@@ -74,7 +74,8 @@ export function formatParagraphsForPassA(paragraphs: FilteredParagraph[]): strin
   const parts: string[] = [];
   for (let i = 0; i < paragraphs.length; i++) {
     const text = paragraphs[i].text;
-    const bounded = text.length > PARAGRAPH_TRUNCATE ? `${text.slice(0, PARAGRAPH_TRUNCATE)}…` : text;
+    const bounded =
+      text.length > PARAGRAPH_TRUNCATE ? `${text.slice(0, PARAGRAPH_TRUNCATE)}…` : text;
     parts.push(`[${i}]\n${bounded}`);
   }
   return parts.join("\n\n---\n\n");
@@ -99,7 +100,7 @@ export async function classifyParagraphsByIndex(
 
   const userMessage = formatParagraphsForPassA(paragraphs);
 
-  const result = await generateStructuredAnalysis(env, {
+  const result = await new AiProvider(env).generateStructuredAnalysis({
     messages: [
       { role: "system", content: PASS_A_NARRATIVE_SYSTEM_PROMPT },
       { role: "user", content: userMessage },

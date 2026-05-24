@@ -98,7 +98,7 @@ async function main() {
       stdio: "inherit",
     });
     console.log("✅ Sync complete. Session is live on your Worker.");
-  } catch (error) {
+  } catch {
     console.error("❌ KV Write failed. Ensure you are logged in: 'npx wrangler login'");
     process.exit(1);
   }

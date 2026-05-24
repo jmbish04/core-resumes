@@ -13,8 +13,8 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiGet, apiPost } from "@/lib/api-client";
 
-import { TranscriptionViewer } from "./TranscriptionViewer";
 import { PodcastTranscript } from "./PodcastTranscript";
+import { TranscriptionViewer } from "./TranscriptionViewer";
 
 type RolePodcastRow = {
   id: string;
@@ -216,22 +216,14 @@ export function RolePodcast({ roleId }: { roleId: string }) {
 
         {/* Timestamped transcript with playback sync */}
         <div className="flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setShowTimedTranscript((v) => !v)}
-          >
+          <Button size="sm" variant="outline" onClick={() => setShowTimedTranscript((v) => !v)}>
             <FileText className="size-4" />
             {showTimedTranscript ? "Hide timed transcript" : "View timed transcript"}
           </Button>
         </div>
 
         {showTimedTranscript && (
-          <PodcastTranscript
-            roleId={roleId}
-            podcastId={podcast.id}
-            audioRef={audioRef}
-          />
+          <PodcastTranscript roleId={roleId} podcastId={podcast.id} audioRef={audioRef} />
         )}
 
         {podcast.stepErrors.length > 0 && (

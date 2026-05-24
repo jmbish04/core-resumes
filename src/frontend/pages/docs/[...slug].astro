@@ -1,5 +1,7 @@
 ---
 import { DocsSidebar } from "@/components/docs/DocsSidebar";
+import { PipelineAAggregatorDocs } from "@/components/docs/PipelineAAggregatorDocs";
+import { PipelineBTrackerDocs } from "@/components/docs/PipelineBTrackerDocs";
 import { SchemaViewer } from "@/components/docs/SchemaViewer";
 import { AgentCard } from "@/components/docs/AgentCard";
 import { GoogleDocPreview } from "@/components/docs/GoogleDocPreview";
@@ -27,6 +29,8 @@ const agentClassName = showAgentCard ? getAgentClassName(slug) : null;
 const showNotebookInfo = slug === "integrations/notebooklm";
 const showResumePreview = slug === "resume-template";
 const showCoverLetterPreview = slug === "cover-letter-template";
+const showPipelineAAggregator = slug === "greenhouse-aggregator";
+const showPipelineBTracker = slug === "greenhouse-tracker";
 
 function getAgentClassName(s: string): string | null {
   const map: Record<string, string> = {
@@ -100,6 +104,8 @@ const breadcrumbs = pathParts.map((part, index) => {
           {showNotebookInfo && <NotebookInfoCard client:load />}
           {showResumePreview && <GoogleDocPreview client:load docType="resume" title="Resume Template" />}
           {showCoverLetterPreview && <GoogleDocPreview client:load docType="coverLetter" title="Cover Letter Template" />}
+          {showPipelineAAggregator && <PipelineAAggregatorDocs client:load />}
+          {showPipelineBTracker && <PipelineBTrackerDocs client:load />}
         </div>
       </div>
 

@@ -4,12 +4,12 @@
 
 import type { ChatMessage } from "./types";
 
-import { extractText } from "../../utils/extract-text";
-import {streamChat} from "./stream";
 import { getModelRegistry } from "../../models";
-import { getProvider } from "../../providers";
+import { AiProvider } from "../../providers";
+import { extractText } from "../../utils/extract-text";
+import { streamChat } from "./stream";
 
-export {streamChat}
+export { streamChat };
 export * from "./types";
 export * from "./health";
 
@@ -20,7 +20,7 @@ export async function chat(
     cacheTtl?: number;
   },
 ): Promise<string> {
-  const provider = await getProvider(env);
+  const provider = new AiProvider(env);
   const model = getModelRegistry(env).chat;
   const result = await provider.invokeModel(
     model,

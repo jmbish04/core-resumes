@@ -51,14 +51,14 @@ export async function getAgenticWorkerApiKey(env: Env): Promise<string | undefin
   return getSecret(env, "AGENTIC_WORKER_API_KEY");
 }
 
-// export async function getGithubToken(env: Env): Promise<string | undefined> {
-//     if (env.GITHUB_PERSONAL_ACCESS_TOKEN) {
-//         return typeof env.GITHUB_PERSONAL_ACCESS_TOKEN === 'string'
-//             ? env.GITHUB_PERSONAL_ACCESS_TOKEN
-//             : await (env.GITHUB_PERSONAL_ACCESS_TOKEN as any).get();
-//     }
-//     return getSecret(env, "GITHUB_PERSONAL_ACCESS_TOKEN");
-// }
+export async function getGithubToken(env: Env): Promise<string | undefined> {
+  if (env.GITHUB_TOKEN) {
+    return typeof env.GITHUB_TOKEN === "string"
+      ? env.GITHUB_TOKEN
+      : await (env.GITHUB_TOKEN as any).get();
+  }
+  return getSecret(env, "GITHUB_TOKEN");
+}
 
 /**
  * Helper to fetch the CLOUDFLARE_WRANGLER_API_TOKEN from the Secrets Store.
@@ -429,4 +429,16 @@ export async function getCloudflareAiGatewayToken(env: Env): Promise<string> {
       : await (env.CLOUDFLARE_AI_GATEWAY_TOKEN as any).get();
   }
   throw new Error("Missing env.CLOUDFLARE_AI_GATEWAY_TOKEN in Secret Store Bindings");
+}
+
+/**
+ * Helper to fetch the GEMINI_API_KEY from the Secrets Store.
+ */
+export async function getGeminiApiKey(env: Env): Promise<string> {
+  if (env.GEMINI_API_KEY) {
+    return typeof env.GEMINI_API_KEY === "string"
+      ? env.GEMINI_API_KEY
+      : await (env.GEMINI_API_KEY as any).get();
+  }
+  throw new Error("Missing env.GEMINI_API_KEY in Secret Store Bindings");
 }

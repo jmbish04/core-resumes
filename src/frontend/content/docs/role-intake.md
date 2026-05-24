@@ -18,12 +18,12 @@ The hybrid pipeline (`src/backend/ai/tasks/extract-role-hybrid.ts`) replaces the
 
 ### Three-source merge
 
-| Source | Mechanism | Produces |
-| --- | --- | --- |
-| **DOM bullets** | Browser Rendering `/scrape` → `extractHeadingGroups()` | All `responsibilities`, `requiredQualifications`, `preferredQualifications`, `requiredSkills`, `preferredSkills`, `educationRequirements`, `benefits` arrays — verbatim from `<li>` |
-| **Pass H (LLM)** | `classifyHeadingsByIndex()` with `gpt-oss-120b` | Maps each heading by index → bullet field name (or `skip`) |
-| **Pass A (LLM)** | `classifyParagraphsByIndex()` with `gpt-oss-120b` | Maps each filtered `<p>` by index → narrative bucket: `aboutCompany`, `aboutRoleNarrative`, `rtoPolicy`, `visaSponsorship`, `otherContent`, or `skip` |
-| **Pass B (LLM)** | `extractRoleFactFields()` with `gpt-oss-120b` | The 12 scalar fields: `companyName`, `jobTitle`, `salaryMin/Max`, `salaryCurrency`, `location`, `workplaceType`, `yearsExperienceMin/Max`, `department`, `reportingTo`, `jobUrl` |
+| Source           | Mechanism                                              | Produces                                                                                                                                                                            |
+| ---------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **DOM bullets**  | Browser Rendering `/scrape` → `extractHeadingGroups()` | All `responsibilities`, `requiredQualifications`, `preferredQualifications`, `requiredSkills`, `preferredSkills`, `educationRequirements`, `benefits` arrays — verbatim from `<li>` |
+| **Pass H (LLM)** | `classifyHeadingsByIndex()` with `gpt-oss-120b`        | Maps each heading by index → bullet field name (or `skip`)                                                                                                                          |
+| **Pass A (LLM)** | `classifyParagraphsByIndex()` with `gpt-oss-120b`      | Maps each filtered `<p>` by index → narrative bucket: `aboutCompany`, `aboutRoleNarrative`, `rtoPolicy`, `visaSponsorship`, `otherContent`, or `skip`                               |
+| **Pass B (LLM)** | `extractRoleFactFields()` with `gpt-oss-120b`          | The 12 scalar fields: `companyName`, `jobTitle`, `salaryMin/Max`, `salaryCurrency`, `location`, `workplaceType`, `yearsExperienceMin/Max`, `department`, `reportingTo`, `jobUrl`    |
 
 The three passes run in parallel via `Promise.all()`. The merge is purely deterministic:
 
@@ -43,7 +43,7 @@ Pass H asks the LLM to label each heading by index based on the heading text plu
 
 ### Pass A — capture-everything default
 
-The Pass A prompt explicitly tells the model: *"When in doubt between `otherContent` and `skip`, pick `otherContent` — we never want to leave real body content on the floor."* Five narrative buckets cover the entire space, plus `skip` for genuine page chrome (nav labels, button text, footer fragments).
+The Pass A prompt explicitly tells the model: _"When in doubt between `otherContent` and `skip`, pick `otherContent` — we never want to leave real body content on the floor."_ Five narrative buckets cover the entire space, plus `skip` for genuine page chrome (nav labels, button text, footer fragments).
 
 ### Telemetry
 
@@ -98,7 +98,7 @@ On confirmation, the `POST /api/intake/confirm` endpoint:
 2. Inserts all `role_bullets` classified by type.
 3. Creates or finds the `companies` record.
 4. Triggers an `OrchestratorAgent` task to create a Google Drive folder and trigger baseline asynchronous tasks (like initial hireability analysis).
-> Note: As of May 2026, the `mock_interview` task generation is fully decoupled from the automatic intake flow and is strictly an on-demand, user-triggered action to conserve tokens and reduce redundant processing.
+   > Note: As of May 2026, the `mock_interview` task generation is fully decoupled from the automatic intake flow and is strictly an on-demand, user-triggered action to conserve tokens and reduce redundant processing.
 
 ## Extraction Fidelity Health Check
 

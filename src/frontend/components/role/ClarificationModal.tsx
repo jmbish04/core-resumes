@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { MessageSquarePlusIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -53,7 +53,8 @@ export function ClarificationModal({
             Provide Clarifying Context
           </DialogTitle>
           <DialogDescription className="pt-2">
-            The AI scored this bullet lower than 90. Provide additional context, examples, or metrics from your career to help the AI better understand your fit for this requirement.
+            The AI scored this bullet lower than 90. Provide additional context, examples, or
+            metrics from your career to help the AI better understand your fit for this requirement.
           </DialogDescription>
         </DialogHeader>
 
@@ -69,7 +70,6 @@ export function ClarificationModal({
               onChange={(e) => setValue(e.target.value)}
               placeholder="e.g. While I don't have this exact tool, I built a similar internal system that scaled to 5M DAU..."
               className="min-h-[120px] resize-none"
-              autoFocus
             />
           </div>
         </div>

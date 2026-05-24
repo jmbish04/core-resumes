@@ -1,5 +1,17 @@
-export function generateRoleReportMarkdown(payload: any, fetchedDocs: Record<string, string>): string {
-  const { role, analysis, alignmentScores, bullets, bulletAnalyses, mockInterviews, careerMemory, documents } = payload;
+export function generateRoleReportMarkdown(
+  payload: any,
+  fetchedDocs: Record<string, string>,
+): string {
+  const {
+    role,
+    analysis,
+    alignmentScores,
+    bullets,
+    bulletAnalyses,
+    mockInterviews,
+    careerMemory,
+    documents,
+  } = payload;
 
   let md = `# Role Analysis Report: ${role.companyName} - ${role.jobTitle}\n\n`;
 
@@ -25,7 +37,7 @@ export function generateRoleReportMarkdown(payload: any, fetchedDocs: Record<str
   if (alignmentScores && alignmentScores.length > 0) {
     md += `## Alignment Scores\n`;
     alignmentScores.forEach((score: any) => {
-      md += `- **${score.type ? score.type.replace(/_/g, ' ').toLowerCase() : 'Unknown'}**: ${score.score}/100\n`;
+      md += `- **${score.type ? score.type.replace(/_/g, " ").toLowerCase() : "Unknown"}**: ${score.score}/100\n`;
       md += `  *Rationale*: ${score.rationale}\n`;
     });
     md += `\n`;
@@ -34,7 +46,7 @@ export function generateRoleReportMarkdown(payload: any, fetchedDocs: Record<str
   // Bullet Breakdown
   if (bullets && bullets.length > 0) {
     md += `## Bullet Breakdown\n\n`;
-    
+
     // Group analyses by bullet
     const analysesByBullet = (bulletAnalyses || []).reduce((acc: any, curr: any) => {
       if (!acc[curr.bulletId]) acc[curr.bulletId] = [];
@@ -44,7 +56,7 @@ export function generateRoleReportMarkdown(payload: any, fetchedDocs: Record<str
 
     bullets.forEach((bullet: any) => {
       md += `### Requirement: ${bullet.content}\n`;
-      md += `- **Category**: ${bullet.type ? bullet.type.replace(/_/g, ' ').toLowerCase() : 'Unknown'}\n`;
+      md += `- **Category**: ${bullet.type ? bullet.type.replace(/_/g, " ").toLowerCase() : "Unknown"}\n`;
       if (bullet.isCritical) md += `- **Critical**: Yes\n`;
 
       const revisions = analysesByBullet[bullet.id] || [];
@@ -61,7 +73,7 @@ export function generateRoleReportMarkdown(payload: any, fetchedDocs: Record<str
   // Mock Interviews
   if (mockInterviews && mockInterviews.length > 0) {
     md += `## Mock Interviews\n\n`;
-    mockInterviews.forEach((interview: any, i: number) => {
+    mockInterviews.forEach((interview: any, _i: number) => {
       md += `### Mock Interview (v${interview.version})\n`;
       if (Array.isArray(interview.qaPairs)) {
         interview.qaPairs.forEach((qa: any, j: number) => {
@@ -81,7 +93,7 @@ export function generateRoleReportMarkdown(payload: any, fetchedDocs: Record<str
       md += `### ${doc.name} (v${doc.version})\n`;
       md += `- **Type**: ${doc.type}\n`;
       md += `- **Google Doc ID**: ${doc.gdocId}\n`;
-      md += `- **Link**: [Open Document](${(doc.type === "resume" || doc.type === "cover_letter") ? `https://docs.google.com/document/d/${doc.gdocId}/edit` : `https://drive.google.com/file/d/${doc.gdocId}/view`})\n\n`;
+      md += `- **Link**: [Open Document](${doc.type === "resume" || doc.type === "cover_letter" ? `https://docs.google.com/document/d/${doc.gdocId}/edit` : `https://drive.google.com/file/d/${doc.gdocId}/view`})\n\n`;
 
       if (fetchedDocs[doc.id]) {
         md += `#### Content:\n\n${fetchedDocs[doc.id]}\n\n`;

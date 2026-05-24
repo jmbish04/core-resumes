@@ -1,7 +1,7 @@
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
-import { roles } from "./roles";
+import { roles } from "../applications/roles";
 import { threads } from "./threads";
 
 // ---------------------------------------------------------------------------

@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { AiProvider } from "@/backend/ai/providers";
 import { scrapeGreenhouseJob } from "@/backend/ai/tools/greenhouse";
 import { getDb } from "@/backend/db";
 import { jobSnapshots, jobsPostings } from "@/backend/db/schema";
@@ -97,6 +96,7 @@ ${scraped.text}`,
     },
   ];
 
+  const { AiProvider } = await import("@/backend/ai/providers");
   const analysisResult = await new AiProvider(env).generateStructuredOutput({
     messages,
     schema: DeepAnalysisSchema,

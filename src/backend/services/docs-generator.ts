@@ -1,46 +1,55 @@
 import { z } from "zod";
 
-export const ResumeRequestSchema = z.object({
-  roleId: z.string().optional().openapi({ description: "Optional Role ID to link this document to." }),
-  targetRole: z.string().openapi({ example: "Senior Product Manager - AI Tooling" }),
-  summaryStatement: z.string().openapi({ example: "Product-minded data leader..." }),
-  skillsProduct: z.string().openapi({ example: "Full Lifecycle Product Management, Cross-Functional Leadership..." }),
-  skillsData: z.string().openapi({ example: "Data Engineering, ETL Pipeline Optimization..." }),
-  skillsTech: z.string().openapi({ example: "SQL (BigQuery, Cloud SQL), Python, JavaScript..." }),
-  skillsAI: z.string().openapi({ example: "Vertex AI, BigQuery ML, LLMs..." }),
-  googleBullets: z.array(z.string()).openapi({ 
-    example: [
-      "<span class=\"metric\">$16M Annual ROI:</span> Pioneered the technical overhaul..."
-    ],
-    description: "Array of HTML formatted bullet points for Google experience."
-  }),
-  osdBullets: z.array(z.string()).openapi({
-    example: [
-      "<span class=\"metric\">0-to-1 Intrapreneurship:</span> Founded and scaled the company's e-discovery division..."
-    ]
+export const ResumeRequestSchema = z
+  .object({
+    roleId: z
+      .string()
+      .optional()
+      .openapi({ description: "Optional Role ID to link this document to." }),
+    targetRole: z.string().openapi({ example: "Senior Product Manager - AI Tooling" }),
+    summaryStatement: z.string().openapi({ example: "Product-minded data leader..." }),
+    skillsProduct: z
+      .string()
+      .openapi({ example: "Full Lifecycle Product Management, Cross-Functional Leadership..." }),
+    skillsData: z.string().openapi({ example: "Data Engineering, ETL Pipeline Optimization..." }),
+    skillsTech: z.string().openapi({ example: "SQL (BigQuery, Cloud SQL), Python, JavaScript..." }),
+    skillsAI: z.string().openapi({ example: "Vertex AI, BigQuery ML, LLMs..." }),
+    googleBullets: z.array(z.string()).openapi({
+      example: ['<span class="metric">$16M Annual ROI:</span> Pioneered the technical overhaul...'],
+      description: "Array of HTML formatted bullet points for Google experience.",
+    }),
+    osdBullets: z.array(z.string()).openapi({
+      example: [
+        '<span class="metric">0-to-1 Intrapreneurship:</span> Founded and scaled the company\'s e-discovery division...',
+      ],
+    }),
   })
-}).openapi("ResumeRequest");
+  .openapi("ResumeRequest");
 
-export const CoverLetterRequestSchema = z.object({
-  roleId: z.string().optional().openapi({ description: "Optional Role ID to link this document to." }),
-  targetRole: z.string().openapi({ example: "Head of Data" }),
-  companyName: z.string().openapi({ example: "Anthropic" }),
-  hiringManagerName: z.string().optional().openapi({ example: "Hiring Team" }),
-  companyAlignmentParagraph: z.string().openapi({ 
-    example: "I am particularly drawn to Anthropic because of your commitment to reliable AI..." 
+export const CoverLetterRequestSchema = z
+  .object({
+    roleId: z
+      .string()
+      .optional()
+      .openapi({ description: "Optional Role ID to link this document to." }),
+    targetRole: z.string().openapi({ example: "Head of Data" }),
+    companyName: z.string().openapi({ example: "Anthropic" }),
+    hiringManagerName: z.string().optional().openapi({ example: "Hiring Team" }),
+    companyAlignmentParagraph: z.string().openapi({
+      example: "I am particularly drawn to Anthropic because of your commitment to reliable AI...",
+    }),
   })
-}).openapi("CoverLetterRequest");
+  .openapi("CoverLetterRequest");
 
-export const DocumentResponseSchema = z.object({
-  success: z.boolean(),
-  documentId: z.string(),
-  documentUrl: z.string()
-}).openapi("DocumentResponse");
+export const DocumentResponseSchema = z
+  .object({
+    success: z.boolean(),
+    documentId: z.string(),
+    documentUrl: z.string(),
+  })
+  .openapi("DocumentResponse");
 
-export function generateResumeHtml(data: z.infer<typeof ResumeRequestSchema>): string {
-  const googleBulletsHtml = data.googleBullets.map((b: string) => `<li>${b}</li>`).join('\\n');
-  const osdBulletsHtml = data.osdBullets.map((b: string) => `<li>${b}</li>`).join('\\n');
-
+export function generateResumeHtml(_data: z.infer<typeof ResumeRequestSchema>): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -117,10 +126,7 @@ export function generateResumeHtml(data: z.infer<typeof ResumeRequestSchema>): s
 </html>`;
 }
 
-export function generateCoverLetterHtml(data: z.infer<typeof CoverLetterRequestSchema>): string {
-  const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  const salutationName = data.hiringManagerName || "Hiring Team";
-
+export function generateCoverLetterHtml(_data: z.infer<typeof CoverLetterRequestSchema>): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>

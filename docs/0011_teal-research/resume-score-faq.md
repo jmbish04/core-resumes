@@ -32,8 +32,7 @@ Know your resume’s strengths before you apply. Get a personalized resume score
 
 ![A Job Description](https://cdn.prod.website-files.com/627c8700df0be67c4b1d533c/653072fe8b5077f98b76bee9_Uncover_Key_Gaps.png)
 
-Get an ATS score and instant feedback on formatting, structure, content strength, and keyword usage.  
-  
+Get an ATS score and instant feedback on formatting, structure, content strength, and keyword usage.
 
 The resume score checker analyzes your resume against industry benchmarks and highlights what needs work—so you can focus on what matters most, fast.
 
@@ -41,8 +40,7 @@ The resume score checker analyzes your resume against industry benchmarks and hi
 
 ![Optimizing your Resume](https://cdn.prod.website-files.com/627c8700df0be67c4b1d533c/653076035c2e1cf82c1e1889_Show_Me.png)
 
-Check your resume’s compatibility with applicant tracking systems.  
-  
+Check your resume’s compatibility with applicant tracking systems.
 
 Run 15+ AI-powered checks to flag formatting issues, keyword gaps, and weak structure. See what might get filtered out—and what needs a stronger signal to get through.
 
@@ -50,8 +48,7 @@ Run 15+ AI-powered checks to flag formatting issues, keyword gaps, and weak stru
 
 ![Keywords in your resume content](https://cdn.prod.website-files.com/627c8700df0be67c4b1d533c/653076be9d32726f422f7998_Enhance_Key_Sections.png)
 
-Use the resume checker to improve your professional summary, bullet points, and experience.  
-  
+Use the resume checker to improve your professional summary, bullet points, and experience.
 
 Get keyword suggestions and formatting tips to help your resume scan cleanly—and get found by recruiters.
 
@@ -81,12 +78,12 @@ Get immediate feedback on the current state of your resume, and see how it stack
 
 ‍
 
--   Resume structure
--   Information completeness
--   Measurable results
--   Language & keyword usage
--   Quality signals
--   +5 More
+- Resume structure
+- Information completeness
+- Measurable results
+- Language & keyword usage
+- Quality signals
+- +5 More
 
 [
 
@@ -110,13 +107,13 @@ Dec 29, 2023
 
 **Katherine Paras**
 
-The extension has really made a difference in my job search! It is easy to add info from a number of job boards to my Teal account to track positions I’m interested in and effectively manage a lot more information on possible career tracks than I could do with a conventional job application tracker system. It is easy, effective, works with most major job boards applications (like Workday or LinkedIn) and in cases where it doesn’t play seamlessly it’s extremely efficient to copy and past info from the site. It’s a terrific little tool with a big impact.  
+The extension has really made a difference in my job search! It is easy to add info from a number of job boards to my Teal account to track positions I’m interested in and effectively manage a lot more information on possible career tracks than I could do with a conventional job application tracker system. It is easy, effective, works with most major job boards applications (like Workday or LinkedIn) and in cases where it doesn’t play seamlessly it’s extremely efficient to copy and past info from the site. It’s a terrific little tool with a big impact.
 
 Dec 21, 2023
 
 **Zack Turnbow**
 
-I use this extension to quickly bookmark opportunities so I can do more research at a later time. It’s so much easier to use this extension than bookmarking the job post or sending myself an email. It certainly keeps me organized.  
+I use this extension to quickly bookmark opportunities so I can do more research at a later time. It’s so much easier to use this extension than bookmarking the job post or sending myself an email. It certainly keeps me organized.
 
 Dec 29, 2023
 
@@ -128,11 +125,11 @@ Dec 18, 2023
 
 Brandon Saltzman
 
-Teal is a great resource to organizing and managing my job search. For months I have been struggling to keep up with all the job postings, my progress, and contacts to network with. In a week, Teal has organized the entire process. Using the chrome extension is necessary for proper functionality because I simply add postings from LinkedIn or Indeed directly to my bookmarked list of jobs. 5 stars.  
+Teal is a great resource to organizing and managing my job search. For months I have been struggling to keep up with all the job postings, my progress, and contacts to network with. In a week, Teal has organized the entire process. Using the chrome extension is necessary for proper functionality because I simply add postings from LinkedIn or Indeed directly to my bookmarked list of jobs. 5 stars.
 
 Dec 18, 2023
 
-![Left Facing Arrow Icon](https://cdn.prod.website-files.com/62775a91cc3db44c787149de/6297877a685e6ab4966381b5_Union%20(1).svg)
+![Left Facing Arrow Icon](<https://cdn.prod.website-files.com/62775a91cc3db44c787149de/6297877a685e6ab4966381b5_Union%20(1).svg>)
 
 ![Right Facing Arrow Icon](https://cdn.prod.website-files.com/62775a91cc3db44c787149de/6297875bed946daf4ff11190_Union.svg)
 
@@ -142,8 +139,7 @@ Step 1
 
 ## Import your existing resume into the resume builder
 
-Upload your resume or import from LinkedIn. (Or start from scratch.)  
-  
+Upload your resume or import from LinkedIn. (Or start from scratch.)
 
 You’ll get structured sections and tools to help you organize fast.
 
@@ -435,7 +431,7 @@ Get started for free
 
 ![Resume Builder Features](https://cdn.prod.website-files.com/62775a91cc3db44c787149de/670d4cc81d08b42faac15352_Resume-Builder-Features.webp)
 
-## Land a job 58% faster  
+## Land a job 58% faster
 
 ### The resume builder that gets results.
 
@@ -461,41 +457,26 @@ Explore the resume builder
 
 Upgrade to unlock Teal's premium features and turbocharge your job search.
 
--   Unlimited Resumes
-    
--   Unlimited Resumes Templates
-    
--   Unlimited Job Tracking
-    
--   Top 5 Keywords
-    
--   1 Email Template Per job stage
-    
--   Limited AI credits
-    
--   Basic AI Resume Analysis
-    
--   Basic Resume Keyword Matching
-    
+- Unlimited Resumes
+- Unlimited Resumes Templates
+- Unlimited Job Tracking
+- Top 5 Keywords
+- 1 Email Template Per job stage
+- Limited AI credits
+- Basic AI Resume Analysis
+- Basic Resume Keyword Matching
 
 Free
 
 Forever
 
--   Everything in Teal Free
-    
--   Unlimited Advanced Resume Analysis
-    
--   Unlimited Resume Keyword Matching
-    
--   Unlimited keywords (hard and soft skills) listed in the job tracker
-    
--   Unlimited Email Templates
-    
--   Advanced Design Mode
-    
--   Premium Resume Templates
-    
+- Everything in Teal Free
+- Unlimited Advanced Resume Analysis
+- Unlimited Resume Keyword Matching
+- Unlimited keywords (hard and soft skills) listed in the job tracker
+- Unlimited Email Templates
+- Advanced Design Mode
+- Premium Resume Templates
 
 $13 / Week
 

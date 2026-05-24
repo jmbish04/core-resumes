@@ -10,6 +10,7 @@ Expand the role analysis pipeline from simple bullet scoring into a full **Role 
 > Justin has 13+ years in Legal Operations at Google, but his actual work has always been technology: Product Management, Program Management, Software Engineering, ETL pipelines, dashboards, proof-of-concepts, workflow automation, and enterprise system architecture. He wore all of those hats while partnering with Corporate Engineering, yet his titles remained in the Legal Ops lane (Legal Specialist → Discovery Ops Specialist → Discovery PM → Business Program Manager, Generalist).
 >
 > **The Career Pivot Problem:**
+>
 > - Hiring managers outside Legal don't understand what "someone in Legal doing tech" means
 > - His 13-year Legal Ops tenure makes it progressively harder to pivot to explicit tech titles (SWE, PM, TPM)
 > - His last Google title (Business Program Manager, Generalist) was forced on him despite being offered Software Engineer — his manager refused to file the paperwork, creating a title/work mismatch that contributed to his layoff
@@ -35,9 +36,9 @@ Expand the role analysis pipeline from simple bullet scoring into a full **Role 
 
 Add two new columns:
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `interview_tip` | text (nullable) | Forward-looking advice: how to speak to this bullet if asked in an interview |
+| Column                | Type            | Purpose                                                                                |
+| --------------------- | --------------- | -------------------------------------------------------------------------------------- |
+| `interview_tip`       | text (nullable) | Forward-looking advice: how to speak to this bullet if asked in an interview           |
 | `mitigation_strategy` | text (nullable) | For low-scoring bullets: how to reframe the gap or bridge with transferable experience |
 
 Update `ROLE_BULLET_ANALYSES_COLUMN_DESCRIPTIONS` accordingly.
@@ -48,19 +49,20 @@ Update `ROLE_BULLET_ANALYSES_COLUMN_DESCRIPTIONS` accordingly.
 
 New table `role_resume_bullets` — potential customized resume lines that could be used when drafting a resume for this role. **No direct FK to role_bullets** — the M:M mapping lives in a separate table below.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | integer PK auto | — |
-| `role_id` | text FK → `roles.id` | Which role this resume bullet is associated with |
-| `potential_resume_bullet` | text | The actual line that would appear on the resume |
-| `source` | text enum | `resume_bullets` · `role_resume_bullets` · `agent_generated` |
-| `ai_rationale` | text | Why this resume bullet was selected/generated and is associated with the mapped role bullet(s) |
-| `interview_tip` | text (nullable) | How this resume bullet creates an interview opportunity |
-| `category` | text | Strategic · Technical · Impact · Collaboration |
-| `impact` | text (nullable) | e.g., "$16M annual savings", "300% adoption" |
-| `created_at` | integer timestamp | — |
+| Column                    | Type                 | Description                                                                                    |
+| ------------------------- | -------------------- | ---------------------------------------------------------------------------------------------- |
+| `id`                      | integer PK auto      | —                                                                                              |
+| `role_id`                 | text FK → `roles.id` | Which role this resume bullet is associated with                                               |
+| `potential_resume_bullet` | text                 | The actual line that would appear on the resume                                                |
+| `source`                  | text enum            | `resume_bullets` · `role_resume_bullets` · `agent_generated`                                   |
+| `ai_rationale`            | text                 | Why this resume bullet was selected/generated and is associated with the mapped role bullet(s) |
+| `interview_tip`           | text (nullable)      | How this resume bullet creates an interview opportunity                                        |
+| `category`                | text                 | Strategic · Technical · Impact · Collaboration                                                 |
+| `impact`                  | text (nullable)      | e.g., "$16M annual savings", "300% adoption"                                                   |
+| `created_at`              | integer timestamp    | —                                                                                              |
 
 **Source enum values:**
+
 - `resume_bullets` — pulled verbatim from the user's `resume_bullets` config inventory
 - `role_resume_bullets` — sourced from a prior role's `role_resume_bullets` records (cross-role intelligence)
 - `agent_generated` — AI created this bullet fresh during this analysis run
@@ -73,11 +75,11 @@ Indexes: `role_id`, `source`.
 
 New M:M mapping table `role_resume_bullets_role_bullet_map` — links resume bullets ↔ role bullets. A single well-written resume bullet can satisfy multiple role requirements.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | integer PK auto | — |
-| `resume_bullet_id` | integer FK → `role_resume_bullets.id` | The potential resume bullet |
-| `role_bullet_id` | integer FK → `role_bullets.id` | The JD requirement it addresses |
+| Column             | Type                                  | Description                     |
+| ------------------ | ------------------------------------- | ------------------------------- |
+| `id`               | integer PK auto                       | —                               |
+| `resume_bullet_id` | integer FK → `role_resume_bullets.id` | The potential resume bullet     |
+| `role_bullet_id`   | integer FK → `role_bullets.id`        | The JD requirement it addresses |
 
 Indexes: `resume_bullet_id`, `role_bullet_id`, unique composite `(resume_bullet_id, role_bullet_id)`.
 
@@ -89,22 +91,22 @@ Two tables for cross-bullet pattern intelligence:
 
 **`role_bullet_patterns`** — holistic observations across bullets
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | integer PK auto | — |
-| `role_id` | text FK → `roles.id` | — |
-| `observation` | text | Pattern detected (e.g., "no-code/low-code emphasis spans 4 of 6 bullet categories") |
-| `recommendation` | text | Actionable advice for downstream agents building resumes, cover letters, podcasts, interview prep |
-| `insight` | text | Strategic insight for the frontend (what this signals about the role's priorities and hiring manager expectations) |
-| `created_at` | integer timestamp | — |
+| Column           | Type                 | Description                                                                                                        |
+| ---------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `id`             | integer PK auto      | —                                                                                                                  |
+| `role_id`        | text FK → `roles.id` | —                                                                                                                  |
+| `observation`    | text                 | Pattern detected (e.g., "no-code/low-code emphasis spans 4 of 6 bullet categories")                                |
+| `recommendation` | text                 | Actionable advice for downstream agents building resumes, cover letters, podcasts, interview prep                  |
+| `insight`        | text                 | Strategic insight for the frontend (what this signals about the role's priorities and hiring manager expectations) |
+| `created_at`     | integer timestamp    | —                                                                                                                  |
 
 **`role_bullet_pattern_map`** — M:M linking patterns ↔ bullets
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | integer PK auto | — |
-| `pattern_id` | integer FK → `role_bullet_patterns.id` | — |
-| `role_bullet_id` | integer FK → `role_bullets.id` | — |
+| Column           | Type                                   | Description |
+| ---------------- | -------------------------------------- | ----------- |
+| `id`             | integer PK auto                        | —           |
+| `pattern_id`     | integer FK → `role_bullet_patterns.id` | —           |
+| `role_bullet_id` | integer FK → `role_bullets.id`         | —           |
 
 ---
 
@@ -197,12 +199,17 @@ const BulletScoringSchema = z.object({
       bullet_id: z.number(),
       score: z.number().int().min(0).max(100),
       rationale: z.string(),
-      interview_tip: z.string().describe(
-        "Specific, actionable interview talking point. Reference concrete metrics or projects. NOT generic advice."
-      ),
-      mitigation_strategy: z.string().nullable().describe(
-        "For scores below 75: how to bridge this gap using transferable experience. null if score >= 75."
-      ),
+      interview_tip: z
+        .string()
+        .describe(
+          "Specific, actionable interview talking point. Reference concrete metrics or projects. NOT generic advice.",
+        ),
+      mitigation_strategy: z
+        .string()
+        .nullable()
+        .describe(
+          "For scores below 75: how to bridge this gap using transferable experience. null if score >= 75.",
+        ),
     }),
   ),
 });
@@ -214,30 +221,52 @@ Add to `HolisticAnalysisSchema`:
 
 ```typescript
 career_pivot_analysis: z.object({
-  legal_ops_gravity_score: z.number().int().min(0).max(100)
+  legal_ops_gravity_score: z
+    .number()
+    .int()
+    .min(0)
+    .max(100)
     .describe("0 = pure tech role (no legal lock-in), 100 = deep legal ops entrenchment"),
   legal_ops_gravity_rationale: z.string(),
   credential_gap: z.object({
-    requires_jd: z.boolean().describe("Does the role explicitly require a Juris Doctor (law degree)?"),
-    jd_workaround_likelihood: z.number().int().min(0).max(100)
+    requires_jd: z
+      .boolean()
+      .describe("Does the role explicitly require a Juris Doctor (law degree)?"),
+    jd_workaround_likelihood: z
+      .number()
+      .int()
+      .min(0)
+      .max(100)
       .describe("Likelihood of getting an interview without the JD credential (0-100)"),
-    jd_workaround_strategy: z.string()
+    jd_workaround_strategy: z
+      .string()
       .describe("How to convince the hiring manager that builder experience > credentials"),
   }),
   title_alignment: z.object({
     posted_title: z.string(),
-    actual_work_type: z.enum(["software_engineering", "product_management", "program_management", "legal_ops", "hybrid_tech_legal", "other"]),
-    title_advancement: z.boolean()
+    actual_work_type: z.enum([
+      "software_engineering",
+      "product_management",
+      "program_management",
+      "legal_ops",
+      "hybrid_tech_legal",
+      "other",
+    ]),
+    title_advancement: z
+      .boolean()
       .describe("Would this title be an improvement over 'Business Program Manager, Generalist'?"),
   }),
-  pivot_pathways: z.array(z.object({
-    horizon: z.enum(["1_year", "2_year", "5_year", "10_year"]),
-    strategy: z.string(),
-    target_title: z.string(),
-    leverage_points: z.string()
-      .describe("How to leverage this role + legal ops background to reach the target"),
-  })),
-})
+  pivot_pathways: z.array(
+    z.object({
+      horizon: z.enum(["1_year", "2_year", "5_year", "10_year"]),
+      strategy: z.string(),
+      target_title: z.string(),
+      leverage_points: z
+        .string()
+        .describe("How to leverage this role + legal ops background to reach the target"),
+    }),
+  ),
+});
 ```
 
 #### [NEW] [generate-resume-bullets.ts](file:///Volumes/Projects/workers/core-resumes/src/backend/ai/tasks/generate-resume-bullets.ts)
@@ -330,6 +359,7 @@ New dedicated docs page with:
 
 > [!NOTE]
 > Frontend component work is scoped for a follow-up plan after the backend pipeline is stable:
+>
 > - `RoleProcessingStatus.tsx` — consume workflow progress events for step-by-step status
 > - `AlignmentBreakdown.tsx` — show `interview_tip` and `mitigation_strategy` per bullet
 > - New `ResumeIdeation.tsx` — browse/filter suggested resume bullets by role requirement
@@ -351,11 +381,13 @@ New dedicated docs page with:
 ## Verification Plan
 
 ### Automated
+
 1. `pnpm run db:generate` — verify Drizzle migrations generate cleanly
 2. `pnpm run build` — verify TypeScript compilation
 3. Deploy to staging and trigger a role analysis via `OrchestratorAgent.enqueueTask({ type: "role_analysis", roleId })`
 
 ### Manual
+
 1. Verify `role_bullet_analyses` rows contain `interview_tip` and `mitigation_strategy`
 2. Verify `role_resume_bullets` populates with a mix of sources + M:M mappings in the map table
 3. Verify `role_bullet_patterns` correctly links to multiple bullets via the pattern map table

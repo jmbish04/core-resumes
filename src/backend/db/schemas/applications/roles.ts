@@ -27,8 +27,7 @@ export const ROLES_COLUMN_DESCRIPTIONS: Record<string, string> = {
     "Company introduction / About Us section extracted from the job posting. Stored verbatim.",
   about_role_narrative:
     "Free-text role narrative paragraphs that appear before bullet points in the job posting.",
-  other_content:
-    "Catch-all field for any content the scraping extraction failed to categorize.",
+  other_content: "Catch-all field for any content the scraping extraction failed to categorize.",
   status:
     "Application lifecycle status. One of: preparing, applied, interviewing, offer, rejected, withdrawn, archived.",
   drive_folder_id: "Google Drive folder ID containing this role's generated documents.",
@@ -37,6 +36,10 @@ export const ROLES_COLUMN_DESCRIPTIONS: Record<string, string> = {
     "Flexible JSON blob for scraped job description, extracted skills, and other unstructured data.",
   role_instructions:
     "Role-specific AI instructions that override or supplement global agent_rules.",
+  source:
+    "Where this role originated. One of: manual (user-created), greenhouse_scan (scanned from Greenhouse), email (ingested from inbound email).",
+  source_snapshot_id:
+    "If source is greenhouse_scan, references the job_snapshot row that seeded this role. Null for manual or email sources.",
   created_at: "Unix timestamp (seconds) of when the role was created.",
   updated_at: "Unix timestamp (seconds) of the last modification.",
 };
@@ -82,6 +85,12 @@ export const roles = sqliteTable(
     driveFolderId: text("drive_folder_id"),
     metadata: text("metadata", { mode: "json" }).$type<Record<string, unknown>>(),
     roleInstructions: text("role_instructions"),
+    source: text("source", {
+      enum: ["manual", "greenhouse_scan", "email"],
+    })
+      .notNull()
+      .default("manual"),
+    sourceSnapshotId: integer("source_snapshot_id"),
     createdAt: integer("created_at", { mode: "timestamp" })
       .notNull()
       .$defaultFn(() => new Date()),
@@ -91,6 +100,7 @@ export const roles = sqliteTable(
   },
   (table) => ({
     statusIdx: index("roles_status_idx").on(table.status),
+    sourceIdx: index("roles_source_idx").on(table.source),
   }),
 );
 
@@ -98,3 +108,6 @@ export const insertRoleSchema = createInsertSchema(roles);
 export const selectRoleSchema = createSelectSchema(roles);
 export type Role = typeof roles.$inferSelect;
 export type NewRole = typeof roles.$inferInsert;
+
+/** Discriminated union for the `source` column on `roles`. */
+export type RoleSource = "manual" | "greenhouse_scan" | "email";

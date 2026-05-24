@@ -20,7 +20,7 @@ import type { z } from "zod";
 
 import type { ScrapeResult } from "../../tools/browser-rendering";
 
-import { generateStructuredAnalysis } from "../../providers";
+import { AiProvider } from "../../providers";
 import { enforceTokenLimit } from "../../utils/token-estimator";
 import { extractRolePostingHybrid } from "./role-hybrid";
 
@@ -109,7 +109,7 @@ export async function extractStructuredRolePosting<TSchema extends z.ZodTypeAny>
   // Kimi K2.5 has 256k context; cap input at 200k tokens for safety.
   enforceTokenLimit(opts.text, 200_000, "Extract Text");
 
-  return generateStructuredAnalysis(env, {
+  return new AiProvider(env).generateStructuredAnalysis({
     messages: [
       {
         role: "system",

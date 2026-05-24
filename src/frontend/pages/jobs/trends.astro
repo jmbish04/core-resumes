@@ -1,0 +1,45 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { JobMarketTrends } from "../../components/jobs/JobMarketTrends";
+import { getDb } from "@/backend/db";
+import { apiCompanies } from "@/backend/db/schema";
+
+const db = getDb(Astro.locals.runtime.env);
+const apiCompaniesList = await db.select().from(apiCompanies).all();
+
+// Optionally fetch the salary_lookup.json from upstream
+const salaryLookupUrl = "https://raw.githubusercontent.com/Feashliaa/job-board-aggregator/main/data/salary/salary_lookup.json";
+let salaryData = {};
+try {
+  const res = await fetch(salaryLookupUrl);
+  if (res.ok) {
+    salaryData = await res.json();
+  }
+} catch (e) {
+  console.error("Failed to fetch upstream salary data", e);
+}
+
+const pipelineStatsRes = await Astro.locals.runtime.env.OrchestratorAgent?.fetch?.("http://worker/api/pipeline/insights");
+let pipelineStats = {};
+if (pipelineStatsRes?.ok) {
+  pipelineStats = await pipelineStatsRes.json();
+}
+---
+
+<BaseLayout title="Job Market Trends | Colby Ecosystem" description="Analysis of remote job salaries and trends.">
+  <div class="container py-8 max-w-6xl space-y-8">
+    <div class="flex flex-col space-y-2">
+      <h1 class="text-3xl font-bold tracking-tight">Job Market Trends</h1>
+      <p class="text-muted-foreground">
+        Live aggregation and analysis of the current tech job market, powered by upstream aggregator data and local AI scoring.
+      </p>
+    </div>
+
+    <JobMarketTrends 
+      client:load 
+      apiCompanies={apiCompaniesList} 
+      salaryData={salaryData} 
+      pipelineStats={pipelineStats} 
+    />
+  </div>
+</BaseLayout>

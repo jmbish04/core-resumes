@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS  `role_analyses` (
 	FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE INDEX `role_analyses_role_id_idx` ON `role_analyses` (`role_id`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `role_analyses_role_id_idx` ON `role_analyses` (`role_id`);--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS  `role_alignment_scores` (
 	`id` text PRIMARY KEY NOT NULL,
 	`analysis_id` text NOT NULL,
@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS  `role_alignment_scores` (
 	FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE INDEX `alignment_scores_analysis_id_idx` ON `role_alignment_scores` (`analysis_id`);--> statement-breakpoint
-CREATE INDEX `alignment_scores_role_id_idx` ON `role_alignment_scores` (`role_id`);--> statement-breakpoint
-CREATE INDEX `alignment_scores_type_idx` ON `role_alignment_scores` (`type`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `alignment_scores_analysis_id_idx` ON `role_alignment_scores` (`analysis_id`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `alignment_scores_role_id_idx` ON `role_alignment_scores` (`role_id`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `alignment_scores_type_idx` ON `role_alignment_scores` (`type`);--> statement-breakpoint
 ALTER TABLE `messages` ADD `parts` text;--> statement-breakpoint
 ALTER TABLE `messages` ADD `format` text;

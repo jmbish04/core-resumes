@@ -20,37 +20,37 @@ What's non-negotiable: you need to be genuinely comfortable with technology, cur
 
 ## **Responsibilities**
 
-* Coordinate the legal team's AI tooling roadmap — maintaining visibility into what's in progress, tracking timelines across multiple concurrent workstreams, and communicating status to stakeholders
-* Triage incoming tooling requests, assess complexity and scope, and route work appropriately — handling straightforward builds yourself and flagging those that need deeper technical review
-* Build no-code and low-code solutions end-to-end: [Claude.ai](http://Claude.ai) Projects, AppSheet apps, Slack workflows, and similar tools that solve real pain points without requiring deployment infrastructure
-* Partner with the team on AI adoption efforts — contributing to training materials, documentation, and user guides as new tools ship
-* Support the legal team onboarding process and maintain onboarding content as our tooling evolves
-* Track adoption signals and surface patterns: what's being used, what isn't, and what that tells us about where to focus
+- Coordinate the legal team's AI tooling roadmap — maintaining visibility into what's in progress, tracking timelines across multiple concurrent workstreams, and communicating status to stakeholders
+- Triage incoming tooling requests, assess complexity and scope, and route work appropriately — handling straightforward builds yourself and flagging those that need deeper technical review
+- Build no-code and low-code solutions end-to-end: [Claude.ai](http://Claude.ai) Projects, AppSheet apps, Slack workflows, and similar tools that solve real pain points without requiring deployment infrastructure
+- Partner with the team on AI adoption efforts — contributing to training materials, documentation, and user guides as new tools ship
+- Support the legal team onboarding process and maintain onboarding content as our tooling evolves
+- Track adoption signals and surface patterns: what's being used, what isn't, and what that tells us about where to focus
 
 ## **You may be a good fit if you:**
 
-* Have at least 4–7 years of experience in legal operations, legal technology, or a technical operations role
-* Are comfortable keeping multiple projects organized and visible simultaneously — you can track dependencies, flag risks early, and keep stakeholders informed without being asked
-* Are comfortable building lightweight technical solutions — Claude Projects, no-code apps, Slack automations — and know how to scope what's appropriate for DIY versus what needs engineering input
-* Have worked alongside teams building and shipping tools, and understand what it takes to get a new workflow actually adopted
-* Lead with curiosity — you ask good questions, want to understand how things work, and are honest when you don't know something
-* Bring empathy to the work: you understand that change is hard, especially for busy lawyers, and you meet people where they are rather than where you wish they were
-* Are collaborative and low-ego — you'll flex into adjacent work as the team grows and don't protect scope at the expense of outcomes
-* Have enough of a sense of humor to keep the work enjoyable, even when it's complex
+- Have at least 4–7 years of experience in legal operations, legal technology, or a technical operations role
+- Are comfortable keeping multiple projects organized and visible simultaneously — you can track dependencies, flag risks early, and keep stakeholders informed without being asked
+- Are comfortable building lightweight technical solutions — Claude Projects, no-code apps, Slack automations — and know how to scope what's appropriate for DIY versus what needs engineering input
+- Have worked alongside teams building and shipping tools, and understand what it takes to get a new workflow actually adopted
+- Lead with curiosity — you ask good questions, want to understand how things work, and are honest when you don't know something
+- Bring empathy to the work: you understand that change is hard, especially for busy lawyers, and you meet people where they are rather than where you wish they were
+- Are collaborative and low-ego — you'll flex into adjacent work as the team grows and don't protect scope at the expense of outcomes
+- Have enough of a sense of humor to keep the work enjoyable, even when it's complex
 
 ## **Strong candidates may also have:**
 
-* Experience in legal operations at a law firm, in-house legal department, or legal technology company
-* Hands-on experience with Claude, Claude Code, or MCP integrations
-* A track record of building or contributing to training programs or onboarding processes in a technical environment
-* Familiarity with change management in professional services environments, where skepticism about new tools is real and earned
-* Experience with tools like AppSheet, Tines, Zapier, or similar no-code/low-code platforms
+- Experience in legal operations at a law firm, in-house legal department, or legal technology company
+- Hands-on experience with Claude, Claude Code, or MCP integrations
+- A track record of building or contributing to training programs or onboarding processes in a technical environment
+- Familiarity with change management in professional services environments, where skepticism about new tools is real and earned
+- Experience with tools like AppSheet, Tines, Zapier, or similar no-code/low-code platforms
 
 ## **Role-specific policy:**
 
 For this role, we expect all staff to be able to work from our San Francisco office at least 3 days a week, though we encourage you to apply even if you might need some flexibility for an interim period of time.
 
-The annual compensation range for this role is listed below. 
+The annual compensation range for this role is listed below.
 
 For sales roles, the range provided is the role’s On Target Earnings ("OTE") range, meaning that the range includes both the sales commissions/sales bonuses target and annual base salary for the role.
 
@@ -70,8 +70,8 @@ $170,000 \- $220,000 USD
 
 **Visa sponsorship:** We do sponsor visas! However, we aren't able to successfully sponsor visas for every role and every candidate. But if we make you an offer, we will make every reasonable effort to get you a visa, and we retain an immigration lawyer to help with this.
 
-**We encourage you to apply even if you do not believe you meet every single qualification.** Not all strong candidates will meet every single qualification as listed. Research shows that people who identify as being from underrepresented groups are more prone to experiencing imposter syndrome and doubting the strength of their candidacy, so we urge you not to exclude yourself prematurely and to submit an application if you're interested in this work. We think AI systems like the ones we're building have enormous social and ethical implications. We think this makes representation even more important, and we strive to include a range of diverse perspectives on our team.  
-  
+**We encourage you to apply even if you do not believe you meet every single qualification.** Not all strong candidates will meet every single qualification as listed. Research shows that people who identify as being from underrepresented groups are more prone to experiencing imposter syndrome and doubting the strength of their candidacy, so we urge you not to exclude yourself prematurely and to submit an application if you're interested in this work. We think AI systems like the ones we're building have enormous social and ethical implications. We think this makes representation even more important, and we strive to include a range of diverse perspectives on our team.
+
 **Your safety matters to us.** To protect yourself from potential scams, remember that Anthropic recruiters only contact you from @anthropic.com email addresses. In some cases, we may partner with vetted recruiting agencies who will identify themselves as working on behalf of Anthropic. Be cautious of emails from other domains. Legitimate Anthropic recruiters will never ask for money, fees, or banking information before your first day. If you're ever unsure about a communication, don't click any links—visit [anthropic.com/careers](http://anthropic.com/careers) directly for confirmed position openings.
 
 ## **How we're different**
@@ -162,7 +162,7 @@ Add a cover letter or anything else you want to share.
 
 LinkedIn Profile
 
-Please ensure to provide _either_ your LinkedIn profile or Resume, we require at least one of the two. 
+Please ensure to provide _either_ your LinkedIn profile or Resume, we require at least one of the two.
 
 Are you open to relocation for this role? \*
 
@@ -190,7 +190,7 @@ Select...
 
 [Race & Ethnicity Definitions](https://job-boards.cdn.greenhouse.io/docs/2023/RaceEthnicityDefinitions.pdf)
 
- If you believe you belong to any of the categories of protected veterans listed below, please indicate by making the appropriate selection. As a government contractor subject to the Vietnam Era Veterans Readjustment Assistance Act (VEVRAA), we request this information in order to measure the effectiveness of the outreach and positive recruitment efforts we undertake pursuant to VEVRAA. Classification of protected categories is as follows:
+If you believe you belong to any of the categories of protected veterans listed below, please indicate by making the appropriate selection. As a government contractor subject to the Vietnam Era Veterans Readjustment Assistance Act (VEVRAA), we request this information in order to measure the effectiveness of the outreach and positive recruitment efforts we undertake pursuant to VEVRAA. Classification of protected categories is as follows:
 
 A "disabled veteran" is one of the following: a veteran of the U.S. military, ground, naval or air service who is entitled to compensation (or who but for the receipt of military retired pay would be entitled to compensation) under laws administered by the Secretary of Veterans Affairs; or a person who was discharged or released from active duty because of a service-connected disability.
 
@@ -214,39 +214,38 @@ OMB Control Number 1250-0005
 
 Expires 04/30/2026
 
-  
-**Why are you being asked to complete this form?** 
+**Why are you being asked to complete this form?**
 
 We are a federal contractor or subcontractor. The law requires us to provide equal employment opportunity to qualified people with disabilities. We have a goal of having at least 7% of our workers as people with disabilities. The law says we must measure our progress towards this goal. To do this, we must ask applicants and employees if they have a disability or have ever had one. People can become disabled, so we need to ask this question at least every five years.
 
 Completing this form is voluntary, and we hope that you will choose to do so. Your answer is confidential. No one who makes hiring decisions will see it. Your decision to complete the form and your answer will not harm you in any way. If you want to learn more about the law or this form, visit the U.S. Department of Labor’s Office of Federal Contract Compliance Programs (OFCCP) website at [www.dol.gov/ofccp](https://www.dol.gov/ofccp).
 
-**How do you know if you have a disability?** 
+**How do you know if you have a disability?**
 
 A disability is a condition that substantially limits one or more of your “major life activities.” If you have or have ever had such a condition, you are a person with a disability. **Disabilities include, but are not limited to:**
 
-* Alcohol or other substance use disorder (not currently using drugs illegally)
-* Autoimmune disorder, for example, lupus, fibromyalgia, rheumatoid arthritis, HIV/AIDS
-* Blind or low vision
-* Cancer (past or present)
-* Cardiovascular or heart disease
-* Celiac disease
-* Cerebral palsy
-* Deaf or serious difficulty hearing
-* Diabetes
-* Disfigurement, for example, disfigurement caused by burns, wounds, accidents, or congenital disorders
-* Epilepsy or other seizure disorder
-* Gastrointestinal disorders, for example, Crohn's Disease, irritable bowel syndrome
-* Intellectual or developmental disability
-* Mental health conditions, for example, depression, bipolar disorder, anxiety disorder, schizophrenia, PTSD
-* Missing limbs or partially missing limbs
-* Mobility impairment, benefiting from the use of a wheelchair, scooter, walker, leg brace(s) and/or other supports
-* Nervous system condition, for example, migraine headaches, Parkinson’s disease, multiple sclerosis (MS)
-* Neurodivergence, for example, attention-deficit/hyperactivity disorder (ADHD), autism spectrum disorder, dyslexia, dyspraxia, other learning disabilities
-* Partial or complete paralysis (any cause)
-* Pulmonary or respiratory conditions, for example, tuberculosis, asthma, emphysema
-* Short stature (dwarfism)
-* Traumatic brain injury
+- Alcohol or other substance use disorder (not currently using drugs illegally)
+- Autoimmune disorder, for example, lupus, fibromyalgia, rheumatoid arthritis, HIV/AIDS
+- Blind or low vision
+- Cancer (past or present)
+- Cardiovascular or heart disease
+- Celiac disease
+- Cerebral palsy
+- Deaf or serious difficulty hearing
+- Diabetes
+- Disfigurement, for example, disfigurement caused by burns, wounds, accidents, or congenital disorders
+- Epilepsy or other seizure disorder
+- Gastrointestinal disorders, for example, Crohn's Disease, irritable bowel syndrome
+- Intellectual or developmental disability
+- Mental health conditions, for example, depression, bipolar disorder, anxiety disorder, schizophrenia, PTSD
+- Missing limbs or partially missing limbs
+- Mobility impairment, benefiting from the use of a wheelchair, scooter, walker, leg brace(s) and/or other supports
+- Nervous system condition, for example, migraine headaches, Parkinson’s disease, multiple sclerosis (MS)
+- Neurodivergence, for example, attention-deficit/hyperactivity disorder (ADHD), autism spectrum disorder, dyslexia, dyspraxia, other learning disabilities
+- Partial or complete paralysis (any cause)
+- Pulmonary or respiratory conditions, for example, tuberculosis, asthma, emphysema
+- Short stature (dwarfism)
+- Traumatic brain injury
 
 Disability Status
 

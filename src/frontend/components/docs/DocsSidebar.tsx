@@ -38,7 +38,6 @@ const docGroups: DocGroup[] = [
       { href: "/docs/integrations/notebooklm", label: "NotebookLM" },
       { href: "/docs/integrations/google-drive", label: "Google Drive" },
       { href: "/docs/integrations/google-docs", label: "Google Docs" },
-      { href: "/docs/integrations/greenhouse", label: "Greenhouse" },
       { href: "/docs/integrations/openroute", label: "OpenRoute" },
     ],
   },
@@ -51,6 +50,8 @@ const docGroups: DocGroup[] = [
     label: "Pipelines",
     icon: Workflow,
     links: [
+      { href: "/docs/greenhouse-aggregator", label: "Greenhouse Aggregator (A)" },
+      { href: "/docs/greenhouse-tracker", label: "Greenhouse Tracker (B)" },
       { href: "/docs/role-intake", label: "Role Intake" },
       { href: "/docs/role-viewport", label: "Role Viewport" },
       { href: "/docs/role-insights", label: "Role Insights" },

@@ -112,10 +112,7 @@ export async function uploadTextSource(
 }
 
 /** Upload a URL source to NotebookLM for crawling. */
-export async function uploadUrlSource(
-  env: Env,
-  url: string,
-): Promise<{ sourceId: string }> {
+export async function uploadUrlSource(env: Env, url: string): Promise<{ sourceId: string }> {
   return withNotebookClient(env, async (client, notebookId) => {
     const source = await client.sources.addUrl(notebookId, url);
     await client.sources.waitUntilReady(notebookId, source.id, 300, 2);
@@ -215,7 +212,15 @@ export async function listArtifacts(env: Env): Promise<Artifact[]> {
 /** List artifacts filtered by type. */
 export async function listArtifactsByType(
   env: Env,
-  type: "audio" | "video" | "reports" | "quizzes" | "flashcards" | "infographics" | "slideDecks" | "dataTables",
+  type:
+    | "audio"
+    | "video"
+    | "reports"
+    | "quizzes"
+    | "flashcards"
+    | "infographics"
+    | "slideDecks"
+    | "dataTables",
 ): Promise<Artifact[]> {
   return withNotebookClient(env, async (client, notebookId) => {
     switch (type) {
@@ -280,10 +285,16 @@ export async function createMindMap(env: Env) {
 // ---------------------------------------------------------------------------
 
 /** Download a video artifact as bytes. */
-export async function downloadVideoArtifactBytes(env: Env, artifactId: string): Promise<ArrayBuffer> {
+export async function downloadVideoArtifactBytes(
+  env: Env,
+  artifactId: string,
+): Promise<ArrayBuffer> {
   return withNotebookClient(env, async (client, notebookId) => {
     const buffer = await client.artifacts.downloadVideo(notebookId, artifactId);
-    return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
+    return buffer.buffer.slice(
+      buffer.byteOffset,
+      buffer.byteOffset + buffer.byteLength,
+    ) as ArrayBuffer;
   });
 }
 
@@ -295,7 +306,10 @@ export async function downloadSlideDeckBytes(
 ): Promise<ArrayBuffer> {
   return withNotebookClient(env, async (client, notebookId) => {
     const buffer = await client.artifacts.downloadSlideDeck(notebookId, artifactId, format);
-    return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
+    return buffer.buffer.slice(
+      buffer.byteOffset,
+      buffer.byteOffset + buffer.byteLength,
+    ) as ArrayBuffer;
   });
 }
 
@@ -303,7 +317,10 @@ export async function downloadSlideDeckBytes(
 export async function downloadInfographicBytes(env: Env, artifactId: string): Promise<ArrayBuffer> {
   return withNotebookClient(env, async (client, notebookId) => {
     const buffer = await client.artifacts.downloadInfographic(notebookId, artifactId);
-    return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
+    return buffer.buffer.slice(
+      buffer.byteOffset,
+      buffer.byteOffset + buffer.byteLength,
+    ) as ArrayBuffer;
   });
 }
 
@@ -377,11 +394,7 @@ export async function pollResearch(env: Env) {
 }
 
 /** Import research results as notebook sources. */
-export async function importResearchSources(
-  env: Env,
-  taskId: string,
-  sources: any[],
-) {
+export async function importResearchSources(env: Env, taskId: string, sources: any[]) {
   return withNotebookClient(env, async (client, notebookId) => {
     return client.research.importSources(notebookId, taskId, sources);
   });
@@ -453,4 +466,3 @@ export async function deleteMindMap(env: Env, mindMapId: string) {
     return client.notes.deleteMindMap(notebookId, mindMapId);
   });
 }
-

@@ -1,6 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
-import { getCloudflareAiGatewayUrl, getSecret } from "../../utils/secrets";
+
 import type { AIProvider, InvokeOpts, ModelDescriptor } from "../providers/base";
+
+import { getCloudflareAiGatewayUrl, getSecret } from "../../utils/secrets";
 
 /**
  * Initialize the Google GenAI official SDK (@google/genai).
@@ -42,7 +44,7 @@ export class GeminiProvider implements AIProvider {
   async invokeModel<TInput, TOutput>(
     model: ModelDescriptor<TInput, TOutput>,
     input: TInput,
-    opts: InvokeOpts = {}
+    _opts: InvokeOpts = {},
   ): Promise<TOutput> {
     const parsed = model.input.parse(input);
     const serialized = model.serialize(parsed) as any;
@@ -69,7 +71,7 @@ export class GeminiProvider implements AIProvider {
   async invokeStructured<TInput, TOutput>(
     model: ModelDescriptor<TInput, TOutput>,
     input: TInput,
-    opts: InvokeOpts = {}
+    _opts: InvokeOpts = {},
   ): Promise<unknown> {
     const parsed = model.input.parse(input);
     const serialized = model.serialize(parsed) as any;
@@ -100,7 +102,7 @@ export class GeminiProvider implements AIProvider {
   async streamModel<TInput, TOutput>(
     model: ModelDescriptor<TInput, TOutput>,
     input: TInput,
-    opts: InvokeOpts = {}
+    _opts: InvokeOpts = {},
   ): Promise<ReadableStream<Uint8Array>> {
     const parsed = model.input.parse(input);
     const serialized = model.serialize(parsed) as any;

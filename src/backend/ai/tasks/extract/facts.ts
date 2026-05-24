@@ -12,7 +12,7 @@
 
 import { z } from "zod";
 
-import { generateStructuredAnalysis } from "../../providers";
+import { AiProvider } from "../../providers";
 import { enforceTokenLimit } from "../../utils/token-estimator";
 
 // ---------------------------------------------------------------------------
@@ -68,7 +68,7 @@ export async function extractRoleFactFields(env: Env, markdown: string): Promise
   // gpt-oss-120b context is 128k; 100k leaves room for system prompt + reasoning.
   enforceTokenLimit(markdown, 100_000, "Pass B Fact Extraction");
 
-  return generateStructuredAnalysis(env, {
+  return new AiProvider(env).generateStructuredAnalysis({
     messages: [
       { role: "system", content: PASS_B_FACTS_SYSTEM_PROMPT },
       { role: "user", content: markdown },

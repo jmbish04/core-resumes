@@ -1,14 +1,21 @@
 "use client";
 
-import { ScaleIcon, RefreshCcwIcon, Loader2Icon, ChevronDownIcon, TrendingUpIcon } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import {
+  ScaleIcon,
+  RefreshCcwIcon,
+  Loader2Icon,
+  ChevronDownIcon,
+  TrendingUpIcon,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { apiGet, apiPost, toast } from "@/lib/api-client";
+
 import { ScoreRadialChart } from "./ScoreRadialChart";
 
 // ---------------------------------------------------------------------------
@@ -119,7 +126,11 @@ export function CombinedValueScore({ roleId }: { roleId: string }) {
     <Card className="flex flex-col">
       <div className="flex flex-col md:flex-row items-start p-6 gap-6">
         <div className="flex-1 w-full md:w-auto self-center">
-          <ScoreRadialChart score={insight.score} label={getScoreLabel(insight.score)} color={color} />
+          <ScoreRadialChart
+            score={insight.score}
+            label={getScoreLabel(insight.score)}
+            color={color}
+          />
         </div>
 
         <div className="flex-[2] flex flex-col gap-4 w-full">
@@ -147,16 +158,31 @@ export function CombinedValueScore({ roleId }: { roleId: string }) {
               </Button>
             </div>
           </div>
-          
+
           {insight.score === 0 && (
             <div className="flex items-start gap-2 rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-2.5 text-sm text-amber-400 mt-2">
-               <ScaleIcon className="mt-0.5 size-4 shrink-0" />
-               <div className="flex-1">
-                 <p>Combined score did not compute correctly — this usually means the sub-analyses haven't been generated yet.</p>
-                 <Button variant="outline" size="sm" className="mt-2 h-7 text-xs" disabled={analyzing} onClick={() => void analyze()}>
-                   {analyzing ? <><Loader2Icon className="mr-1 h-3 w-3 animate-spin" /> Running…</> : "Run Full Analysis"}
-                 </Button>
-               </div>
+              <ScaleIcon className="mt-0.5 size-4 shrink-0" />
+              <div className="flex-1">
+                <p>
+                  Combined score did not compute correctly — this usually means the sub-analyses
+                  haven't been generated yet.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 h-7 text-xs"
+                  disabled={analyzing}
+                  onClick={() => void analyze()}
+                >
+                  {analyzing ? (
+                    <>
+                      <Loader2Icon className="mr-1 h-3 w-3 animate-spin" /> Running…
+                    </>
+                  ) : (
+                    "Run Full Analysis"
+                  )}
+                </Button>
+              </div>
             </div>
           )}
 
@@ -184,7 +210,9 @@ export function CombinedValueScore({ roleId }: { roleId: string }) {
             <div className="flex items-center gap-2">
               AI Insight <TrendingUpIcon className="h-4 w-4 text-primary" />
             </div>
-            <ChevronDownIcon className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+            <ChevronDownIcon
+              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+            />
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3">
             <div className="prose prose-sm dark:prose-invert max-w-none text-left">

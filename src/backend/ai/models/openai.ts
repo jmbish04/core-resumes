@@ -1,6 +1,8 @@
 import OpenAI from "openai";
-import { getCloudflareAiGatewayUrl, getSecret } from "../../utils/secrets";
+
 import type { AIProvider, InvokeOpts, ModelDescriptor } from "../providers/base";
+
+import { getCloudflareAiGatewayUrl, getSecret } from "../../utils/secrets";
 
 /**
  * Initialize the OpenAI official SDK.
@@ -25,7 +27,7 @@ export class OpenAIProvider implements AIProvider {
   async invokeModel<TInput, TOutput>(
     model: ModelDescriptor<TInput, TOutput>,
     input: TInput,
-    opts: InvokeOpts = {}
+    opts: InvokeOpts = {},
   ): Promise<TOutput> {
     const parsed = model.input.parse(input);
     const serialized = model.serialize(parsed) as any;
@@ -38,7 +40,7 @@ export class OpenAIProvider implements AIProvider {
         max_tokens: serialized.max_tokens,
         stream: false,
       },
-      { signal: opts.signal }
+      { signal: opts.signal },
     );
 
     const content = response.choices[0]?.message?.content;
@@ -52,7 +54,7 @@ export class OpenAIProvider implements AIProvider {
   async invokeStructured<TInput, TOutput>(
     model: ModelDescriptor<TInput, TOutput>,
     input: TInput,
-    opts: InvokeOpts = {}
+    opts: InvokeOpts = {},
   ): Promise<unknown> {
     const parsed = model.input.parse(input);
     const serialized = model.serialize(parsed) as any;
@@ -66,7 +68,7 @@ export class OpenAIProvider implements AIProvider {
         response_format: serialized.response_format,
         stream: false,
       },
-      { signal: opts.signal }
+      { signal: opts.signal },
     );
 
     const content = response.choices[0]?.message?.content;
@@ -80,7 +82,7 @@ export class OpenAIProvider implements AIProvider {
   async streamModel<TInput, TOutput>(
     model: ModelDescriptor<TInput, TOutput>,
     input: TInput,
-    opts: InvokeOpts = {}
+    opts: InvokeOpts = {},
   ): Promise<ReadableStream<Uint8Array>> {
     const parsed = model.input.parse(input);
     const serialized = model.serialize(parsed) as any;
@@ -93,7 +95,7 @@ export class OpenAIProvider implements AIProvider {
         max_tokens: serialized.max_tokens,
         stream: true,
       },
-      { signal: opts.signal }
+      { signal: opts.signal },
     );
 
     const encoder = new TextEncoder();

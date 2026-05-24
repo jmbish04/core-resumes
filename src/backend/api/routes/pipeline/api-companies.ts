@@ -4,7 +4,7 @@
 
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { getAgentByName } from "agents";
-import { and, eq, inArray, notInArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 import { getDb } from "@/backend/db";
 import { apiCompanies, apiCompanySyncStats } from "@/backend/db/schema";
@@ -55,44 +55,61 @@ apiCompaniesRouter.openapi(
     const body = c.req.valid("json");
     const upstreamTokens = body.companies;
     const now = new Date();
+    const logger = new Logger(c.env);
 
     if (upstreamTokens.length === 0) {
       return c.json({ inserted: 0, deactivated: 0, reactivated: 0 }, 200);
     }
 
-    const tokenStrings = upstreamTokens.map((t) => t.token);
+    // D1 caps bound parameters at 100 per query — diff in memory and update by id
+    // in chunks instead of passing the full token list into inArray/notInArray.
+    // Setting CHUNK to 15 keeps maximum parameters at 75 (15 * 5) for inserts and 17 (15 + 2) for updates.
+    const CHUNK = 15;
+    const upstreamSet = new Set(upstreamTokens.map((t) => t.token));
 
-    // 1. Mark active companies inactive if not in upstream
-    const deactivated = await db
-      .update(apiCompanies)
-      .set({ isActive: false, timestampInactive: now })
-      .where(
-        and(eq(apiCompanies.isActive, true), notInArray(apiCompanies.jobBoardToken, tokenStrings)),
-      )
-      .returning();
+    try {
+      const allCompanies = await db
+        .select({
+          id: apiCompanies.id,
+          token: apiCompanies.jobBoardToken,
+          isActive: apiCompanies.isActive,
+        })
+        .from(apiCompanies);
 
-    // 2. Mark previously inactive companies active if in upstream
-    const reactivated = await db
-      .update(apiCompanies)
-      .set({ isActive: true, timestampInactive: null })
-      .where(
-        and(eq(apiCompanies.isActive, false), inArray(apiCompanies.jobBoardToken, tokenStrings)),
-      )
-      .returning();
+      const existingTokenSet = new Set(allCompanies.map((c) => c.token));
+      const toDeactivateIds = allCompanies
+        .filter((c) => c.isActive && !upstreamSet.has(c.token))
+        .map((c) => c.id);
+      const toReactivateIds = allCompanies
+        .filter((c) => !c.isActive && upstreamSet.has(c.token))
+        .map((c) => c.id);
+      const newTokens = upstreamTokens.filter((t) => !existingTokenSet.has(t.token));
 
-    // 3. Find and insert new tokens
-    const existingTokens = await db
-      .select({ token: apiCompanies.jobBoardToken })
-      .from(apiCompanies);
-    const existingTokenSet = new Set(existingTokens.map((t) => t.token));
+      let deactivatedCount = 0;
+      for (let i = 0; i < toDeactivateIds.length; i += CHUNK) {
+        const chunk = toDeactivateIds.slice(i, i + CHUNK);
+        const rows = await db
+          .update(apiCompanies)
+          .set({ isActive: false, timestampInactive: now })
+          .where(inArray(apiCompanies.id, chunk))
+          .returning({ id: apiCompanies.id });
+        deactivatedCount += rows.length;
+      }
 
-    const newTokens = upstreamTokens.filter((t) => !existingTokenSet.has(t.token));
-    let insertedCount = 0;
+      let reactivatedCount = 0;
+      for (let i = 0; i < toReactivateIds.length; i += CHUNK) {
+        const chunk = toReactivateIds.slice(i, i + CHUNK);
+        const rows = await db
+          .update(apiCompanies)
+          .set({ isActive: true, timestampInactive: null })
+          .where(inArray(apiCompanies.id, chunk))
+          .returning({ id: apiCompanies.id });
+        reactivatedCount += rows.length;
+      }
 
-    if (newTokens.length > 0) {
-      const chunkSize = 100;
-      for (let i = 0; i < newTokens.length; i += chunkSize) {
-        const chunk = newTokens.slice(i, i + chunkSize);
+      let insertedCount = 0;
+      for (let i = 0; i < newTokens.length; i += CHUNK) {
+        const chunk = newTokens.slice(i, i + CHUNK);
         const insertedRows = await db
           .insert(apiCompanies)
           .values(
@@ -102,39 +119,77 @@ apiCompaniesRouter.openapi(
               source: t.source,
               isActive: true,
               timestampAdded: now,
+              isRecommended: t.isRecommended ?? false,
+              recommendationReason: t.recommendationReason ?? null,
             })),
           )
           .onConflictDoNothing()
-          .returning();
+          .returning({ id: apiCompanies.id });
         insertedCount += insertedRows.length;
       }
+
+      // Update recommendation status for recommended companies in the sync payload
+      const recommendedTokens = upstreamTokens.filter((t) => t.isRecommended);
+      for (let i = 0; i < recommendedTokens.length; i += CHUNK) {
+        const chunk = recommendedTokens.slice(i, i + CHUNK);
+        for (const t of chunk) {
+          await db
+            .update(apiCompanies)
+            .set({
+              isRecommended: true,
+              recommendationReason: t.recommendationReason || null,
+            })
+            .where(eq(apiCompanies.jobBoardToken, t.token));
+        }
+      }
+
+      await db.insert(apiCompanySyncStats).values({
+        runTimestamp: now,
+        filesProcessed: 0,
+        companiesAdded: insertedCount,
+        companiesDeactivated: deactivatedCount,
+        companiesReactivated: reactivatedCount,
+        status: "success",
+      });
+
+      await logger.info(
+        "[Aggregator Sync Completed] Discovered and processed company records in D1.",
+        {
+          status: "completed",
+          added: insertedCount,
+          deactivated: deactivatedCount,
+          reactivated: reactivatedCount,
+        },
+      );
+
+      return c.json(
+        {
+          inserted: insertedCount,
+          deactivated: deactivatedCount,
+          reactivated: reactivatedCount,
+        },
+        200,
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await logger.error(`[Aggregator Sync Failed] ${message}`, {
+        status: "failed",
+        upstreamCount: upstreamTokens.length,
+      });
+      await db
+        .insert(apiCompanySyncStats)
+        .values({
+          runTimestamp: now,
+          filesProcessed: 0,
+          companiesAdded: 0,
+          companiesDeactivated: 0,
+          companiesReactivated: 0,
+          status: "failed",
+          error: message,
+        })
+        .catch(() => {});
+      throw err;
     }
-    // 4. Log the sync stats
-    await db.insert(apiCompanySyncStats).values({
-      runTimestamp: now,
-      filesProcessed: 0, // We don't have filesProcessed from the script in this endpoint, but we can set it to upstreamTokens.length as an approximation or leave 0
-      companiesAdded: insertedCount,
-      companiesDeactivated: deactivated.length,
-      companiesReactivated: reactivated.length,
-      status: "success",
-    });
-
-    const logger = new Logger(c.env);
-    await logger.info("[Aggregator Sync Completed] Discovered and processed company records in D1.", {
-      status: "completed",
-      added: insertedCount,
-      deactivated: deactivated.length,
-      reactivated: reactivated.length,
-    });
-
-    return c.json(
-      {
-        inserted: insertedCount,
-        deactivated: deactivated.length,
-        reactivated: reactivated.length,
-      },
-      200,
-    );
   },
 );
 
@@ -219,6 +274,8 @@ apiCompaniesRouter.openapi(
                   jobBoardToken: z.string(),
                   system: z.string(),
                   isActive: z.boolean(),
+                  isRecommended: z.boolean(),
+                  recommendationReason: z.string().nullable(),
                 }),
               ),
             }),
@@ -236,6 +293,8 @@ apiCompaniesRouter.openapi(
         jobBoardToken: apiCompanies.jobBoardToken,
         system: apiCompanies.system,
         isActive: apiCompanies.isActive,
+        isRecommended: apiCompanies.isRecommended,
+        recommendationReason: apiCompanies.recommendationReason,
       })
       .from(apiCompanies)
       .where(eq(apiCompanies.isActive, true))
@@ -377,7 +436,6 @@ apiCompaniesRouter.openapi(
     const body = c.req.valid("json");
     const logger = new Logger(c.env);
 
-    // Centralized Logging: Logs to console + inserts D1 row + fans-out to WebSocket.
     const logMetadata = {
       status: body.status,
       current: body.current ?? undefined,
@@ -391,6 +449,19 @@ apiCompaniesRouter.openapi(
       await logger.error(logMessage, logMetadata);
     } else {
       await logger.info(logMessage, logMetadata);
+    }
+
+    // Fan out to every open Pipeline dashboard WebSocket via SyncBroadcastAgent.
+    // Failures here must not 500 the GitHub Action — log and swallow.
+    try {
+      const agent = await getAgentByName(c.env.SYNC_BROADCAST_AGENT, "global");
+      await agent.reportProgress(body);
+    } catch (e) {
+      await logger.warn(
+        `[Aggregator Sync Progress] Failed to broadcast to SyncBroadcastAgent: ${
+          e instanceof Error ? e.message : String(e)
+        }`,
+      );
     }
 
     return c.json({ success: true }, 200);
@@ -438,6 +509,128 @@ apiCompaniesRouter.openapi(
       },
       200,
     );
+  },
+);
+
+/**
+ * GET /api-companies/search-terms — Expose keywords for title and location matching
+ */
+apiCompaniesRouter.openapi(
+  createRoute({
+    method: "get",
+    path: "/api-companies/search-terms",
+    operationId: "getApiCompaniesSearchTerms",
+    responses: {
+      200: {
+        description: "Sync discovery search terms",
+        content: {
+          "application/json": {
+            schema: z.object({
+              titles: z.array(z.string()),
+              locations: z.array(z.string()),
+            }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    return c.json(
+      {
+        titles: [
+          "software engineer",
+          "software developer",
+          "frontend",
+          "backend",
+          "fullstack",
+          "full stack",
+          "engineer",
+          "developer",
+          "platform",
+          "infrastructure",
+          "devops",
+        ],
+        locations: [
+          "remote",
+          "san francisco",
+          "sf",
+          "bay area",
+          "california",
+          "united states",
+          "us",
+          "usa",
+        ],
+      },
+      200,
+    );
+  },
+);
+
+/**
+ * POST /api-companies/reject-all — Dismiss all unpromoted aggregator recommendations
+ */
+apiCompaniesRouter.openapi(
+  createRoute({
+    method: "post",
+    path: "/api-companies/reject-all",
+    operationId: "rejectAllRecommendations",
+    responses: {
+      200: {
+        description: "Successfully rejected all recommendations",
+        content: {
+          "application/json": {
+            schema: z.object({
+              success: z.boolean(),
+            }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    const db = getDb(c.env);
+    await db.update(apiCompanies).set({ isRecommended: false, recommendationReason: null });
+    return c.json({ success: true }, 200);
+  },
+);
+
+/**
+ * POST /api-companies/{id}/reject — Dismiss single company recommendation
+ */
+apiCompaniesRouter.openapi(
+  createRoute({
+    method: "post",
+    path: "/api-companies/{id}/reject",
+    operationId: "rejectRecommendation",
+    request: {
+      params: z.object({
+        id: z.string().openapi({ description: "Company ID" }),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Successfully rejected recommendation",
+        content: {
+          "application/json": {
+            schema: z.object({
+              success: z.boolean(),
+            }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    const db = getDb(c.env);
+    const { id } = c.req.valid("param");
+    const numericId = parseInt(id, 10);
+    if (!isNaN(numericId)) {
+      await db
+        .update(apiCompanies)
+        .set({ isRecommended: false, recommendationReason: null })
+        .where(eq(apiCompanies.id, numericId));
+    }
+    return c.json({ success: true }, 200);
   },
 );
 

@@ -26,7 +26,7 @@ import {
   Table2,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import {
   AlertDialog,
@@ -50,12 +50,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { apiGet, apiPost, toast } from "@/lib/api-client";
 
@@ -263,10 +258,10 @@ export function NotebookLMCommandMenu({ roleId }: { roleId: string }) {
     if (!pendingAction) return;
     setIsSubmitting(true);
     try {
-      await apiPost(
-        `/api/roles/${encodeURIComponent(roleId)}/notebooklm/actions`,
-        { action: pendingAction.action, prompt: activePrompt },
-      );
+      await apiPost(`/api/roles/${encodeURIComponent(roleId)}/notebooklm/actions`, {
+        action: pendingAction.action,
+        prompt: activePrompt,
+      });
       toast({
         title: `${pendingAction.label} triggered`,
         description: "The action has been queued for processing.",
@@ -296,12 +291,7 @@ export function NotebookLMCommandMenu({ roleId }: { roleId: string }) {
   return (
     <>
       {/* Trigger button */}
-      <Button
-        onClick={() => setPaletteOpen(true)}
-        variant="outline"
-        size="sm"
-        className="gap-1.5"
-      >
+      <Button onClick={() => setPaletteOpen(true)} variant="outline" size="sm" className="gap-1.5">
         <BookOpen className="size-3.5" />
         NotebookLM
       </Button>
@@ -315,16 +305,11 @@ export function NotebookLMCommandMenu({ roleId }: { roleId: string }) {
 
             <CommandGroup heading="Generate Artifacts">
               {ARTIFACT_ACTIONS.map((item) => (
-                <CommandItem
-                  key={item.action}
-                  onSelect={() => handleSelect(item)}
-                >
+                <CommandItem key={item.action} onSelect={() => handleSelect(item)}>
                   {item.icon}
                   <div className="flex flex-col">
                     <span>{item.label}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {item.description}
-                    </span>
+                    <span className="text-xs text-muted-foreground">{item.description}</span>
                   </div>
                 </CommandItem>
               ))}
@@ -334,16 +319,11 @@ export function NotebookLMCommandMenu({ roleId }: { roleId: string }) {
 
             <CommandGroup heading="Research">
               {RESEARCH_ACTIONS.map((item) => (
-                <CommandItem
-                  key={item.action}
-                  onSelect={() => handleSelect(item)}
-                >
+                <CommandItem key={item.action} onSelect={() => handleSelect(item)}>
                   {item.icon}
                   <div className="flex flex-col">
                     <span>{item.label}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {item.description}
-                    </span>
+                    <span className="text-xs text-muted-foreground">{item.description}</span>
                   </div>
                 </CommandItem>
               ))}
@@ -377,8 +357,7 @@ export function NotebookLMCommandMenu({ roleId }: { roleId: string }) {
             /* ── CONFIRM VIEW ── */
             <div className="grid gap-4">
               <p className="text-sm text-muted-foreground">
-                {pendingAction?.description}. Review the prompt below before
-                sending to NotebookLM:
+                {pendingAction?.description}. Review the prompt below before sending to NotebookLM:
               </p>
 
               {/* Read-only prompt display */}
@@ -390,21 +369,11 @@ export function NotebookLMCommandMenu({ roleId }: { roleId: string }) {
 
               {/* Action buttons */}
               <div className="flex items-center justify-end gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCancel}
-                  className="gap-1.5"
-                >
+                <Button variant="outline" size="sm" onClick={handleCancel} className="gap-1.5">
                   <X className="size-3.5" />
                   Cancel
                 </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleEnterEdit}
-                  className="gap-1.5"
-                >
+                <Button variant="secondary" size="sm" onClick={handleEnterEdit} className="gap-1.5">
                   <Pencil className="size-3.5" />
                   Edit Prompt
                 </Button>
@@ -427,8 +396,8 @@ export function NotebookLMCommandMenu({ roleId }: { roleId: string }) {
             /* ── EDIT VIEW ── */
             <div className="grid gap-4">
               <p className="text-sm text-muted-foreground">
-                Edit the prompt template below. Template tags will be
-                hydrated with role data at runtime.
+                Edit the prompt template below. Template tags will be hydrated with role data at
+                runtime.
               </p>
 
               {/* Template tag reference */}
@@ -439,16 +408,11 @@ export function NotebookLMCommandMenu({ roleId }: { roleId: string }) {
                   </div>
                   <div className="grid gap-1">
                     {templateTags.map((t) => (
-                      <div
-                        key={t.tag}
-                        className="flex items-baseline gap-2 text-sm"
-                      >
+                      <div key={t.tag} className="flex items-baseline gap-2 text-sm">
                         <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-primary">
                           {t.tag}
                         </code>
-                        <span className="text-muted-foreground text-xs">
-                          {t.description}
-                        </span>
+                        <span className="text-muted-foreground text-xs">{t.description}</span>
                       </div>
                     ))}
                   </div>
@@ -466,20 +430,11 @@ export function NotebookLMCommandMenu({ roleId }: { roleId: string }) {
 
               {/* Action buttons */}
               <div className="flex items-center justify-end gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCancelEdit}
-                  className="gap-1.5"
-                >
+                <Button variant="outline" size="sm" onClick={handleCancelEdit} className="gap-1.5">
                   <X className="size-3.5" />
                   Cancel
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={handleSaveEdit}
-                  className="gap-1.5"
-                >
+                <Button size="sm" onClick={handleSaveEdit} className="gap-1.5">
                   <Check className="size-3.5" />
                   Save &amp; Review
                 </Button>
@@ -495,15 +450,12 @@ export function NotebookLMCommandMenu({ roleId }: { roleId: string }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Discard modifications?</AlertDialogTitle>
             <AlertDialogDescription>
-              Your prompt modifications will be lost. Are you sure you want to
-              close?
+              Your prompt modifications will be lost. Are you sure you want to close?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Keep Editing</AlertDialogCancel>
-            <AlertDialogAction onClick={resetModal}>
-              Discard &amp; Close
-            </AlertDialogAction>
+            <AlertDialogAction onClick={resetModal}>Discard &amp; Close</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -1,1 +1,860 @@
-[{"results": [{"attributes": [{"name": "class", "value": "section-header section-header--large font-primary"}], "height": 40, "html": "Legal Operations Specialist, Tooling &amp; Enablement", "left": 534, "text": "Legal Operations Specialist, Tooling & Enablement", "top": 160, "width": 730}, {"attributes": [], "height": 40, "html": "<strong>About Anthropic</strong>", "left": 534, "text": "About Anthropic", "top": 263.90625, "width": 852}, {"attributes": [{"name": "class", "value": "heading"}], "height": 40, "html": "<strong>Responsibilities</strong>", "left": 534, "text": "Responsibilities", "top": 743.71875, "width": 852}, {"attributes": [{"name": "class", "value": "heading"}], "height": 40, "html": "<strong>You may be a good fit if you:</strong>", "left": 534, "text": "You may be a good fit if you:", "top": 1087.53125, "width": 852}, {"attributes": [{"name": "class", "value": "heading"}], "height": 40, "html": "<strong>Strong candidates may also have:</strong>", "left": 534, "text": "Strong candidates may also have:", "top": 1503.34375, "width": 852}, {"attributes": [{"name": "class", "value": "heading"}], "height": 40, "html": "<strong>Role-specific policy:</strong>", "left": 534, "text": "Role-specific policy:", "top": 1751.15625, "width": 852}, {"attributes": [], "height": 40, "html": "<strong>Logistics</strong>", "left": 534, "text": "Logistics", "top": 2102.96875, "width": 852}, {"attributes": [], "height": 40, "html": "<strong>How we're different</strong>", "left": 534, "text": "How we're different", "top": 2838.78125, "width": 852}, {"attributes": [], "height": 40, "html": "<strong>Come work with us!</strong>", "left": 534, "text": "Come work with us!", "top": 3174.59375, "width": 852}, {"attributes": [{"name": "class", "value": "section-header font-primary"}], "height": 32, "html": "Apply for this job", "left": 534, "text": "Apply for this job", "top": 3533.5, "width": 177}, {"attributes": [{"name": "class", "value": "section-header font-primary"}], "height": 40, "html": "Voluntary Self-Identification", "left": 534, "text": "Voluntary Self-Identification", "top": 5975.5, "width": 852}, {"attributes": [{"name": "class", "value": "section-header font-primary"}], "height": 40, "html": "Voluntary Self-Identification of Disability", "left": 534, "text": "Voluntary Self-Identification of Disability", "top": 6964.5, "width": 852}], "selector": "h1, h2, h3"}, {"results": [{"attributes": [], "height": 48, "html": "Coordinate the legal team's AI tooling roadmap — maintaining visibility into what's in progress, tracking timelines across multiple concurrent workstreams, and communicating status to stakeholders", "left": 574, "text": "Coordinate the legal team's AI tooling roadmap — maintaining visibility into what's in progress, tracking timelines across multiple concurrent workstreams, and communicating status to stakeholders", "top": 803.625, "width": 812}, {"attributes": [], "height": 48, "html": "Triage incoming tooling requests, assess complexity and scope, and route work appropriately — handling straightforward builds yourself and flagging those that need deeper technical review", "left": 574, "text": "Triage incoming tooling requests, assess complexity and scope, and route work appropriately — handling straightforward builds yourself and flagging those that need deeper technical review", "top": 851.625, "width": 812}, {"attributes": [], "height": 48, "html": "Build no-code and low-code solutions end-to-end: <a class=\"text-accent-secondary-100 underline\" href=\"http://Claude.ai\" target=\"_blank\">Claude.ai</a> Projects, AppSheet apps, Slack workflows, and similar tools that solve real pain points without requiring deployment infrastructure", "left": 574, "text": "Build no-code and low-code solutions end-to-end: Claude.ai Projects, AppSheet apps, Slack workflows, and similar tools that solve real pain points without requiring deployment infrastructure", "top": 899.625, "width": 812}, {"attributes": [], "height": 48, "html": "Partner with the team on AI adoption efforts — contributing to training materials, documentation, and user guides as new tools ship", "left": 574, "text": "Partner with the team on AI adoption efforts — contributing to training materials, documentation, and user guides as new tools ship", "top": 947.625, "width": 812}, {"attributes": [], "height": 24, "html": "Support the legal team onboarding process and maintain onboarding content as our tooling evolves", "left": 574, "text": "Support the legal team onboarding process and maintain onboarding content as our tooling evolves", "top": 995.625, "width": 812}, {"attributes": [], "height": 48, "html": "Track adoption signals and surface patterns: what's being used, what isn't, and what that tells us about where to focus", "left": 574, "text": "Track adoption signals and surface patterns: what's being used, what isn't, and what that tells us about where to focus", "top": 1019.625, "width": 812}, {"attributes": [], "height": 24, "html": "Have at least 4–7 years of experience in legal operations, legal technology, or a technical operations role", "left": 574, "text": "Have at least 4–7 years of experience in legal operations, legal technology, or a technical operations role", "top": 1147.4375, "width": 812}, {"attributes": [], "height": 48, "html": "Are comfortable keeping multiple projects organized and visible simultaneously — you can track dependencies, flag risks early, and keep stakeholders informed without being asked", "left": 574, "text": "Are comfortable keeping multiple projects organized and visible simultaneously — you can track dependencies, flag risks early, and keep stakeholders informed without being asked", "top": 1171.4375, "width": 812}, {"attributes": [], "height": 48, "html": "Are comfortable building lightweight technical solutions — Claude Projects, no-code apps, Slack automations — and know how to scope what's appropriate for DIY versus what needs engineering input", "left": 574, "text": "Are comfortable building lightweight technical solutions — Claude Projects, no-code apps, Slack automations — and know how to scope what's appropriate for DIY versus what needs engineering input", "top": 1219.4375, "width": 812}, {"attributes": [], "height": 48, "html": "Have worked alongside teams building and shipping tools, and understand what it takes to get a new workflow actually adopted", "left": 574, "text": "Have worked alongside teams building and shipping tools, and understand what it takes to get a new workflow actually adopted", "top": 1267.4375, "width": 812}, {"attributes": [], "height": 48, "html": "Lead with curiosity — you ask good questions, want to understand how things work, and are honest when you don't know something", "left": 574, "text": "Lead with curiosity — you ask good questions, want to understand how things work, and are honest when you don't know something", "top": 1315.4375, "width": 812}, {"attributes": [], "height": 48, "html": "Bring empathy to the work: you understand that change is hard, especially for busy lawyers, and you meet people where they are rather than where you wish they were", "left": 574, "text": "Bring empathy to the work: you understand that change is hard, especially for busy lawyers, and you meet people where they are rather than where you wish they were", "top": 1363.4375, "width": 812}, {"attributes": [], "height": 48, "html": "Are collaborative and low-ego — you'll flex into adjacent work as the team grows and don't protect scope at the expense of outcomes", "left": 574, "text": "Are collaborative and low-ego — you'll flex into adjacent work as the team grows and don't protect scope at the expense of outcomes", "top": 1411.4375, "width": 812}, {"attributes": [], "height": 24, "html": "Have enough of a sense of humor to keep the work enjoyable, even when it's complex", "left": 574, "text": "Have enough of a sense of humor to keep the work enjoyable, even when it's complex", "top": 1459.4375, "width": 812}, {"attributes": [], "height": 24, "html": "Experience in legal operations at a law firm, in-house legal department, or legal technology company", "left": 574, "text": "Experience in legal operations at a law firm, in-house legal department, or legal technology company", "top": 1563.25, "width": 812}, {"attributes": [], "height": 24, "html": "Hands-on experience with Claude, Claude Code, or MCP integrations", "left": 574, "text": "Hands-on experience with Claude, Claude Code, or MCP integrations", "top": 1587.25, "width": 812}, {"attributes": [], "height": 48, "html": "A track record of building or contributing to training programs or onboarding processes in a technical environment", "left": 574, "text": "A track record of building or contributing to training programs or onboarding processes in a technical environment", "top": 1611.25, "width": 812}, {"attributes": [], "height": 48, "html": "Familiarity with change management in professional services environments, where skepticism about new tools is real and earned", "left": 574, "text": "Familiarity with change management in professional services environments, where skepticism about new tools is real and earned", "top": 1659.25, "width": 812}, {"attributes": [], "height": 24, "html": "Experience with tools like AppSheet, Tines, Zapier, or similar no-code/low-code platforms", "left": 574, "text": "Experience with tools like AppSheet, Tines, Zapier, or similar no-code/low-code platforms", "top": 1707.25, "width": 812}, {"attributes": [], "height": 24, "html": "Alcohol or other substance use disorder (not currently using drugs illegally)", "left": 574, "text": "Alcohol or other substance use disorder (not currently using drugs illegally)", "top": 7468.5, "width": 812}, {"attributes": [], "height": 24, "html": "Autoimmune disorder, for example, lupus, fibromyalgia, rheumatoid arthritis, HIV/AIDS", "left": 574, "text": "Autoimmune disorder, for example, lupus, fibromyalgia, rheumatoid arthritis, HIV/AIDS", "top": 7492.5, "width": 812}, {"attributes": [], "height": 24, "html": "Blind or low vision", "left": 574, "text": "Blind or low vision", "top": 7516.5, "width": 812}, {"attributes": [], "height": 24, "html": "Cancer (past or present)", "left": 574, "text": "Cancer (past or present)", "top": 7540.5, "width": 812}, {"attributes": [], "height": 24, "html": "Cardiovascular or heart disease", "left": 574, "text": "Cardiovascular or heart disease", "top": 7564.5, "width": 812}, {"attributes": [], "height": 24, "html": "Celiac disease", "left": 574, "text": "Celiac disease", "top": 7588.5, "width": 812}, {"attributes": [], "height": 24, "html": "Cerebral palsy", "left": 574, "text": "Cerebral palsy", "top": 7612.5, "width": 812}, {"attributes": [], "height": 24, "html": "Deaf or serious difficulty hearing", "left": 574, "text": "Deaf or serious difficulty hearing", "top": 7636.5, "width": 812}, {"attributes": [], "height": 24, "html": "Diabetes", "left": 574, "text": "Diabetes", "top": 7660.5, "width": 812}, {"attributes": [], "height": 24, "html": "Disfigurement, for example, disfigurement caused by burns, wounds, accidents, or congenital disorders", "left": 574, "text": "Disfigurement, for example, disfigurement caused by burns, wounds, accidents, or congenital disorders", "top": 7684.5, "width": 812}, {"attributes": [], "height": 24, "html": "Epilepsy or other seizure disorder", "left": 574, "text": "Epilepsy or other seizure disorder", "top": 7708.5, "width": 812}, {"attributes": [], "height": 24, "html": "Gastrointestinal disorders, for example, Crohn's Disease, irritable bowel syndrome", "left": 574, "text": "Gastrointestinal disorders, for example, Crohn's Disease, irritable bowel syndrome", "top": 7732.5, "width": 812}, {"attributes": [], "height": 24, "html": "Intellectual or developmental disability", "left": 574, "text": "Intellectual or developmental disability", "top": 7756.5, "width": 812}, {"attributes": [], "height": 24, "html": "Mental health conditions, for example, depression, bipolar disorder, anxiety disorder, schizophrenia, PTSD", "left": 574, "text": "Mental health conditions, for example, depression, bipolar disorder, anxiety disorder, schizophrenia, PTSD", "top": 7780.5, "width": 812}, {"attributes": [], "height": 24, "html": "Missing limbs or partially missing limbs", "left": 574, "text": "Missing limbs or partially missing limbs", "top": 7804.5, "width": 812}, {"attributes": [], "height": 48, "html": "Mobility impairment, benefiting from the use of a wheelchair, scooter, walker, leg brace(s) and/or other supports", "left": 574, "text": "Mobility impairment, benefiting from the use of a wheelchair, scooter, walker, leg brace(s) and/or other supports", "top": 7828.5, "width": 812}, {"attributes": [], "height": 24, "html": "Nervous system condition, for example, migraine headaches, Parkinson’s disease, multiple sclerosis (MS)", "left": 574, "text": "Nervous system condition, for example, migraine headaches, Parkinson’s disease, multiple sclerosis (MS)", "top": 7876.5, "width": 812}, {"attributes": [], "height": 48, "html": "Neurodivergence, for example, attention-deficit/hyperactivity disorder (ADHD), autism spectrum disorder, dyslexia, dyspraxia, other learning disabilities", "left": 574, "text": "Neurodivergence, for example, attention-deficit/hyperactivity disorder (ADHD), autism spectrum disorder, dyslexia, dyspraxia, other learning disabilities", "top": 7900.5, "width": 812}, {"attributes": [], "height": 24, "html": "Partial or complete paralysis (any cause)", "left": 574, "text": "Partial or complete paralysis (any cause)", "top": 7948.5, "width": 812}, {"attributes": [], "height": 24, "html": "Pulmonary or respiratory conditions, for example, tuberculosis, asthma, emphysema", "left": 574, "text": "Pulmonary or respiratory conditions, for example, tuberculosis, asthma, emphysema", "top": 7972.5, "width": 812}, {"attributes": [], "height": 24, "html": "Short stature (dwarfism)", "left": 574, "text": "Short stature (dwarfism)", "top": 7996.5, "width": 812}, {"attributes": [], "height": 24, "html": "Traumatic brain injury", "left": 574, "text": "Traumatic brain injury", "top": 8020.5, "width": 812}], "selector": "ul > li"}, {"results": [], "selector": "ol > li"}, {"results": [{"attributes": [], "height": 72, "html": "Anthropic’s mission is to create reliable, interpretable, and steerable AI systems. We want AI to be safe and beneficial for our users and for society as a whole. Our team is a quickly growing group of committed researchers, engineers, policy experts, and business leaders working together to build beneficial AI systems.", "left": 534, "text": "Anthropic’s mission is to create reliable, interpretable, and steerable AI systems. We want AI to be safe and beneficial for our users and for society as a whole. Our team is a quickly growing group of committed researchers, engineers, policy experts, and business leaders working together to build beneficial AI systems.", "top": 323.8125, "width": 852}, {"attributes": [], "height": 72, "html": "Anthropic's Legal Operations team builds the systems, workflows, and tools that let our legal team operate at the speed of the company. We've made significant investments in tooling and automation — and now the challenge is keeping that work coordinated, visible, and actually used.", "left": 534, "text": "Anthropic's Legal Operations team builds the systems, workflows, and tools that let our legal team operate at the speed of the company. We've made significant investments in tooling and automation — and now the challenge is keeping that work coordinated, visible, and actually used.", "top": 427.8125, "width": 852}, {"attributes": [], "height": 120, "html": "As a Legal Operations Specialist, Tooling &amp; Enablement, you'll sit at the intersection of three things: keeping our tooling work organized and moving, partnering with the team on getting tools into the legal team’s hands, and contributing directly to technical builds. The right balance across these will depend on what you bring — we're open to someone who leans toward the technical side and can think through solutions end-to-end, as well as someone who leans toward coordination and enablement with meaningful technical contribution.", "left": 534, "text": "As a Legal Operations Specialist, Tooling & Enablement, you'll sit at the intersection of three things: keeping our tooling work organized and moving, partnering with the team on getting tools into the legal team’s hands, and contributing directly to technical builds. The right balance across these will depend on what you bring — we're open to someone who leans toward the technical side and can think through solutions end-to-end, as well as someone who leans toward coordination and enablement with meaningful technical contribution.", "top": 515.8125, "width": 852}, {"attributes": [], "height": 72, "html": "What's non-negotiable: you need to be genuinely comfortable with technology, curious about AI, and able to hold your own in a technical conversation. Above all else, you want to solve hard problems with a human-centric approach that thoughtfully weaves together a technical solution.", "left": 534, "text": "What's non-negotiable: you need to be genuinely comfortable with technology, curious about AI, and able to hold your own in a technical conversation. Above all else, you want to solve hard problems with a human-centric approach that thoughtfully weaves together a technical solution.", "top": 651.8125, "width": 852}, {"attributes": [], "height": 48, "html": "For this role, we expect all staff to be able to work from our San Francisco office at least 3 days a week, though we encourage you to apply even if you might need some flexibility for an interim period of time.", "left": 534, "text": "For this role, we expect all staff to be able to work from our San Francisco office at least 3 days a week, though we encourage you to apply even if you might need some flexibility for an interim period of time.", "top": 1811.0625, "width": 852}, {"attributes": [], "height": 24, "html": "The annual compensation range for this role is listed below.&nbsp;", "left": 534, "text": "The annual compensation range for this role is listed below. ", "top": 1907.0625, "width": 852}, {"attributes": [], "height": 48, "html": "For sales roles, the range provided is the role’s On Target Earnings (\"OTE\") range, meaning that the range includes both the sales commissions/sales bonuses target and annual base salary for the role.", "left": 534, "text": "For sales roles, the range provided is the role’s On Target Earnings (\"OTE\") range, meaning that the range includes both the sales commissions/sales bonuses target and annual base salary for the role.", "top": 1947.0625, "width": 852}, {"attributes": [{"name": "class", "value": "body body--medium"}], "height": 24, "html": "Annual Salary:", "left": 534, "text": "Annual Salary:", "top": 2019.0625, "width": 852}, {"attributes": [{"name": "class", "value": "body"}], "height": 24, "html": "<bdi>$170,000</bdi> - <bdi>$220,000</bdi> <bdi>USD</bdi>", "left": 534, "text": "$170,000 - $220,000 USD", "top": 2043.0625, "width": 852}, {"attributes": [], "height": 24, "html": "<strong>Minimum education: </strong>Bachelor’s degree or an equivalent combination of education, training, and/or experience", "left": 534, "text": "Minimum education: Bachelor’s degree or an equivalent combination of education, training, and/or experience", "top": 2162.875, "width": 852}, {"attributes": [], "height": 48, "html": "<strong>Required field of study:&nbsp;</strong>A field relevant to the role as demonstrated through coursework, training, or professional experience", "left": 534, "text": "Required field of study: A field relevant to the role as demonstrated through coursework, training, or professional experience", "top": 2202.875, "width": 852}, {"attributes": [], "height": 48, "html": "<strong>Minimum years of experience: </strong>Years of experience required will correlate with the internal job level requirements for the position", "left": 534, "text": "Minimum years of experience: Years of experience required will correlate with the internal job level requirements for the position", "top": 2266.875, "width": 852}, {"attributes": [], "height": 48, "html": "<strong>Location-based hybrid policy:</strong> Currently, we expect all staff to be in one of our offices at least 25% of the time. However, some roles may require more time in our offices.", "left": 534, "text": "Location-based hybrid policy: Currently, we expect all staff to be in one of our offices at least 25% of the time. However, some roles may require more time in our offices.", "top": 2330.875, "width": 852}, {"attributes": [], "height": 72, "html": "<strong data-stringify-type=\"bold\">Visa sponsorship:</strong>&nbsp;We do sponsor visas! However, we aren't able to successfully sponsor visas for every role and every candidate. But if we make you an offer, we will make every reasonable effort to get you a visa, and we retain an immigration lawyer to help with this.", "left": 534, "text": "Visa sponsorship: We do sponsor visas! However, we aren't able to successfully sponsor visas for every role and every candidate. But if we make you an offer, we will make every reasonable effort to get you a visa, and we retain an immigration lawyer to help with this.", "top": 2394.875, "width": 852}, {"attributes": [], "height": 336, "html": "<strong>We encourage you to apply even if you do not believe you meet every single qualification.</strong> Not all strong candidates will meet every single qualification as listed.&nbsp; Research shows that people who identify as being from underrepresented groups are more prone to experiencing imposter syndrome and doubting the strength of their candidacy, so we urge you not to exclude yourself prematurely and to submit an application if you're interested in this work. We think AI systems like the ones we're building have enormous social and ethical implications. We think this makes representation even more important, and we strive to include a range of diverse perspectives on our team.<br><br><strong data-stringify-type=\"bold\">Your safety matters to us.</strong> To protect yourself from potential scams, remember that Anthropic recruiters only contact you from&nbsp;@anthropic.com&nbsp;email addresses. In some cases, we may partner with vetted recruiting agencies who will identify themselves as working on behalf of Anthropic. Be cautious of emails from other domains. Legitimate Anthropic recruiters will never ask for money, fees, or banking information before your first day. If you're ever unsure about a communication, don't click any links—visit&nbsp;<u data-stringify-type=\"underline\"><a class=\"c-link c-link--underline\" href=\"http://anthropic.com/careers\" target=\"_blank\" data-stringify-link=\"http://anthropic.com/careers\" data-sk=\"tooltip_parent\" data-remove-tab-index=\"true\">anthropic.com/careers</a></u>&nbsp;directly for confirmed position openings.", "left": 534, "text": "We encourage you to apply even if you do not believe you meet every single qualification. Not all strong candidates will meet every single qualification as listed.  Research shows that people who identify as being from underrepresented groups are more prone to experiencing imposter syndrome and doubting the strength of their candidacy, so we urge you not to exclude yourself prematurely and to submit an application if you're interested in this work. We think AI systems like the ones we're building have enormous social and ethical implications. We think this makes representation even more important, and we strive to include a range of diverse perspectives on our team.\n\nYour safety matters to us. To protect yourself from potential scams, remember that Anthropic recruiters only contact you from @anthropic.com email addresses. In some cases, we may partner with vetted recruiting agencies who will identify themselves as working on behalf of Anthropic. Be cautious of emails from other domains. Legitimate Anthropic recruiters will never ask for money, fees, or banking information before your first day. If you're ever unsure about a communication, don't click any links—visit anthropic.com/careers directly for confirmed position openings.", "top": 2482.875, "width": 852}, {"attributes": [], "height": 144, "html": "We believe that the highest-impact AI research will be big science. At Anthropic we work as a single cohesive team on just a few large-scale research efforts. And we value impact — advancing our long-term goals of steerable, trustworthy AI — rather than work on smaller and more specific puzzles. We view AI research as an empirical science, which has as much in common with physics and biology as with traditional efforts in computer science. We're an extremely collaborative group, and we host frequent research discussions to ensure that we are pursuing the highest-impact work at any given time. As such, we greatly value communication skills.", "left": 534, "text": "We believe that the highest-impact AI research will be big science. At Anthropic we work as a single cohesive team on just a few large-scale research efforts. And we value impact — advancing our long-term goals of steerable, trustworthy AI — rather than work on smaller and more specific puzzles. We view AI research as an empirical science, which has as much in common with physics and biology as with traditional efforts in computer science. We're an extremely collaborative group, and we host frequent research discussions to ensure that we are pursuing the highest-impact work at any given time. As such, we greatly value communication skills.", "top": 2898.6875, "width": 852}, {"attributes": [], "height": 96, "html": "The easiest way to understand our research directions is to read our recent research. This research continues many of the directions our team worked on prior to Anthropic, including: GPT-3, Circuit-Based Interpretability, Multimodal Neurons, Scaling Laws, AI &amp; Compute, Concrete Problems in AI Safety, and Learning from Human Preferences.", "left": 534, "text": "The easiest way to understand our research directions is to read our recent research. This research continues many of the directions our team worked on prior to Anthropic, including: GPT-3, Circuit-Based Interpretability, Multimodal Neurons, Scaling Laws, AI & Compute, Concrete Problems in AI Safety, and Learning from Human Preferences.", "top": 3058.6875, "width": 852}, {"attributes": [], "height": 96, "html": "Anthropic is a public benefit corporation headquartered in San Francisco. We offer competitive compensation and benefits, optional equity donation matching, generous vacation and parental leave, flexible working hours, and a lovely office space in which to collaborate with colleagues. <strong data-stringify-type=\"bold\">Guidance on Candidates' AI Usage:</strong>&nbsp;Learn about&nbsp;<a class=\"c-link\" href=\"https://www.anthropic.com/candidate-ai-guidance\" target=\"_blank\" data-stringify-link=\"https://www.anthropic.com/candidate-ai-guidance\" data-sk=\"tooltip_parent\">our policy</a>&nbsp;for using AI in our application process", "left": 534, "text": "Anthropic is a public benefit corporation headquartered in San Francisco. We offer competitive compensation and benefits, optional equity donation matching, generous vacation and parental leave, flexible working hours, and a lovely office space in which to collaborate with colleagues. Guidance on Candidates' AI Usage: Learn about our policy for using AI in our application process", "top": 3234.5, "width": 852}, {"attributes": [{"name": "class", "value": "body body--medium"}], "height": 24, "html": "Create a Job Alert", "left": 605.1875, "text": "Create a Job Alert", "top": 3379.5, "width": 764}, {"attributes": [{"name": "class", "value": "body"}], "height": 24, "html": "Interested in building your career at Anthropic? Get future opportunities sent straight to your email.", "left": 605.1875, "text": "Interested in building your career at Anthropic? Get future opportunities sent straight to your email.", "top": 3403.5, "width": 764}, {"attributes": [{"name": "class", "value": "body body__secondary"}], "height": 20, "html": "*", "left": 534, "text": "*", "top": 3569.5, "width": 7}, {"attributes": [{"name": "class", "value": "body body__secondary"}], "height": 20, "html": "indicates a required field", "left": 545.28125, "text": "indicates a required field", "top": 3569.5, "width": 161}, {"attributes": [{"name": "id", "value": "accepted-filetypes"}, {"name": "class", "value": "file-upload__filetypes"}], "height": 22, "html": "Accepted file types: pdf, doc, docx, txt, rtf", "left": 534, "text": "Accepted file types: pdf, doc, docx, txt, rtf", "top": 4155.5, "width": 300}, {"attributes": [], "height": 20, "html": "How do you pronounce your name?", "left": 544, "text": "How do you pronounce your name?", "top": 4294.5, "width": 590}, {"attributes": [], "height": 100, "html": "We believe that AI will have a transformative impact on the world, and we’re seeking exceptional candidates who collaborate thoughtfully with Claude to realize this vision. At the same time, we want to understand your unique skills, expertise, and perspective through our hiring process. We invite you to review our <a href=\"https://www.anthropic.com/candidate-ai-guidance\">AI partnership guidelines for candidates</a> and confirm your understanding by selecting “Yes.”", "left": 544, "text": "We believe that AI will have a transformative impact on the world, and we’re seeking exceptional candidates who collaborate thoughtfully with Claude to realize this vision. At the same time, we want to understand your unique skills, expertise, and perspective through our hiring process. We invite you to review our AI partnership guidelines for candidates and confirm your understanding by selecting “Yes.”", "top": 4708.5, "width": 590}, {"attributes": [], "height": 20, "html": "Why do you want to work at Anthropic? (We value this response highly - great answers are often 200-400 words.)", "left": 544, "text": "Why do you want to work at Anthropic? (We value this response highly - great answers are often 200-400 words.)", "top": 4960.5, "width": 842}, {"attributes": [], "height": 20, "html": "Add a cover letter or anything else you want to share.", "left": 544, "text": "Add a cover letter or anything else you want to share.", "top": 5476.5, "width": 842}, {"attributes": [], "height": 40, "html": "Please ensure to provide <em>either</em> your LinkedIn profile or Resume, we require at least one of the two.&nbsp;", "left": 544, "text": "Please ensure to provide either your LinkedIn profile or Resume, we require at least one of the two. ", "top": 5586.5, "width": 590}, {"attributes": [], "height": 72, "html": "For government reporting purposes, we ask candidates to respond to the below self-identification survey.\nCompletion of the form is entirely voluntary. Whatever your decision, it will not be considered in the hiring\nprocess or thereafter. Any information that you do provide will be recorded and maintained in a\nconfidential file.", "left": 534, "text": "For government reporting purposes, we ask candidates to respond to the below self-identification survey. Completion of the form is entirely voluntary. Whatever your decision, it will not be considered in the hiring process or thereafter. Any information that you do provide will be recorded and maintained in a confidential file.", "top": 6031.5, "width": 852}, {"attributes": [], "height": 48, "html": "As set forth in Anthropic’s Equal Employment Opportunity policy,\nwe do not discriminate on the basis of any protected group status under any applicable law.", "left": 534, "text": "As set forth in Anthropic’s Equal Employment Opportunity policy, we do not discriminate on the basis of any protected group status under any applicable law.", "top": 6119.5, "width": 852}, {"attributes": [], "height": 96, "html": "\n  If you believe you belong to any of the categories of protected veterans listed below, please indicate by making the appropriate selection.\n  As a government contractor subject to the Vietnam Era Veterans Readjustment Assistance Act (VEVRAA), we request this information in order to measure\n  the effectiveness of the outreach and positive recruitment efforts we undertake pursuant to VEVRAA. Classification of protected categories\n  is as follows:\n", "left": 534, "text": "If you believe you belong to any of the categories of protected veterans listed below, please indicate by making the appropriate selection. As a government contractor subject to the Vietnam Era Veterans Readjustment Assistance Act (VEVRAA), we request this information in order to measure the effectiveness of the outreach and positive recruitment efforts we undertake pursuant to VEVRAA. Classification of protected categories is as follows:", "top": 6375.5, "width": 852}, {"attributes": [], "height": 96, "html": "A \"disabled veteran\" is one of the following: a veteran of the U.S. military, ground, naval or air service who is entitled to compensation (or who but for the receipt of military retired pay would be entitled to compensation) under laws administered by the Secretary of Veterans Affairs; or a person who was discharged or released from active duty because of a service-connected disability.", "left": 534, "text": "A \"disabled veteran\" is one of the following: a veteran of the U.S. military, ground, naval or air service who is entitled to compensation (or who but for the receipt of military retired pay would be entitled to compensation) under laws administered by the Secretary of Veterans Affairs; or a person who was discharged or released from active duty because of a service-connected disability.", "top": 6487.5, "width": 852}, {"attributes": [], "height": 48, "html": "A \"recently separated veteran\" means any veteran during the three-year period beginning on the date of such veteran's discharge or release from active duty in the U.S. military, ground, naval, or air service.", "left": 534, "text": "A \"recently separated veteran\" means any veteran during the three-year period beginning on the date of such veteran's discharge or release from active duty in the U.S. military, ground, naval, or air service.", "top": 6599.5, "width": 852}, {"attributes": [], "height": 72, "html": "An \"active duty wartime or campaign badge veteran\" means a veteran who served on active duty in the U.S. military, ground, naval or air service during a war, or in a campaign or expedition for which a campaign badge has been authorized under the laws administered by the Department of Defense.", "left": 534, "text": "An \"active duty wartime or campaign badge veteran\" means a veteran who served on active duty in the U.S. military, ground, naval or air service during a war, or in a campaign or expedition for which a campaign badge has been authorized under the laws administered by the Department of Defense.", "top": 6663.5, "width": 852}, {"attributes": [], "height": 72, "html": "An \"Armed forces service medal veteran\" means a veteran who, while serving on active duty in the U.S. military, ground, naval or air service, participated in a United States military operation for which an Armed Forces service medal was awarded pursuant to Executive Order 12985.", "left": 534, "text": "An \"Armed forces service medal veteran\" means a veteran who, while serving on active duty in the U.S. military, ground, naval or air service, participated in a United States military operation for which an Armed Forces service medal was awarded pursuant to Executive Order 12985.", "top": 6751.5, "width": 852}, {"attributes": [], "height": 120, "html": "We are a federal contractor or subcontractor. The law requires us to provide equal employment opportunity to qualified people with disabilities. We have a goal of having at least 7% of our workers as people with disabilities. The law says we must measure our progress towards this goal. To do this, we must ask applicants and employees if they have a disability or have ever had one. People can become disabled, so we need to ask this question at least every five years.", "left": 534, "text": "We are a federal contractor or subcontractor. The law requires us to provide equal employment opportunity to qualified people with disabilities. We have a goal of having at least 7% of our workers as people with disabilities. The law says we must measure our progress towards this goal. To do this, we must ask applicants and employees if they have a disability or have ever had one. People can become disabled, so we need to ask this question at least every five years.", "top": 7116.5, "width": 852}, {"attributes": [], "height": 96, "html": "Completing this form is voluntary, and we hope that you will choose to do so. Your answer is confidential. No one who makes hiring decisions will see it. Your decision to complete the form and your answer will not harm you in any way. If you want to learn more about the law or this form, visit the U.S. Department of Labor’s Office of Federal Contract Compliance Programs (OFCCP) website at <a href=\"https://www.dol.gov/ofccp\" target=\"_blank\">www.dol.gov/ofccp</a>.", "left": 534, "text": "Completing this form is voluntary, and we hope that you will choose to do so. Your answer is confidential. No one who makes hiring decisions will see it. Your decision to complete the form and your answer will not harm you in any way. If you want to learn more about the law or this form, visit the U.S. Department of Labor’s Office of Federal Contract Compliance Programs (OFCCP) website at www.dol.gov/ofccp.", "top": 7252.5, "width": 852}, {"attributes": [], "height": 48, "html": "A disability is a condition that substantially limits one or more of your “major life activities.” If you have or have ever had such a condition, you are a person with a disability. <strong>Disabilities include, but are not limited to:</strong>", "left": 534, "text": "A disability is a condition that substantially limits one or more of your “major life activities.” If you have or have ever had such a condition, you are a person with a disability. Disabilities include, but are not limited to:", "top": 7404.5, "width": 852}, {"attributes": [], "height": 72, "html": "PUBLIC BURDEN STATEMENT: According to the Paperwork Reduction Act of 1995 no persons are required to respond to a collection of information unless such collection displays a valid OMB control number. This survey should take about 5 minutes to complete.", "left": 534, "text": "PUBLIC BURDEN STATEMENT: According to the Paperwork Reduction Act of 1995 no persons are required to respond to a collection of information unless such collection displays a valid OMB control number. This survey should take about 5 minutes to complete.", "top": 8136.5, "width": 852}, {"attributes": [{"name": "class", "value": "body"}], "height": 24, "html": "Powered by", "left": 863.953125, "text": "Powered by", "top": 8376.5, "width": 87}], "selector": "p"}]
+[
+  {
+    "results": [
+      {
+        "attributes": [
+          { "name": "class", "value": "section-header section-header--large font-primary" }
+        ],
+        "height": 40,
+        "html": "Legal Operations Specialist, Tooling &amp; Enablement",
+        "left": 534,
+        "text": "Legal Operations Specialist, Tooling & Enablement",
+        "top": 160,
+        "width": 730
+      },
+      {
+        "attributes": [],
+        "height": 40,
+        "html": "<strong>About Anthropic</strong>",
+        "left": 534,
+        "text": "About Anthropic",
+        "top": 263.90625,
+        "width": 852
+      },
+      {
+        "attributes": [{ "name": "class", "value": "heading" }],
+        "height": 40,
+        "html": "<strong>Responsibilities</strong>",
+        "left": 534,
+        "text": "Responsibilities",
+        "top": 743.71875,
+        "width": 852
+      },
+      {
+        "attributes": [{ "name": "class", "value": "heading" }],
+        "height": 40,
+        "html": "<strong>You may be a good fit if you:</strong>",
+        "left": 534,
+        "text": "You may be a good fit if you:",
+        "top": 1087.53125,
+        "width": 852
+      },
+      {
+        "attributes": [{ "name": "class", "value": "heading" }],
+        "height": 40,
+        "html": "<strong>Strong candidates may also have:</strong>",
+        "left": 534,
+        "text": "Strong candidates may also have:",
+        "top": 1503.34375,
+        "width": 852
+      },
+      {
+        "attributes": [{ "name": "class", "value": "heading" }],
+        "height": 40,
+        "html": "<strong>Role-specific policy:</strong>",
+        "left": 534,
+        "text": "Role-specific policy:",
+        "top": 1751.15625,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 40,
+        "html": "<strong>Logistics</strong>",
+        "left": 534,
+        "text": "Logistics",
+        "top": 2102.96875,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 40,
+        "html": "<strong>How we're different</strong>",
+        "left": 534,
+        "text": "How we're different",
+        "top": 2838.78125,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 40,
+        "html": "<strong>Come work with us!</strong>",
+        "left": 534,
+        "text": "Come work with us!",
+        "top": 3174.59375,
+        "width": 852
+      },
+      {
+        "attributes": [{ "name": "class", "value": "section-header font-primary" }],
+        "height": 32,
+        "html": "Apply for this job",
+        "left": 534,
+        "text": "Apply for this job",
+        "top": 3533.5,
+        "width": 177
+      },
+      {
+        "attributes": [{ "name": "class", "value": "section-header font-primary" }],
+        "height": 40,
+        "html": "Voluntary Self-Identification",
+        "left": 534,
+        "text": "Voluntary Self-Identification",
+        "top": 5975.5,
+        "width": 852
+      },
+      {
+        "attributes": [{ "name": "class", "value": "section-header font-primary" }],
+        "height": 40,
+        "html": "Voluntary Self-Identification of Disability",
+        "left": 534,
+        "text": "Voluntary Self-Identification of Disability",
+        "top": 6964.5,
+        "width": 852
+      }
+    ],
+    "selector": "h1, h2, h3"
+  },
+  {
+    "results": [
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "Coordinate the legal team's AI tooling roadmap — maintaining visibility into what's in progress, tracking timelines across multiple concurrent workstreams, and communicating status to stakeholders",
+        "left": 574,
+        "text": "Coordinate the legal team's AI tooling roadmap — maintaining visibility into what's in progress, tracking timelines across multiple concurrent workstreams, and communicating status to stakeholders",
+        "top": 803.625,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "Triage incoming tooling requests, assess complexity and scope, and route work appropriately — handling straightforward builds yourself and flagging those that need deeper technical review",
+        "left": 574,
+        "text": "Triage incoming tooling requests, assess complexity and scope, and route work appropriately — handling straightforward builds yourself and flagging those that need deeper technical review",
+        "top": 851.625,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "Build no-code and low-code solutions end-to-end: <a class=\"text-accent-secondary-100 underline\" href=\"http://Claude.ai\" target=\"_blank\">Claude.ai</a> Projects, AppSheet apps, Slack workflows, and similar tools that solve real pain points without requiring deployment infrastructure",
+        "left": 574,
+        "text": "Build no-code and low-code solutions end-to-end: Claude.ai Projects, AppSheet apps, Slack workflows, and similar tools that solve real pain points without requiring deployment infrastructure",
+        "top": 899.625,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "Partner with the team on AI adoption efforts — contributing to training materials, documentation, and user guides as new tools ship",
+        "left": 574,
+        "text": "Partner with the team on AI adoption efforts — contributing to training materials, documentation, and user guides as new tools ship",
+        "top": 947.625,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Support the legal team onboarding process and maintain onboarding content as our tooling evolves",
+        "left": 574,
+        "text": "Support the legal team onboarding process and maintain onboarding content as our tooling evolves",
+        "top": 995.625,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "Track adoption signals and surface patterns: what's being used, what isn't, and what that tells us about where to focus",
+        "left": 574,
+        "text": "Track adoption signals and surface patterns: what's being used, what isn't, and what that tells us about where to focus",
+        "top": 1019.625,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Have at least 4–7 years of experience in legal operations, legal technology, or a technical operations role",
+        "left": 574,
+        "text": "Have at least 4–7 years of experience in legal operations, legal technology, or a technical operations role",
+        "top": 1147.4375,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "Are comfortable keeping multiple projects organized and visible simultaneously — you can track dependencies, flag risks early, and keep stakeholders informed without being asked",
+        "left": 574,
+        "text": "Are comfortable keeping multiple projects organized and visible simultaneously — you can track dependencies, flag risks early, and keep stakeholders informed without being asked",
+        "top": 1171.4375,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "Are comfortable building lightweight technical solutions — Claude Projects, no-code apps, Slack automations — and know how to scope what's appropriate for DIY versus what needs engineering input",
+        "left": 574,
+        "text": "Are comfortable building lightweight technical solutions — Claude Projects, no-code apps, Slack automations — and know how to scope what's appropriate for DIY versus what needs engineering input",
+        "top": 1219.4375,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "Have worked alongside teams building and shipping tools, and understand what it takes to get a new workflow actually adopted",
+        "left": 574,
+        "text": "Have worked alongside teams building and shipping tools, and understand what it takes to get a new workflow actually adopted",
+        "top": 1267.4375,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "Lead with curiosity — you ask good questions, want to understand how things work, and are honest when you don't know something",
+        "left": 574,
+        "text": "Lead with curiosity — you ask good questions, want to understand how things work, and are honest when you don't know something",
+        "top": 1315.4375,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "Bring empathy to the work: you understand that change is hard, especially for busy lawyers, and you meet people where they are rather than where you wish they were",
+        "left": 574,
+        "text": "Bring empathy to the work: you understand that change is hard, especially for busy lawyers, and you meet people where they are rather than where you wish they were",
+        "top": 1363.4375,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "Are collaborative and low-ego — you'll flex into adjacent work as the team grows and don't protect scope at the expense of outcomes",
+        "left": 574,
+        "text": "Are collaborative and low-ego — you'll flex into adjacent work as the team grows and don't protect scope at the expense of outcomes",
+        "top": 1411.4375,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Have enough of a sense of humor to keep the work enjoyable, even when it's complex",
+        "left": 574,
+        "text": "Have enough of a sense of humor to keep the work enjoyable, even when it's complex",
+        "top": 1459.4375,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Experience in legal operations at a law firm, in-house legal department, or legal technology company",
+        "left": 574,
+        "text": "Experience in legal operations at a law firm, in-house legal department, or legal technology company",
+        "top": 1563.25,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Hands-on experience with Claude, Claude Code, or MCP integrations",
+        "left": 574,
+        "text": "Hands-on experience with Claude, Claude Code, or MCP integrations",
+        "top": 1587.25,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "A track record of building or contributing to training programs or onboarding processes in a technical environment",
+        "left": 574,
+        "text": "A track record of building or contributing to training programs or onboarding processes in a technical environment",
+        "top": 1611.25,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "Familiarity with change management in professional services environments, where skepticism about new tools is real and earned",
+        "left": 574,
+        "text": "Familiarity with change management in professional services environments, where skepticism about new tools is real and earned",
+        "top": 1659.25,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Experience with tools like AppSheet, Tines, Zapier, or similar no-code/low-code platforms",
+        "left": 574,
+        "text": "Experience with tools like AppSheet, Tines, Zapier, or similar no-code/low-code platforms",
+        "top": 1707.25,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Alcohol or other substance use disorder (not currently using drugs illegally)",
+        "left": 574,
+        "text": "Alcohol or other substance use disorder (not currently using drugs illegally)",
+        "top": 7468.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Autoimmune disorder, for example, lupus, fibromyalgia, rheumatoid arthritis, HIV/AIDS",
+        "left": 574,
+        "text": "Autoimmune disorder, for example, lupus, fibromyalgia, rheumatoid arthritis, HIV/AIDS",
+        "top": 7492.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Blind or low vision",
+        "left": 574,
+        "text": "Blind or low vision",
+        "top": 7516.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Cancer (past or present)",
+        "left": 574,
+        "text": "Cancer (past or present)",
+        "top": 7540.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Cardiovascular or heart disease",
+        "left": 574,
+        "text": "Cardiovascular or heart disease",
+        "top": 7564.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Celiac disease",
+        "left": 574,
+        "text": "Celiac disease",
+        "top": 7588.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Cerebral palsy",
+        "left": 574,
+        "text": "Cerebral palsy",
+        "top": 7612.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Deaf or serious difficulty hearing",
+        "left": 574,
+        "text": "Deaf or serious difficulty hearing",
+        "top": 7636.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Diabetes",
+        "left": 574,
+        "text": "Diabetes",
+        "top": 7660.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Disfigurement, for example, disfigurement caused by burns, wounds, accidents, or congenital disorders",
+        "left": 574,
+        "text": "Disfigurement, for example, disfigurement caused by burns, wounds, accidents, or congenital disorders",
+        "top": 7684.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Epilepsy or other seizure disorder",
+        "left": 574,
+        "text": "Epilepsy or other seizure disorder",
+        "top": 7708.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Gastrointestinal disorders, for example, Crohn's Disease, irritable bowel syndrome",
+        "left": 574,
+        "text": "Gastrointestinal disorders, for example, Crohn's Disease, irritable bowel syndrome",
+        "top": 7732.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Intellectual or developmental disability",
+        "left": 574,
+        "text": "Intellectual or developmental disability",
+        "top": 7756.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Mental health conditions, for example, depression, bipolar disorder, anxiety disorder, schizophrenia, PTSD",
+        "left": 574,
+        "text": "Mental health conditions, for example, depression, bipolar disorder, anxiety disorder, schizophrenia, PTSD",
+        "top": 7780.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Missing limbs or partially missing limbs",
+        "left": 574,
+        "text": "Missing limbs or partially missing limbs",
+        "top": 7804.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "Mobility impairment, benefiting from the use of a wheelchair, scooter, walker, leg brace(s) and/or other supports",
+        "left": 574,
+        "text": "Mobility impairment, benefiting from the use of a wheelchair, scooter, walker, leg brace(s) and/or other supports",
+        "top": 7828.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Nervous system condition, for example, migraine headaches, Parkinson’s disease, multiple sclerosis (MS)",
+        "left": 574,
+        "text": "Nervous system condition, for example, migraine headaches, Parkinson’s disease, multiple sclerosis (MS)",
+        "top": 7876.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "Neurodivergence, for example, attention-deficit/hyperactivity disorder (ADHD), autism spectrum disorder, dyslexia, dyspraxia, other learning disabilities",
+        "left": 574,
+        "text": "Neurodivergence, for example, attention-deficit/hyperactivity disorder (ADHD), autism spectrum disorder, dyslexia, dyspraxia, other learning disabilities",
+        "top": 7900.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Partial or complete paralysis (any cause)",
+        "left": 574,
+        "text": "Partial or complete paralysis (any cause)",
+        "top": 7948.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Pulmonary or respiratory conditions, for example, tuberculosis, asthma, emphysema",
+        "left": 574,
+        "text": "Pulmonary or respiratory conditions, for example, tuberculosis, asthma, emphysema",
+        "top": 7972.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Short stature (dwarfism)",
+        "left": 574,
+        "text": "Short stature (dwarfism)",
+        "top": 7996.5,
+        "width": 812
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "Traumatic brain injury",
+        "left": 574,
+        "text": "Traumatic brain injury",
+        "top": 8020.5,
+        "width": 812
+      }
+    ],
+    "selector": "ul > li"
+  },
+  { "results": [], "selector": "ol > li" },
+  {
+    "results": [
+      {
+        "attributes": [],
+        "height": 72,
+        "html": "Anthropic’s mission is to create reliable, interpretable, and steerable AI systems. We want AI to be safe and beneficial for our users and for society as a whole. Our team is a quickly growing group of committed researchers, engineers, policy experts, and business leaders working together to build beneficial AI systems.",
+        "left": 534,
+        "text": "Anthropic’s mission is to create reliable, interpretable, and steerable AI systems. We want AI to be safe and beneficial for our users and for society as a whole. Our team is a quickly growing group of committed researchers, engineers, policy experts, and business leaders working together to build beneficial AI systems.",
+        "top": 323.8125,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 72,
+        "html": "Anthropic's Legal Operations team builds the systems, workflows, and tools that let our legal team operate at the speed of the company. We've made significant investments in tooling and automation — and now the challenge is keeping that work coordinated, visible, and actually used.",
+        "left": 534,
+        "text": "Anthropic's Legal Operations team builds the systems, workflows, and tools that let our legal team operate at the speed of the company. We've made significant investments in tooling and automation — and now the challenge is keeping that work coordinated, visible, and actually used.",
+        "top": 427.8125,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 120,
+        "html": "As a Legal Operations Specialist, Tooling &amp; Enablement, you'll sit at the intersection of three things: keeping our tooling work organized and moving, partnering with the team on getting tools into the legal team’s hands, and contributing directly to technical builds. The right balance across these will depend on what you bring — we're open to someone who leans toward the technical side and can think through solutions end-to-end, as well as someone who leans toward coordination and enablement with meaningful technical contribution.",
+        "left": 534,
+        "text": "As a Legal Operations Specialist, Tooling & Enablement, you'll sit at the intersection of three things: keeping our tooling work organized and moving, partnering with the team on getting tools into the legal team’s hands, and contributing directly to technical builds. The right balance across these will depend on what you bring — we're open to someone who leans toward the technical side and can think through solutions end-to-end, as well as someone who leans toward coordination and enablement with meaningful technical contribution.",
+        "top": 515.8125,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 72,
+        "html": "What's non-negotiable: you need to be genuinely comfortable with technology, curious about AI, and able to hold your own in a technical conversation. Above all else, you want to solve hard problems with a human-centric approach that thoughtfully weaves together a technical solution.",
+        "left": 534,
+        "text": "What's non-negotiable: you need to be genuinely comfortable with technology, curious about AI, and able to hold your own in a technical conversation. Above all else, you want to solve hard problems with a human-centric approach that thoughtfully weaves together a technical solution.",
+        "top": 651.8125,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "For this role, we expect all staff to be able to work from our San Francisco office at least 3 days a week, though we encourage you to apply even if you might need some flexibility for an interim period of time.",
+        "left": 534,
+        "text": "For this role, we expect all staff to be able to work from our San Francisco office at least 3 days a week, though we encourage you to apply even if you might need some flexibility for an interim period of time.",
+        "top": 1811.0625,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "The annual compensation range for this role is listed below.&nbsp;",
+        "left": 534,
+        "text": "The annual compensation range for this role is listed below. ",
+        "top": 1907.0625,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "For sales roles, the range provided is the role’s On Target Earnings (\"OTE\") range, meaning that the range includes both the sales commissions/sales bonuses target and annual base salary for the role.",
+        "left": 534,
+        "text": "For sales roles, the range provided is the role’s On Target Earnings (\"OTE\") range, meaning that the range includes both the sales commissions/sales bonuses target and annual base salary for the role.",
+        "top": 1947.0625,
+        "width": 852
+      },
+      {
+        "attributes": [{ "name": "class", "value": "body body--medium" }],
+        "height": 24,
+        "html": "Annual Salary:",
+        "left": 534,
+        "text": "Annual Salary:",
+        "top": 2019.0625,
+        "width": 852
+      },
+      {
+        "attributes": [{ "name": "class", "value": "body" }],
+        "height": 24,
+        "html": "<bdi>$170,000</bdi> - <bdi>$220,000</bdi> <bdi>USD</bdi>",
+        "left": 534,
+        "text": "$170,000 - $220,000 USD",
+        "top": 2043.0625,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 24,
+        "html": "<strong>Minimum education: </strong>Bachelor’s degree or an equivalent combination of education, training, and/or experience",
+        "left": 534,
+        "text": "Minimum education: Bachelor’s degree or an equivalent combination of education, training, and/or experience",
+        "top": 2162.875,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "<strong>Required field of study:&nbsp;</strong>A field relevant to the role as demonstrated through coursework, training, or professional experience",
+        "left": 534,
+        "text": "Required field of study: A field relevant to the role as demonstrated through coursework, training, or professional experience",
+        "top": 2202.875,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "<strong>Minimum years of experience: </strong>Years of experience required will correlate with the internal job level requirements for the position",
+        "left": 534,
+        "text": "Minimum years of experience: Years of experience required will correlate with the internal job level requirements for the position",
+        "top": 2266.875,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "<strong>Location-based hybrid policy:</strong> Currently, we expect all staff to be in one of our offices at least 25% of the time. However, some roles may require more time in our offices.",
+        "left": 534,
+        "text": "Location-based hybrid policy: Currently, we expect all staff to be in one of our offices at least 25% of the time. However, some roles may require more time in our offices.",
+        "top": 2330.875,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 72,
+        "html": "<strong data-stringify-type=\"bold\">Visa sponsorship:</strong>&nbsp;We do sponsor visas! However, we aren't able to successfully sponsor visas for every role and every candidate. But if we make you an offer, we will make every reasonable effort to get you a visa, and we retain an immigration lawyer to help with this.",
+        "left": 534,
+        "text": "Visa sponsorship: We do sponsor visas! However, we aren't able to successfully sponsor visas for every role and every candidate. But if we make you an offer, we will make every reasonable effort to get you a visa, and we retain an immigration lawyer to help with this.",
+        "top": 2394.875,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 336,
+        "html": "<strong>We encourage you to apply even if you do not believe you meet every single qualification.</strong> Not all strong candidates will meet every single qualification as listed.&nbsp; Research shows that people who identify as being from underrepresented groups are more prone to experiencing imposter syndrome and doubting the strength of their candidacy, so we urge you not to exclude yourself prematurely and to submit an application if you're interested in this work. We think AI systems like the ones we're building have enormous social and ethical implications. We think this makes representation even more important, and we strive to include a range of diverse perspectives on our team.<br><br><strong data-stringify-type=\"bold\">Your safety matters to us.</strong> To protect yourself from potential scams, remember that Anthropic recruiters only contact you from&nbsp;@anthropic.com&nbsp;email addresses. In some cases, we may partner with vetted recruiting agencies who will identify themselves as working on behalf of Anthropic. Be cautious of emails from other domains. Legitimate Anthropic recruiters will never ask for money, fees, or banking information before your first day. If you're ever unsure about a communication, don't click any links—visit&nbsp;<u data-stringify-type=\"underline\"><a class=\"c-link c-link--underline\" href=\"http://anthropic.com/careers\" target=\"_blank\" data-stringify-link=\"http://anthropic.com/careers\" data-sk=\"tooltip_parent\" data-remove-tab-index=\"true\">anthropic.com/careers</a></u>&nbsp;directly for confirmed position openings.",
+        "left": 534,
+        "text": "We encourage you to apply even if you do not believe you meet every single qualification. Not all strong candidates will meet every single qualification as listed.  Research shows that people who identify as being from underrepresented groups are more prone to experiencing imposter syndrome and doubting the strength of their candidacy, so we urge you not to exclude yourself prematurely and to submit an application if you're interested in this work. We think AI systems like the ones we're building have enormous social and ethical implications. We think this makes representation even more important, and we strive to include a range of diverse perspectives on our team.\n\nYour safety matters to us. To protect yourself from potential scams, remember that Anthropic recruiters only contact you from @anthropic.com email addresses. In some cases, we may partner with vetted recruiting agencies who will identify themselves as working on behalf of Anthropic. Be cautious of emails from other domains. Legitimate Anthropic recruiters will never ask for money, fees, or banking information before your first day. If you're ever unsure about a communication, don't click any links—visit anthropic.com/careers directly for confirmed position openings.",
+        "top": 2482.875,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 144,
+        "html": "We believe that the highest-impact AI research will be big science. At Anthropic we work as a single cohesive team on just a few large-scale research efforts. And we value impact — advancing our long-term goals of steerable, trustworthy AI — rather than work on smaller and more specific puzzles. We view AI research as an empirical science, which has as much in common with physics and biology as with traditional efforts in computer science. We're an extremely collaborative group, and we host frequent research discussions to ensure that we are pursuing the highest-impact work at any given time. As such, we greatly value communication skills.",
+        "left": 534,
+        "text": "We believe that the highest-impact AI research will be big science. At Anthropic we work as a single cohesive team on just a few large-scale research efforts. And we value impact — advancing our long-term goals of steerable, trustworthy AI — rather than work on smaller and more specific puzzles. We view AI research as an empirical science, which has as much in common with physics and biology as with traditional efforts in computer science. We're an extremely collaborative group, and we host frequent research discussions to ensure that we are pursuing the highest-impact work at any given time. As such, we greatly value communication skills.",
+        "top": 2898.6875,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 96,
+        "html": "The easiest way to understand our research directions is to read our recent research. This research continues many of the directions our team worked on prior to Anthropic, including: GPT-3, Circuit-Based Interpretability, Multimodal Neurons, Scaling Laws, AI &amp; Compute, Concrete Problems in AI Safety, and Learning from Human Preferences.",
+        "left": 534,
+        "text": "The easiest way to understand our research directions is to read our recent research. This research continues many of the directions our team worked on prior to Anthropic, including: GPT-3, Circuit-Based Interpretability, Multimodal Neurons, Scaling Laws, AI & Compute, Concrete Problems in AI Safety, and Learning from Human Preferences.",
+        "top": 3058.6875,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 96,
+        "html": "Anthropic is a public benefit corporation headquartered in San Francisco. We offer competitive compensation and benefits, optional equity donation matching, generous vacation and parental leave, flexible working hours, and a lovely office space in which to collaborate with colleagues. <strong data-stringify-type=\"bold\">Guidance on Candidates' AI Usage:</strong>&nbsp;Learn about&nbsp;<a class=\"c-link\" href=\"https://www.anthropic.com/candidate-ai-guidance\" target=\"_blank\" data-stringify-link=\"https://www.anthropic.com/candidate-ai-guidance\" data-sk=\"tooltip_parent\">our policy</a>&nbsp;for using AI in our application process",
+        "left": 534,
+        "text": "Anthropic is a public benefit corporation headquartered in San Francisco. We offer competitive compensation and benefits, optional equity donation matching, generous vacation and parental leave, flexible working hours, and a lovely office space in which to collaborate with colleagues. Guidance on Candidates' AI Usage: Learn about our policy for using AI in our application process",
+        "top": 3234.5,
+        "width": 852
+      },
+      {
+        "attributes": [{ "name": "class", "value": "body body--medium" }],
+        "height": 24,
+        "html": "Create a Job Alert",
+        "left": 605.1875,
+        "text": "Create a Job Alert",
+        "top": 3379.5,
+        "width": 764
+      },
+      {
+        "attributes": [{ "name": "class", "value": "body" }],
+        "height": 24,
+        "html": "Interested in building your career at Anthropic? Get future opportunities sent straight to your email.",
+        "left": 605.1875,
+        "text": "Interested in building your career at Anthropic? Get future opportunities sent straight to your email.",
+        "top": 3403.5,
+        "width": 764
+      },
+      {
+        "attributes": [{ "name": "class", "value": "body body__secondary" }],
+        "height": 20,
+        "html": "*",
+        "left": 534,
+        "text": "*",
+        "top": 3569.5,
+        "width": 7
+      },
+      {
+        "attributes": [{ "name": "class", "value": "body body__secondary" }],
+        "height": 20,
+        "html": "indicates a required field",
+        "left": 545.28125,
+        "text": "indicates a required field",
+        "top": 3569.5,
+        "width": 161
+      },
+      {
+        "attributes": [
+          { "name": "id", "value": "accepted-filetypes" },
+          { "name": "class", "value": "file-upload__filetypes" }
+        ],
+        "height": 22,
+        "html": "Accepted file types: pdf, doc, docx, txt, rtf",
+        "left": 534,
+        "text": "Accepted file types: pdf, doc, docx, txt, rtf",
+        "top": 4155.5,
+        "width": 300
+      },
+      {
+        "attributes": [],
+        "height": 20,
+        "html": "How do you pronounce your name?",
+        "left": 544,
+        "text": "How do you pronounce your name?",
+        "top": 4294.5,
+        "width": 590
+      },
+      {
+        "attributes": [],
+        "height": 100,
+        "html": "We believe that AI will have a transformative impact on the world, and we’re seeking exceptional candidates who collaborate thoughtfully with Claude to realize this vision. At the same time, we want to understand your unique skills, expertise, and perspective through our hiring process. We invite you to review our <a href=\"https://www.anthropic.com/candidate-ai-guidance\">AI partnership guidelines for candidates</a> and confirm your understanding by selecting “Yes.”",
+        "left": 544,
+        "text": "We believe that AI will have a transformative impact on the world, and we’re seeking exceptional candidates who collaborate thoughtfully with Claude to realize this vision. At the same time, we want to understand your unique skills, expertise, and perspective through our hiring process. We invite you to review our AI partnership guidelines for candidates and confirm your understanding by selecting “Yes.”",
+        "top": 4708.5,
+        "width": 590
+      },
+      {
+        "attributes": [],
+        "height": 20,
+        "html": "Why do you want to work at Anthropic? (We value this response highly - great answers are often 200-400 words.)",
+        "left": 544,
+        "text": "Why do you want to work at Anthropic? (We value this response highly - great answers are often 200-400 words.)",
+        "top": 4960.5,
+        "width": 842
+      },
+      {
+        "attributes": [],
+        "height": 20,
+        "html": "Add a cover letter or anything else you want to share.",
+        "left": 544,
+        "text": "Add a cover letter or anything else you want to share.",
+        "top": 5476.5,
+        "width": 842
+      },
+      {
+        "attributes": [],
+        "height": 40,
+        "html": "Please ensure to provide <em>either</em> your LinkedIn profile or Resume, we require at least one of the two.&nbsp;",
+        "left": 544,
+        "text": "Please ensure to provide either your LinkedIn profile or Resume, we require at least one of the two. ",
+        "top": 5586.5,
+        "width": 590
+      },
+      {
+        "attributes": [],
+        "height": 72,
+        "html": "For government reporting purposes, we ask candidates to respond to the below self-identification survey.\nCompletion of the form is entirely voluntary. Whatever your decision, it will not be considered in the hiring\nprocess or thereafter. Any information that you do provide will be recorded and maintained in a\nconfidential file.",
+        "left": 534,
+        "text": "For government reporting purposes, we ask candidates to respond to the below self-identification survey. Completion of the form is entirely voluntary. Whatever your decision, it will not be considered in the hiring process or thereafter. Any information that you do provide will be recorded and maintained in a confidential file.",
+        "top": 6031.5,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "As set forth in Anthropic’s Equal Employment Opportunity policy,\nwe do not discriminate on the basis of any protected group status under any applicable law.",
+        "left": 534,
+        "text": "As set forth in Anthropic’s Equal Employment Opportunity policy, we do not discriminate on the basis of any protected group status under any applicable law.",
+        "top": 6119.5,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 96,
+        "html": "\n  If you believe you belong to any of the categories of protected veterans listed below, please indicate by making the appropriate selection.\n  As a government contractor subject to the Vietnam Era Veterans Readjustment Assistance Act (VEVRAA), we request this information in order to measure\n  the effectiveness of the outreach and positive recruitment efforts we undertake pursuant to VEVRAA. Classification of protected categories\n  is as follows:\n",
+        "left": 534,
+        "text": "If you believe you belong to any of the categories of protected veterans listed below, please indicate by making the appropriate selection. As a government contractor subject to the Vietnam Era Veterans Readjustment Assistance Act (VEVRAA), we request this information in order to measure the effectiveness of the outreach and positive recruitment efforts we undertake pursuant to VEVRAA. Classification of protected categories is as follows:",
+        "top": 6375.5,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 96,
+        "html": "A \"disabled veteran\" is one of the following: a veteran of the U.S. military, ground, naval or air service who is entitled to compensation (or who but for the receipt of military retired pay would be entitled to compensation) under laws administered by the Secretary of Veterans Affairs; or a person who was discharged or released from active duty because of a service-connected disability.",
+        "left": 534,
+        "text": "A \"disabled veteran\" is one of the following: a veteran of the U.S. military, ground, naval or air service who is entitled to compensation (or who but for the receipt of military retired pay would be entitled to compensation) under laws administered by the Secretary of Veterans Affairs; or a person who was discharged or released from active duty because of a service-connected disability.",
+        "top": 6487.5,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "A \"recently separated veteran\" means any veteran during the three-year period beginning on the date of such veteran's discharge or release from active duty in the U.S. military, ground, naval, or air service.",
+        "left": 534,
+        "text": "A \"recently separated veteran\" means any veteran during the three-year period beginning on the date of such veteran's discharge or release from active duty in the U.S. military, ground, naval, or air service.",
+        "top": 6599.5,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 72,
+        "html": "An \"active duty wartime or campaign badge veteran\" means a veteran who served on active duty in the U.S. military, ground, naval or air service during a war, or in a campaign or expedition for which a campaign badge has been authorized under the laws administered by the Department of Defense.",
+        "left": 534,
+        "text": "An \"active duty wartime or campaign badge veteran\" means a veteran who served on active duty in the U.S. military, ground, naval or air service during a war, or in a campaign or expedition for which a campaign badge has been authorized under the laws administered by the Department of Defense.",
+        "top": 6663.5,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 72,
+        "html": "An \"Armed forces service medal veteran\" means a veteran who, while serving on active duty in the U.S. military, ground, naval or air service, participated in a United States military operation for which an Armed Forces service medal was awarded pursuant to Executive Order 12985.",
+        "left": 534,
+        "text": "An \"Armed forces service medal veteran\" means a veteran who, while serving on active duty in the U.S. military, ground, naval or air service, participated in a United States military operation for which an Armed Forces service medal was awarded pursuant to Executive Order 12985.",
+        "top": 6751.5,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 120,
+        "html": "We are a federal contractor or subcontractor. The law requires us to provide equal employment opportunity to qualified people with disabilities. We have a goal of having at least 7% of our workers as people with disabilities. The law says we must measure our progress towards this goal. To do this, we must ask applicants and employees if they have a disability or have ever had one. People can become disabled, so we need to ask this question at least every five years.",
+        "left": 534,
+        "text": "We are a federal contractor or subcontractor. The law requires us to provide equal employment opportunity to qualified people with disabilities. We have a goal of having at least 7% of our workers as people with disabilities. The law says we must measure our progress towards this goal. To do this, we must ask applicants and employees if they have a disability or have ever had one. People can become disabled, so we need to ask this question at least every five years.",
+        "top": 7116.5,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 96,
+        "html": "Completing this form is voluntary, and we hope that you will choose to do so. Your answer is confidential. No one who makes hiring decisions will see it. Your decision to complete the form and your answer will not harm you in any way. If you want to learn more about the law or this form, visit the U.S. Department of Labor’s Office of Federal Contract Compliance Programs (OFCCP) website at <a href=\"https://www.dol.gov/ofccp\" target=\"_blank\">www.dol.gov/ofccp</a>.",
+        "left": 534,
+        "text": "Completing this form is voluntary, and we hope that you will choose to do so. Your answer is confidential. No one who makes hiring decisions will see it. Your decision to complete the form and your answer will not harm you in any way. If you want to learn more about the law or this form, visit the U.S. Department of Labor’s Office of Federal Contract Compliance Programs (OFCCP) website at www.dol.gov/ofccp.",
+        "top": 7252.5,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 48,
+        "html": "A disability is a condition that substantially limits one or more of your “major life activities.” If you have or have ever had such a condition, you are a person with a disability. <strong>Disabilities include, but are not limited to:</strong>",
+        "left": 534,
+        "text": "A disability is a condition that substantially limits one or more of your “major life activities.” If you have or have ever had such a condition, you are a person with a disability. Disabilities include, but are not limited to:",
+        "top": 7404.5,
+        "width": 852
+      },
+      {
+        "attributes": [],
+        "height": 72,
+        "html": "PUBLIC BURDEN STATEMENT: According to the Paperwork Reduction Act of 1995 no persons are required to respond to a collection of information unless such collection displays a valid OMB control number. This survey should take about 5 minutes to complete.",
+        "left": 534,
+        "text": "PUBLIC BURDEN STATEMENT: According to the Paperwork Reduction Act of 1995 no persons are required to respond to a collection of information unless such collection displays a valid OMB control number. This survey should take about 5 minutes to complete.",
+        "top": 8136.5,
+        "width": 852
+      },
+      {
+        "attributes": [{ "name": "class", "value": "body" }],
+        "height": 24,
+        "html": "Powered by",
+        "left": 863.953125,
+        "text": "Powered by",
+        "top": 8376.5,
+        "width": 87
+      }
+    ],
+    "selector": "p"
+  }
+]

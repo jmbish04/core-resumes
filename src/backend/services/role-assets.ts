@@ -71,9 +71,11 @@ export async function startRoleAssetsWorkflow(
         updatedAt: new Date(),
       })
       .where(eq(rolePodcasts.id, podcastId));
-    
+
     const { Logger } = await import("@/backend/lib/logger");
     const logger = new Logger(env);
-    await logger.error("Failed to start role assets workflow (non-fatal)", { error: String(error) });
+    await logger.error("Failed to start role assets workflow (non-fatal)", {
+      error: String(error),
+    });
   }
 }

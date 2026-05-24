@@ -1,10 +1,10 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { GoogleDriveClient } from "@/backend/ai/tools/google/drive";
 import { getDb } from "@/backend/db";
-import { getServiceAccountAccessToken } from "@/backend/lib/google-auth";
 import { documents, insertDocumentSchema, roles, selectDocumentSchema } from "@/backend/db/schema";
+import { getServiceAccountAccessToken } from "@/backend/lib/google-auth";
 
 const documentQuery = z.object({ roleId: z.string().optional() });
 const documentParam = z.object({ id: z.string() });
@@ -110,16 +110,18 @@ documentsRouter.openapi(
   }),
   async (c) => {
     const { id } = c.req.valid("param");
-    const token = await getServiceAccountAccessToken(c.env, ["https://www.googleapis.com/auth/drive"]);
-    
+    const token = await getServiceAccountAccessToken(c.env, [
+      "https://www.googleapis.com/auth/drive",
+    ]);
+
     // Google Drive v3 API endpoint to export the document natively to text/markdown
     const url = `https://www.googleapis.com/drive/v3/files/${id}/export?mimeType=text/markdown`;
-    
+
     try {
       const response = await fetch(url, {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -131,7 +133,7 @@ documentsRouter.openapi(
       const markdown = await response.text();
       return new Response(markdown, {
         status: 200,
-        headers: { "Content-Type": "text/markdown" }
+        headers: { "Content-Type": "text/markdown" },
       });
     } catch (err: any) {
       return c.json({ error: err.message || "Unknown error occurred during export" }, 500);

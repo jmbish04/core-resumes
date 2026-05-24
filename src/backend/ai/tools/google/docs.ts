@@ -12,8 +12,8 @@
  * method here is a deprecated shim that delegates to the Drive client.
  */
 
-import { getServiceAccountAccessToken } from "@/backend/lib/google-auth";
 import { extractGoogleId } from "@/backend/ai/tools/google/utils";
+import { getServiceAccountAccessToken } from "@/backend/lib/google-auth";
 
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive";
 const DOCS_SCOPE = "https://www.googleapis.com/auth/documents";
@@ -89,7 +89,7 @@ export class GoogleDocsClient {
 
     return extractDocumentText(document);
   }
-  
+
   /**
    * Fetches the raw document JSON from the Google Docs API.
    * Useful for AI agents to inspect precise index locations for batchUpdate commands.
@@ -113,7 +113,7 @@ export class GoogleDocsClient {
       }),
     });
   }
-  
+
   /**
    * Executes a batch update request to perform complex document modifications
    * like formatting text, inserting tables, or changing styles.
@@ -122,7 +122,7 @@ export class GoogleDocsClient {
   async batchUpdate(docIdInput: string, requests: Record<string, any>[]): Promise<void> {
     if (!requests || requests.length === 0) return;
     const docId = extractGoogleId(docIdInput);
-    
+
     await this.docsFetch(`/documents/${docId}:batchUpdate`, {
       method: "POST",
       body: JSON.stringify({ requests }),

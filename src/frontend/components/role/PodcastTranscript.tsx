@@ -7,10 +7,9 @@
  * is highlighted during playback.
  */
 
-import { Loader2, User } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiGet } from "@/lib/api-client";
 
 type TranscriptLine = {
@@ -32,11 +31,7 @@ type PodcastTranscriptProps = {
   audioRef?: React.RefObject<HTMLAudioElement | null>;
 };
 
-export function PodcastTranscript({
-  roleId,
-  podcastId,
-  audioRef,
-}: PodcastTranscriptProps) {
+export function PodcastTranscript({ roleId, podcastId, audioRef }: PodcastTranscriptProps) {
   const [lines, setLines] = useState<TranscriptLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeLine, setActiveLine] = useState<number>(-1);
@@ -71,10 +66,7 @@ export function PodcastTranscript({
 
       for (let i = lines.length - 1; i >= 0; i--) {
         const line = lines[i];
-        if (
-          line.speakerUsecStart !== null &&
-          currentUsec >= line.speakerUsecStart
-        ) {
+        if (line.speakerUsecStart !== null && currentUsec >= line.speakerUsecStart) {
           foundIndex = i;
           break;
         }
@@ -92,9 +84,7 @@ export function PodcastTranscript({
   // Auto-scroll to active line
   useEffect(() => {
     if (activeLine >= 0 && containerRef.current) {
-      const lineEl = containerRef.current.querySelector(
-        `[data-line="${activeLine}"]`,
-      );
+      const lineEl = containerRef.current.querySelector(`[data-line="${activeLine}"]`);
       lineEl?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [activeLine]);
@@ -146,20 +136,19 @@ export function PodcastTranscript({
               >
                 {group.speaker.charAt(0).toUpperCase()}
               </div>
-              <span className="text-xs font-semibold text-foreground">
-                {group.speaker}
-              </span>
+              <span className="text-xs font-semibold text-foreground">{group.speaker}</span>
               {group.lines[0]?.speakerUsecStart !== null && (
                 <span className="text-[10px] text-muted-foreground">
                   {formatTime(group.lines[0].speakerUsecStart!)}
                 </span>
               )}
             </div>
-            {group.lines.map((line, li) => (
-              <p
+            {group.lines.map((line, _li) => (
+              <button
+                type="button"
                 key={line.id}
                 data-line={lines.indexOf(line)}
-                className={`cursor-pointer rounded px-2 py-0.5 text-sm leading-relaxed transition-colors ${
+                className={`cursor-pointer rounded px-2 py-0.5 text-sm leading-relaxed transition-colors text-left w-full ${
                   lines.indexOf(line) === activeLine
                     ? "bg-primary/15 text-foreground"
                     : "text-muted-foreground hover:bg-muted/50"
@@ -167,7 +156,7 @@ export function PodcastTranscript({
                 onClick={() => handleLineClick(line)}
               >
                 {line.speakerMessage}
-              </p>
+              </button>
             ))}
           </div>
         ))}

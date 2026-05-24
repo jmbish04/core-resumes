@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS  `global_config` (
 	`updated_at` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE INDEX `roles_status_idx` ON `roles` (`status`);--> statement-breakpoint
-CREATE INDEX `documents_role_id_idx` ON `documents` (`role_id`);--> statement-breakpoint
-CREATE INDEX `messages_thread_id_idx` ON `messages` (`thread_id`);--> statement-breakpoint
-CREATE INDEX `emails_processed_status_idx` ON `emails` (`processed_status`);
+CREATE INDEX IF NOT EXISTS `roles_status_idx` ON `roles` (`status`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `documents_role_id_idx` ON `documents` (`role_id`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `messages_thread_id_idx` ON `messages` (`thread_id`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `emails_processed_status_idx` ON `emails` (`processed_status`);

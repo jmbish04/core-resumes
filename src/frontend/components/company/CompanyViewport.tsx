@@ -1,15 +1,40 @@
-import { Upload, Building2, TrendingUp, DollarSign, Users, Target, CircleAlert, Briefcase, Leaf, Palette, Save, Link as LinkIcon } from "lucide-react";
+import {
+  Upload,
+  TrendingUp,
+  DollarSign,
+  Target,
+  CircleAlert,
+  Briefcase,
+  Leaf,
+  Palette,
+  Save,
+  Link as LinkIcon,
+} from "lucide-react";
 import { useState, useRef, useMemo } from "react";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, LabelList } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, PieChart, Pie, LabelList } from "recharts";
 
 import { EmailInbox } from "@/components/email/EmailInbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend } from "@/components/ui/chart";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { apiPatch, apiPost } from "@/lib/api-client";
 import { toast } from "@/lib/api-client";
 
@@ -47,12 +72,15 @@ export function CompanyViewport({ company, roles }: { company: any; roles: any[]
 
     setIsUploading(true);
     try {
-      const { uploadURL, id } = await apiPost<{ uploadURL: string; id: string }>(`/api/companies/${company.id}/logo-upload-url`, {});
+      const { uploadURL, id } = await apiPost<{ uploadURL: string; id: string }>(
+        `/api/companies/${company.id}/logo-upload-url`,
+        {},
+      );
       const accountHash = uploadURL.split("/")[3];
 
       const formData = new FormData();
       formData.append("file", file);
-      
+
       const uploadRes = await fetch(uploadURL, {
         method: "POST",
         body: formData,
@@ -63,13 +91,13 @@ export function CompanyViewport({ company, roles }: { company: any; roles: any[]
       }
 
       const finalLogoUrl = `https://imagedelivery.net/${accountHash}/${id}/public`;
-      
+
       await apiPatch(`/api/companies/${company.id}`, {
         attributes: {
           ...company.attributes,
           logoImageId: id,
-          logoUrl: finalLogoUrl
-        }
+          logoUrl: finalLogoUrl,
+        },
       });
 
       setLogoUrl(finalLogoUrl);
@@ -85,7 +113,9 @@ export function CompanyViewport({ company, roles }: { company: any; roles: any[]
     if (!pasteUrl) return;
     setIsUploading(true);
     try {
-      const res = await apiPost<{ logoUrl: string }>(`/api/companies/${company.id}/logo-from-url`, { url: pasteUrl });
+      const res = await apiPost<{ logoUrl: string }>(`/api/companies/${company.id}/logo-from-url`, {
+        url: pasteUrl,
+      });
       setLogoUrl(res.logoUrl);
       setPasteUrl("");
       toast({ title: "Logo imported successfully", variant: "success" });
@@ -100,7 +130,7 @@ export function CompanyViewport({ company, roles }: { company: any; roles: any[]
     try {
       await apiPatch(`/api/companies/${company.id}`, {
         colorPrimary,
-        colorAccent
+        colorAccent,
       });
       toast({ title: "Theme colors saved", variant: "success" });
     } catch (err: any) {
@@ -111,32 +141,32 @@ export function CompanyViewport({ company, roles }: { company: any; roles: any[]
   // Pie chart config & data
   const statusData = useMemo(() => {
     const counts: Record<string, number> = {};
-    roles.forEach(r => {
+    roles.forEach((r) => {
       counts[r.status] = (counts[r.status] || 0) + 1;
     });
     // Map to the PieChart structure
-    return Object.entries(counts).map(([status, value], index) => ({
+    return Object.entries(counts).map(([status, value], _index) => ({
       status,
       value,
-      fill: `var(--color-${status.replace(/\s+/g, '')})`
+      fill: `var(--color-${status.replace(/\s+/g, "")})`,
     }));
   }, [roles]);
 
   const chartConfigPie = useMemo(() => {
     const config: any = {
-      value: { label: "Roles" }
+      value: { label: "Roles" },
     };
     const blueTints = [
-      "hsl(var(--chart-1))", 
-      "hsl(var(--chart-2))", 
-      "hsl(var(--chart-3))", 
-      "hsl(var(--chart-4))", 
-      "hsl(var(--chart-5))"
+      "hsl(var(--chart-1))",
+      "hsl(var(--chart-2))",
+      "hsl(var(--chart-3))",
+      "hsl(var(--chart-4))",
+      "hsl(var(--chart-5))",
     ];
     statusData.forEach((item, index) => {
-      config[item.status.replace(/\s+/g, '')] = {
+      config[item.status.replace(/\s+/g, "")] = {
         label: item.status,
-        color: blueTints[index % blueTints.length]
+        color: blueTints[index % blueTints.length],
       };
     });
     return config;
@@ -144,10 +174,12 @@ export function CompanyViewport({ company, roles }: { company: any; roles: any[]
 
   // Bar chart config & data
   const salaryData = useMemo(() => {
-    return roles.filter(r => r.salaryMax || r.salaryMin).map(r => ({
-      name: r.jobTitle.substring(0, 15) + (r.jobTitle.length > 15 ? "..." : ""),
-      salary: r.salaryMax || r.salaryMin || 0
-    }));
+    return roles
+      .filter((r) => r.salaryMax || r.salaryMin)
+      .map((r) => ({
+        name: r.jobTitle.substring(0, 15) + (r.jobTitle.length > 15 ? "..." : ""),
+        salary: r.salaryMax || r.salaryMin || 0,
+      }));
   }, [roles]);
 
   const chartConfigBar = {
@@ -169,47 +201,62 @@ export function CompanyViewport({ company, roles }: { company: any; roles: any[]
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 flex-1">
               {/* Logo Editor */}
               <div className="flex flex-col gap-2">
-                <div 
+                <button
+                  type="button"
                   className="group relative flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-muted/50 transition-colors hover:border-primary"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   {logoUrl ? (
-                    <img src={logoUrl} alt={`${company.name} logo`} className="h-full w-full object-contain p-2" />
+                    <img
+                      src={logoUrl}
+                      alt={`${company.name} logo`}
+                      className="h-full w-full object-contain p-2"
+                    />
                   ) : (
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                       <Upload className="h-6 w-6" />
-                      <span className="text-[10px] font-medium uppercase tracking-wider">Upload</span>
+                      <span className="text-[10px] font-medium uppercase tracking-wider">
+                        Upload
+                      </span>
                     </div>
                   )}
                   <div className="absolute inset-0 flex items-center justify-center bg-background/80 opacity-0 transition-opacity group-hover:opacity-100">
                     <Upload className="h-6 w-6 text-foreground" />
                   </div>
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    className="hidden" 
-                    accept="image/*" 
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
                     onChange={handleLogoUpload}
                     disabled={isUploading}
                   />
-                </div>
+                </button>
                 <div className="flex items-center gap-1">
-                  <Input 
-                    placeholder="Paste URL..." 
-                    className="h-7 text-xs w-[120px]" 
-                    value={pasteUrl} 
-                    onChange={e => setPasteUrl(e.target.value)} 
+                  <Input
+                    placeholder="Paste URL..."
+                    className="h-7 text-xs w-[120px]"
+                    value={pasteUrl}
+                    onChange={(e) => setPasteUrl(e.target.value)}
                     disabled={isUploading}
                   />
-                  <Button size="icon" variant="outline" className="h-7 w-7" onClick={handlePasteUrl} disabled={isUploading || !pasteUrl}>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-7 w-7"
+                    onClick={handlePasteUrl}
+                    disabled={isUploading || !pasteUrl}
+                  >
                     <LinkIcon className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
-              
+
               {/* Company Info */}
               <div className="flex-1">
-                <h1 className="text-3xl font-bold tracking-tight text-foreground">{company.name}</h1>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                  {company.name}
+                </h1>
                 <p className="text-muted-foreground flex items-center gap-2 mt-1">
                   <Briefcase className="h-4 w-4" />
                   {roles.length} Roles Tracked
@@ -225,29 +272,29 @@ export function CompanyViewport({ company, roles }: { company: any; roles: any[]
                 </Label>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1.5 border rounded-md p-1 bg-background">
-                    <input 
-                      type="color" 
-                      value={colorPrimary} 
+                    <input
+                      type="color"
+                      value={colorPrimary}
                       onChange={(e) => setColorPrimary(e.target.value)}
                       className="h-6 w-6 cursor-pointer appearance-none rounded-md border-0 p-0 bg-transparent"
                     />
-                    <Input 
-                      value={colorPrimary} 
-                      onChange={(e) => setColorPrimary(e.target.value)} 
-                      className="h-6 w-20 font-mono text-xs uppercase border-0 p-1 bg-transparent shadow-none" 
+                    <Input
+                      value={colorPrimary}
+                      onChange={(e) => setColorPrimary(e.target.value)}
+                      className="h-6 w-20 font-mono text-xs uppercase border-0 p-1 bg-transparent shadow-none"
                     />
                   </div>
                   <div className="flex items-center gap-1.5 border rounded-md p-1 bg-background">
-                    <input 
-                      type="color" 
-                      value={colorAccent} 
+                    <input
+                      type="color"
+                      value={colorAccent}
                       onChange={(e) => setColorAccent(e.target.value)}
                       className="h-6 w-6 cursor-pointer appearance-none rounded-md border-0 p-0 bg-transparent"
                     />
-                    <Input 
-                      value={colorAccent} 
-                      onChange={(e) => setColorAccent(e.target.value)} 
-                      className="h-6 w-20 font-mono text-xs uppercase border-0 p-1 bg-transparent shadow-none" 
+                    <Input
+                      value={colorAccent}
+                      onChange={(e) => setColorAccent(e.target.value)}
+                      className="h-6 w-20 font-mono text-xs uppercase border-0 p-1 bg-transparent shadow-none"
                     />
                   </div>
                   <Button size="icon" variant="ghost" className="h-8 w-8" onClick={saveColors}>
@@ -268,7 +315,13 @@ export function CompanyViewport({ company, roles }: { company: any; roles: any[]
                     placeholder="e.g. stripe"
                     className="h-8 w-[140px] font-mono text-xs"
                   />
-                  <Button size="sm" variant="secondary" className="h-8 px-3" onClick={saveGreenhouseToken} disabled={ghSaving}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-8 px-3"
+                    onClick={saveGreenhouseToken}
+                    disabled={ghSaving}
+                  >
                     {ghSaving ? "Saving…" : "Save"}
                   </Button>
                 </div>
@@ -353,15 +406,8 @@ export function CompanyViewport({ company, roles }: { company: any; roles: any[]
                   hide
                 />
                 <XAxis dataKey="salary" type="number" hide />
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent indicator="line" />}
-                />
-                <Bar
-                  dataKey="salary"
-                  fill="var(--color-salary)"
-                  radius={4}
-                >
+                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
+                <Bar dataKey="salary" fill="var(--color-salary)" radius={4}>
                   <LabelList
                     dataKey="name"
                     position="insideLeft"
@@ -375,7 +421,7 @@ export function CompanyViewport({ company, roles }: { company: any; roles: any[]
                     offset={8}
                     className="fill-foreground"
                     fontSize={12}
-                    formatter={(val: any) => `$${Number(val)/1000}k`}
+                    formatter={(val: any) => `$${Number(val) / 1000}k`}
                   />
                 </Bar>
               </BarChart>
@@ -421,7 +467,9 @@ export function CompanyViewport({ company, roles }: { company: any; roles: any[]
               <CardContent>
                 {insights.outliers?.length > 0 ? (
                   <ul className="list-disc pl-4 text-sm text-muted-foreground space-y-1">
-                    {insights.outliers.map((o: string, i: number) => <li key={i}>{o}</li>)}
+                    {insights.outliers.map((o: string, i: number) => (
+                      <li key={i}>{o}</li>
+                    ))}
                   </ul>
                 ) : (
                   <p className="text-sm text-muted-foreground">No significant outliers detected.</p>
@@ -452,28 +500,39 @@ export function CompanyViewport({ company, roles }: { company: any; roles: any[]
               <TableBody>
                 {roles.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">No roles tracked yet.</TableCell>
+                    <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
+                      No roles tracked yet.
+                    </TableCell>
                   </TableRow>
                 ) : (
-                  roles.map(r => (
+                  roles.map((r) => (
                     <TableRow key={r.id}>
                       <TableCell>
-                        <a href={`/roles/${r.id}`} className="font-medium hover:underline text-foreground">
+                        <a
+                          href={`/roles/${r.id}`}
+                          className="font-medium hover:underline text-foreground"
+                        >
                           {r.jobTitle}
                         </a>
                       </TableCell>
-                      <TableCell><Badge variant="secondary">{r.status}</Badge></TableCell>
                       <TableCell>
-                        {r.salaryMin || r.salaryMax 
-                          ? `$${(r.salaryMin || 0).toLocaleString()} - $${(r.salaryMax || 0).toLocaleString()}` 
+                        <Badge variant="secondary">{r.status}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {r.salaryMin || r.salaryMax
+                          ? `$${(r.salaryMin || 0).toLocaleString()} - $${(r.salaryMax || 0).toLocaleString()}`
                           : "Unknown"}
                       </TableCell>
                       <TableCell>
-                        {r.yearsExperienceMin || r.yearsExperienceMax 
+                        {r.yearsExperienceMin || r.yearsExperienceMax
                           ? `${r.yearsExperienceMin || 0} - ${r.yearsExperienceMax || 0} yrs`
                           : "Unknown"}
                       </TableCell>
-                      <TableCell>{r.createdAt ? new Date(r.createdAt).toISOString().split('T')[0] : "Unknown"}</TableCell>
+                      <TableCell>
+                        {r.createdAt
+                          ? new Date(r.createdAt).toISOString().split("T")[0]
+                          : "Unknown"}
+                      </TableCell>
                     </TableRow>
                   ))
                 )}

@@ -4,7 +4,7 @@ import type { DraftDocType } from "./types";
 
 import type { Role } from "../../../db/schema";
 import { getModelRegistry } from "../../models";
-import { getProvider } from "../../providers";
+import { AiProvider } from "../../providers";
 import { extractText } from "../../utils/extract-text";
 
 const DraftPlanSchema = z.object({
@@ -23,7 +23,7 @@ export async function planDraft(opts: {
   bulletsBlock: string;
 }): Promise<DraftPlan> {
   const { env, role, docType, roleContext, bulletsBlock } = opts;
-  const provider = await getProvider(env);
+  const provider = new AiProvider(env);
   const model = getModelRegistry(env).analyze;
 
   const result = await provider.invokeModel(model, {

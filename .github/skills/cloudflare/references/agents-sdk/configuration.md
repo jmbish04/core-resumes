@@ -7,11 +7,12 @@
   "name": "my-agents-app",
   "durable_objects": {
     "bindings": [
-      {"name": "MyAgent", "class_name": "MyAgent"}
+      { "name": "MY_AGENT", "class_name": "MyAgent" }
     ]
   },
+  // new_sqlite_classes — required for Agents SDK (SQLite-backed DO)
   "migrations": [
-    {"tag": "v1", "new_sqlite_classes": ["MyAgent"]}
+    { "tag": "v1", "new_sqlite_classes": ["MyAgent"] }
   ],
   "ai": {
     "binding": "AI"
@@ -19,164 +20,183 @@
 }
 ```
 
+After every `wrangler.jsonc` binding change, regenerate types:
+```bash
+pnpm run cf-typegen
+# or: npx wrangler types
+```
+
 ## Environment Bindings
 
-**Type-safe pattern:**
+The generated `worker-configuration.d.ts` does **not** carry DO generic parameters.
+When using `getAgentByName`, cast explicitly:
 
 ```typescript
-interface Env {
-  AI?: Ai;                              // Workers AI
-  MyAgent?: DurableObjectNamespace<MyAgent>;
-  ChatAgent?: DurableObjectNamespace<ChatAgent>;
-  DB?: D1Database;                      // D1 database
-  KV?: KVNamespace;                     // KV storage
-  R2?: R2Bucket;                        // R2 bucket
-  OPENAI_API_KEY?: string;              // Secrets
-  GITHUB_CLIENT_ID?: string;            // MCP OAuth credentials
-  GITHUB_CLIENT_SECRET?: string;
-  QUEUE?: Queue;                        // Queues
-}
+// Generated type (no generic):
+// MY_AGENT: DurableObjectNamespace;   ← from worker-configuration.d.ts
+
+// Correct cast for getAgentByName:
+// Signature: getAgentByName<Env, AgentClass>(namespace, name)
+const agent = await getAgentByName<Env, MyAgent>(
+  env.MY_AGENT as unknown as DurableObjectNamespace<MyAgent>,
+  "instance-name",
+);
+
+// ❌ Wrong — as any hides real type errors:
+const agent = await getAgentByName<Env, MyAgent>(env.MY_AGENT as any, "instance-name");
 ```
 
-**Best practice:** Define all DO bindings in Env interface for type safety.
+## Agent Routing (Worker entrypoint)
 
-## Deployment
-
-```bash
-# Local dev
-npx wrangler dev
-
-# Deploy production
-npx wrangler deploy
-
-# Set secrets
-npx wrangler secret put OPENAI_API_KEY
-```
-
-## Agent Routing
-
-**Recommended: Use route helpers**
+Use `routeAgentRequest` (not `routeAgent`) to handle both HTTP and WebSocket upgrades:
 
 ```typescript
-import { routeAgent } from "agents";
+import { routeAgentRequest } from "agents";
 
 export default {
-  fetch(request: Request, env: Env) {
-    return routeAgent(request, env);
+  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    // routeAgentRequest intercepts /agents/<ClassName>/<name> paths
+    // and upgrades WebSocket connections automatically.
+    return (
+      (await routeAgentRequest(request, env, ctx)) ??
+      new Response("Not found", { status: 404 })
+    );
+  },
+} satisfies ExportedHandler<Env>;
+```
+
+## @callable vs. Durable Object RPC — CRITICAL DISTINCTION
+
+> Source: https://developers.cloudflare.com/agents/api-reference/callable-methods/
+
+| Caller                              | Correct pattern                          | Use `@callable`? |
+|-------------------------------------|------------------------------------------|-----------------|
+| Browser / mobile / external service | WebSocket RPC via `agent.stub.method()`  | ✅ Yes           |
+| Same Worker (Hono route, fetch)     | `getAgentByName` + direct method call    | ❌ No            |
+| Agent calling another agent         | `getAgentByName` + direct method call    | ❌ No            |
+
+### Worker-to-Agent (DO RPC) — the pattern used in this repo
+
+```typescript
+import { getAgentByName } from "agents";
+import type { MyAgent } from "@/backend/ai/agents/my-agent";
+
+// In a Hono route handler:
+const agent = await getAgentByName<MyAgent>(
+  c.env.MY_AGENT as unknown as DurableObjectNamespace<MyAgent>,
+  "instance-name",
+);
+
+// Call methods directly — no @callable decorator needed on the Agent
+const result = await agent.doWork(data);
+```
+
+The method on the Agent class is just a plain `async` method:
+
+```typescript
+export class MyAgent extends Agent<Env, MyState> {
+  // No @callable() — this is called via DO RPC from the Worker
+  async doWork(data: WorkData): Promise<WorkResult> {
+    // ...
   }
 }
 ```
 
-Helper routes requests to agents automatically based on URL patterns.
-
-**Manual routing (advanced):**
+### Browser-to-Agent (@callable) — for frontend WebSocket clients
 
 ```typescript
-export default {
-  async fetch(request: Request, env: Env) {
-    const url = new URL(request.url);
-    
-    // Named ID (deterministic)
-    const id = env.MyAgent.idFromName("user-123");
-    
-    // Random ID (from URL param)
-    // const id = env.MyAgent.idFromString(url.searchParams.get("id"));
-    
-    const stub = env.MyAgent.get(id);
-    return stub.fetch(request);
+// Agent (server):
+import { Agent, callable } from "agents";
+
+export class MyAgent extends Agent<Env, MyState> {
+  @callable()
+  async greet(name: string): Promise<string> {
+    return `Hello, ${name}!`;
   }
 }
+
+// Frontend (browser):
+import { useAgent } from "agents/react";
+import type { MyAgent } from "./server";
+
+const agent = useAgent<MyAgent>({ agent: "MyAgent", name: "default" });
+const result = await agent.stub.greet("World");
 ```
 
-**Multi-agent setup:**
+### ⚠️ Anti-patterns to avoid
 
 ```typescript
-import { routeAgent } from "agents";
+// ❌ Wrong: raw DO stub fetch to /rpc/ path — not the Agents SDK RPC protocol
+const id = env.MY_AGENT.idFromName("instance");
+const stub = env.MY_AGENT.get(id);
+await stub.fetch(new Request("https://agent/rpc/methodName", { method: "POST" }));
 
-export default {
-  fetch(request: Request, env: Env) {
-    const url = new URL(request.url);
-    
-    // Route by path
-    if (url.pathname.startsWith("/chat")) {
-      return routeAgent(request, env, "ChatAgent");
-    }
-    if (url.pathname.startsWith("/task")) {
-      return routeAgent(request, env, "TaskAgent");
-    }
-    
-    return new Response("Not found", { status: 404 });
-  }
-}
+// ❌ Wrong: as any cast hides real type errors
+const agent = await getAgentByName<Env, MyAgent>(env.MY_AGENT as any, "name");
+
+// ❌ Wrong: (stub as any).method() — silently fails at runtime
+(stub as any).doWork(data);
 ```
 
 ## Email Routing
 
-**Code setup:**
-
 ```typescript
-import { routeAgentEmail } from "agents";
+import { routeAgentRequest, routeAgentEmail } from "agents";
 
 export default {
-  fetch: (req: Request, env: Env) => routeAgent(req, env),
-  email: (message: ForwardableEmailMessage, env: Env) => {
-    return routeAgentEmail(message, env);
-  }
-}
+  fetch: (req: Request, env: Env, ctx: ExecutionContext) =>
+    routeAgentRequest(req, env, ctx),
+  email: (message: ForwardableEmailMessage, env: Env) =>
+    routeAgentEmail(message, env),
+} satisfies ExportedHandler<Env>;
 ```
 
-**Dashboard setup:**
-
-Configure email routing in Cloudflare dashboard:
-
-```
-Destination: Workers with Durable Objects
-Worker: my-agents-app
-```
-
-Then handle in agent:
+Handle in the agent:
 
 ```typescript
 export class EmailAgent extends Agent<Env> {
   async onEmail(email: AgentEmail) {
     const text = await email.text();
-    // Process email
+    // Process email...
   }
 }
 ```
 
-## AI Gateway (Optional)
+## AI Gateway
+
+All Workers AI calls must go through AI Gateway in this repo:
 
 ```typescript
-// Enable caching/routing through AI Gateway
 const response = await this.env.AI.run(
   "@cf/meta/llama-3.1-8b-instruct",
   { prompt },
   {
     gateway: {
-      id: "my-gateway-id",
+      id: env.AI_GATEWAY_ID,  // from wrangler.jsonc vars
       skipCache: false,
-      cacheTtl: 3600
-    }
-  }
+      cacheTtl: 3600,
+    },
+  },
 );
 ```
 
-## MCP Configuration (Optional)
+Do **not** construct AI Gateway URLs manually.
+
+## MCP Configuration
 
 For exposing tools via Model Context Protocol:
 
-```typescript
-// wrangler.jsonc - Add MCP OAuth secrets
+```jsonc
+// wrangler.jsonc
 {
   "vars": {
     "MCP_SERVER_URL": "https://mcp.example.com"
   }
 }
-
-// Set secrets via CLI
-// npx wrangler secret put GITHUB_CLIENT_ID
-// npx wrangler secret put GITHUB_CLIENT_SECRET
 ```
 
-Then register in agent code (see api.md MCP section).
+Set secrets via CLI:
+```bash
+wrangler secret put GITHUB_CLIENT_ID
+wrangler secret put GITHUB_CLIENT_SECRET
+```

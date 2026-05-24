@@ -9,27 +9,14 @@ import {
   ArrowUpRight,
   BarChart3,
   Building2,
-  DollarSign,
   Loader2,
-  Palette,
   Search,
   TrendingDown,
   TrendingUp,
   Users,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, Tooltip, XAxis, YAxis } from "recharts";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,7 +65,6 @@ type CompanyRow = {
 // Colors
 // ---------------------------------------------------------------------------
 
-const CHART_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 const STATUS_COLORS: Record<string, string> = {
   preparing: "#3b82f6",
   applied: "#f59e0b",
@@ -131,16 +117,6 @@ export function CompaniesPage() {
   }, [companies, searchQuery]);
 
   // Map analytics role counts to company list for the table
-  const roleCountMap = useMemo(() => {
-    const map = new Map<string, number>();
-    if (analytics) {
-      // We get full counts from analytics API
-      for (const item of analytics.topByRoleCount) {
-        map.set(item.id, item.value);
-      }
-    }
-    return map;
-  }, [analytics]);
 
   if (loading) {
     return (
@@ -195,20 +171,13 @@ export function CompaniesPage() {
             </CardHeader>
             <CardContent className="h-[250px]">
               <ChartContainer config={{ value: { label: "Roles", color: "#3b82f6" } }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={analytics.topByRoleCount} layout="vertical" margin={{ left: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} />
-                    <XAxis type="number" allowDecimals={false} />
-                    <YAxis
-                      dataKey="name"
-                      type="category"
-                      width={120}
-                      tick={{ fontSize: 12 }}
-                    />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                <BarChart data={analytics.topByRoleCount} layout="vertical" margin={{ left: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} />
+                  <XAxis type="number" allowDecimals={false} />
+                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                </BarChart>
               </ChartContainer>
             </CardContent>
           </Card>
@@ -224,30 +193,20 @@ export function CompaniesPage() {
             </CardHeader>
             <CardContent className="h-[250px]">
               <ChartContainer config={{ value: { label: "Avg Salary", color: "#10b981" } }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={analytics.topByHighestSalary}
-                    layout="vertical"
-                    margin={{ left: 10 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} />
-                    <XAxis
-                      type="number"
-                      tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-                    />
-                    <YAxis
-                      dataKey="name"
-                      type="category"
-                      width={120}
-                      tick={{ fontSize: 12 }}
-                    />
-                    <ChartTooltip
-                      content={<ChartTooltipContent />}
-                      formatter={(v: any) => `$${Number(v).toLocaleString()}`}
-                    />
-                    <Bar dataKey="value" fill="#10b981" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                <BarChart
+                  data={analytics.topByHighestSalary}
+                  layout="vertical"
+                  margin={{ left: 10 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} />
+                  <XAxis type="number" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} />
+                  <ChartTooltip
+                    content={<ChartTooltipContent />}
+                    formatter={(v: any) => `$${Number(v).toLocaleString()}`}
+                  />
+                  <Bar dataKey="value" fill="#10b981" radius={[0, 4, 4, 0]} />
+                </BarChart>
               </ChartContainer>
             </CardContent>
           </Card>
@@ -263,30 +222,20 @@ export function CompaniesPage() {
             </CardHeader>
             <CardContent className="h-[250px]">
               <ChartContainer config={{ value: { label: "Avg Salary", color: "#f59e0b" } }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={analytics.topByLowestSalary}
-                    layout="vertical"
-                    margin={{ left: 10 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} />
-                    <XAxis
-                      type="number"
-                      tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-                    />
-                    <YAxis
-                      dataKey="name"
-                      type="category"
-                      width={120}
-                      tick={{ fontSize: 12 }}
-                    />
-                    <ChartTooltip
-                      content={<ChartTooltipContent />}
-                      formatter={(v: any) => `$${Number(v).toLocaleString()}`}
-                    />
-                    <Bar dataKey="value" fill="#f59e0b" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                <BarChart
+                  data={analytics.topByLowestSalary}
+                  layout="vertical"
+                  margin={{ left: 10 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} />
+                  <XAxis type="number" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} />
+                  <ChartTooltip
+                    content={<ChartTooltipContent />}
+                    formatter={(v: any) => `$${Number(v).toLocaleString()}`}
+                  />
+                  <Bar dataKey="value" fill="#f59e0b" radius={[0, 4, 4, 0]} />
+                </BarChart>
               </ChartContainer>
             </CardContent>
           </Card>
@@ -302,34 +251,29 @@ export function CompaniesPage() {
             </CardHeader>
             <CardContent className="h-[250px]">
               <ChartContainer config={{}}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={analytics.statusDistribution}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={80}
-                      paddingAngle={4}
-                      dataKey="value"
-                      label={({ name, value }) => `${name} (${value})`}
-                    >
-                      {analytics.statusDistribution.map((entry) => (
-                        <Cell
-                          key={entry.name}
-                          fill={STATUS_COLORS[entry.name] ?? "#64748b"}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        background: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                <PieChart>
+                  <Pie
+                    data={analytics.statusDistribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={4}
+                    dataKey="value"
+                    label={({ name, value }) => `${name} (${value})`}
+                  >
+                    {analytics.statusDistribution.map((entry) => (
+                      <Cell key={entry.name} fill={STATUS_COLORS[entry.name] ?? "#64748b"} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      background: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                    }}
+                  />
+                </PieChart>
               </ChartContainer>
             </CardContent>
           </Card>

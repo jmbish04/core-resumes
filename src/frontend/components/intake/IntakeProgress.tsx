@@ -3,13 +3,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-export type IntakeStage =
-  | "idle"
-  | "scraping"
-  | "extracting"
-  | "mapping"
-  | "error"
-  | "complete";
+export type IntakeStage = "idle" | "scraping" | "extracting" | "mapping" | "error" | "complete";
 
 type LogEntry = { timestamp: number; message: string };
 
@@ -26,13 +20,7 @@ const stages = [
   { id: "mapping" as const, label: "Mapping", description: "Field mapping & validation" },
 ] as const;
 
-export function IntakeProgress({
-  stage,
-  logs,
-}: {
-  stage: IntakeStage;
-  logs: IntakeLogData;
-}) {
+export function IntakeProgress({ stage, logs }: { stage: IntakeStage; logs: IntakeLogData }) {
   const activeIndex = stages.findIndex((item) => item.id === stage);
   const complete = stage === "complete";
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -68,9 +56,7 @@ export function IntakeProgress({
             <button
               type="button"
               className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm"
-              onClick={() =>
-                setExpandedId(isExpanded ? null : item.id)
-              }
+              onClick={() => setExpandedId(isExpanded ? null : item.id)}
             >
               <span
                 className={cn(

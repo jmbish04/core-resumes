@@ -216,7 +216,11 @@ export function CareerMemoryPage() {
   const toggleExpand = (id: string) => {
     setExpandedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -596,30 +600,42 @@ function EditForm({
   return (
     <div className="space-y-3">
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <label
+          htmlFor="edit-query"
+          className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+        >
           Query
         </label>
         <Textarea
+          id="edit-query"
           value={form.query}
           onChange={(e) => onChange({ ...form, query: e.target.value })}
           rows={3}
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <label
+          htmlFor="edit-answer"
+          className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+        >
           Answer
         </label>
         <Textarea
+          id="edit-answer"
           value={form.answer}
           onChange={(e) => onChange({ ...form, answer: e.target.value })}
           rows={6}
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <label
+          htmlFor="edit-category"
+          className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+        >
           Category
         </label>
         <select
+          id="edit-category"
           value={form.category}
           onChange={(e) => onChange({ ...form, category: e.target.value })}
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"

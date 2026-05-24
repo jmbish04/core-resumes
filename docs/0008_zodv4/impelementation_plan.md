@@ -10,6 +10,7 @@ $ npx tsx -e "zodToJsonSchema(z.object({ name: z.string() }), 'Test')"
 ```
 
 This means **every** `generateStructuredOutput()` and `generateStructuredAnalysis()` call sends an empty schema to the model. The model then has zero guidance on what fields to produce, leading to:
+
 - **Inconsistent failures** — simpler prompts sometimes work by luck (the model guesses the format from the text prompt), but complex schemas like `LocationInsightSchema` consistently fail
 - **Zod validation errors** — `received undefined` for `rationale`, `commute_table`, `workplace_assessment`, `score`
 
@@ -19,6 +20,7 @@ This means **every** `generateStructuredOutput()` and `generateStructuredAnalysi
 ### Fix: Replace with Zod v4 Native `z.toJSONSchema()`
 
 Zod v4 has built-in JSON Schema conversion. Verified locally:
+
 ```
 $ npx tsx -e "z.toJSONSchema(LocationInsightSchema)"
 → { type: "object", properties: { score: { type: "integer", minimum: 0, maximum: 100 }, ... }, required: [...] }
@@ -32,7 +34,7 @@ $ npx tsx -e "z.toJSONSchema(LocationInsightSchema)"
 
 #### [MODIFY] [index.ts](file:///Volumes/Projects/workers/core-resumes/src/backend/ai/providers/index.ts)
 
-- Remove `import { zodToJsonSchema } from "zod-to-json-schema"` 
+- Remove `import { zodToJsonSchema } from "zod-to-json-schema"`
 - Add `import { z } from "zod"`
 - Replace `zodToJsonSchema(opts.schema, schemaName)` → `z.toJSONSchema(opts.schema)` in both `generateStructuredOutput()` and `generateStructuredAnalysis()`
 - Remove the `definitions` unwrapping logic (Zod v4's native output is flat, no `$ref`/`definitions` wrapping)
@@ -68,6 +70,7 @@ After the code changes, remove `zod-to-json-schema` from `package.json` since it
 Update `LocationInsightSchema.commute_table` to request time-specific departure data:
 
 **New schema:**
+
 ```typescript
 commute_table: z.array(
   z.object({
@@ -75,12 +78,16 @@ commute_table: z.array(
     departure_time: z.string().describe("e.g. '8:30 AM', '5:00 PM'"),
     mode: z.string().describe("e.g. 'Driving (Tesla Model 3)', 'BART + Walk', 'Muni + Walk'"),
     duration_minutes: z.number().nullable(),
-    monthly_cost: z.number().nullable().describe("Estimated monthly cost for this commute mode at this frequency"),
+    monthly_cost: z
+      .number()
+      .nullable()
+      .describe("Estimated monthly cost for this commute mode at this frequency"),
   }),
-)
+);
 ```
 
 **Update the prompt** to explicitly request these time slots:
+
 - **Morning departures (to office):** 8:30 AM, 9:00 AM, 9:30 AM, 10:00 AM
 - **Evening departures (to home):** 4:00 PM, 4:30 PM, 5:00 PM, 5:30 PM, 6:00 PM
 - **Modes:** Driving (Tesla Model 3), BART + Walk (door-to-door), Muni + Walk (door-to-door)
@@ -94,6 +101,7 @@ Update `LocationAnalysisPayload` type to match the new commute table structure.
 #### [MODIFY] [types.ts](file:///Volumes/Projects/workers/core-resumes/src/backend/ai/agents/orchestrator/types.ts)
 
 Add to `JobPostingSchema`:
+
 ```typescript
 allLocations: z.array(z.string()).nullable().optional()
   .describe("All job locations as individual strings"),
@@ -118,16 +126,19 @@ Add `californiaLocations` field to `LocationExtractionSchema`, use it as commute
 ## Verification Plan
 
 ### Automated Tests
+
 1. `pnpm run types` — TypeScript clean
 2. `pnpm run build` — Build succeeds
 3. Local schema test: `npx tsx -e "z.toJSONSchema(LocationInsightSchema)"` produces correct JSON Schema
 
 ### Production Verification
+
 1. Deploy and run health diagnostic — `openroute_commute` should pass
 2. Submit a multi-city job and verify `californiaLocations` is populated correctly
 3. Verify the commute table contains time-specific rows for all requested departure slots
 
 ## Priority Order
+
 1. **P0:** Fix `zodToJsonSchema` → `z.toJSONSchema` (affects ALL AI output system-wide)
 2. **P1:** Enhanced commute table schema with time-specific departures
 3. **P2:** California location extraction for multi-city jobs

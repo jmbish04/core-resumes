@@ -13,17 +13,12 @@ import ReactMarkdown from "react-markdown";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 import { AnalysisConfigModal } from "./AnalysisConfigModal";
-import { StrategicInsights } from "./StrategicInsights";
 import { ScoreRadialChart } from "./ScoreRadialChart";
+import { StrategicInsights } from "./StrategicInsights";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -112,11 +107,7 @@ function RadialScoreCard({
   return (
     <Card className="flex flex-col md:flex-row items-start p-6 gap-6">
       <div className="flex-1 w-full md:w-auto self-center">
-        <ScoreRadialChart
-          score={score}
-          label={getScoreLabel(score)}
-          color={color}
-        />
+        <ScoreRadialChart score={score} label={getScoreLabel(score)} color={color} />
       </div>
       <div className="flex-[2] flex flex-col gap-2 w-full">
         <div>

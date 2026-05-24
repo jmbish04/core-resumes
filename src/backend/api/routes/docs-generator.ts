@@ -1,9 +1,11 @@
 import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { eq, desc } from "drizzle-orm";
+
+import type { AppBindings } from "../index";
+
 import { GoogleDriveClient } from "../../ai/tools/google/drive";
 import { getDb } from "../../db";
 import { documents } from "../../db/schema";
-import type { AppBindings } from "../index";
 import {
   ResumeRequestSchema,
   CoverLetterRequestSchema,
@@ -41,16 +43,16 @@ docsGeneratorRouter.openapi(
   (async (c: any) => {
     const data = c.req.valid("json");
     const { roleId, targetRole } = data;
-    
+
     // 1. Generate HTML
     const htmlContent = generateResumeHtml(data);
-    
+
     // 2. Setup Google Drive Client
     const driveClient = new GoogleDriveClient(c.env);
-    
+
     // Get folder ID (try role-specific or fallback to global)
     let folderId = c.env.PARENT_DRIVE_FOLDER_ID;
-    
+
     // 3. Create folder if missing for role
     const db = getDb(c.env);
     if (roleId) {
@@ -62,23 +64,30 @@ docsGeneratorRouter.openapi(
         } else {
           const folder = await driveClient.createFolder(
             `${role.companyName} - ${role.jobTitle}`,
-            c.env.PARENT_DRIVE_FOLDER_ID
+            c.env.PARENT_DRIVE_FOLDER_ID,
           );
           folderId = folder.id;
-          await db.update(roles).set({ driveFolderId: folderId, updatedAt: new Date() }).where(eq(roles.id, role.id));
+          await db
+            .update(roles)
+            .set({ driveFolderId: folderId, updatedAt: new Date() })
+            .where(eq(roles.id, role.id));
         }
       }
     }
-    
+
     // 4. Create document in Google Drive
     const docName = `Resume - ${targetRole} - Justin Bishop`;
     const createdDoc = await driveClient.createDocFromHtml(docName, htmlContent, folderId);
-    
+
     // 5. Optionally insert into DB if roleId provided
     if (roleId) {
       // Determine version
-      const existingDocs = await db.select().from(documents).where(eq(documents.roleId, roleId)).orderBy(desc(documents.version));
-      const resumeDocs = existingDocs.filter(d => d.type === "resume");
+      const existingDocs = await db
+        .select()
+        .from(documents)
+        .where(eq(documents.roleId, roleId))
+        .orderBy(desc(documents.version));
+      const resumeDocs = existingDocs.filter((d) => d.type === "resume");
       const nextVersion = resumeDocs.length > 0 ? resumeDocs[0].version + 1 : 1;
 
       await db.insert(documents).values({
@@ -94,9 +103,10 @@ docsGeneratorRouter.openapi(
     return c.json({
       success: true,
       documentId: createdDoc.id,
-      documentUrl: createdDoc.webViewLink || `https://docs.google.com/document/d/${createdDoc.id}/edit`,
+      documentUrl:
+        createdDoc.webViewLink || `https://docs.google.com/document/d/${createdDoc.id}/edit`,
     });
-  }) as any
+  }) as any,
 );
 
 // ---------------------------------------------------------------------------
@@ -126,16 +136,16 @@ docsGeneratorRouter.openapi(
   (async (c: any) => {
     const data = c.req.valid("json");
     const { roleId, targetRole, companyName } = data;
-    
+
     // 1. Generate HTML
     const htmlContent = generateCoverLetterHtml(data);
-    
+
     // 2. Setup Google Drive Client
     const driveClient = new GoogleDriveClient(c.env);
-    
+
     // Get folder ID (try role-specific or fallback to global)
     let folderId = c.env.PARENT_DRIVE_FOLDER_ID;
-    
+
     // 3. Create folder if missing for role
     const db = getDb(c.env);
     if (roleId) {
@@ -147,23 +157,30 @@ docsGeneratorRouter.openapi(
         } else {
           const folder = await driveClient.createFolder(
             `${role.companyName} - ${role.jobTitle}`,
-            c.env.PARENT_DRIVE_FOLDER_ID
+            c.env.PARENT_DRIVE_FOLDER_ID,
           );
           folderId = folder.id;
-          await db.update(roles).set({ driveFolderId: folderId, updatedAt: new Date() }).where(eq(roles.id, role.id));
+          await db
+            .update(roles)
+            .set({ driveFolderId: folderId, updatedAt: new Date() })
+            .where(eq(roles.id, role.id));
         }
       }
     }
-    
+
     // 4. Create document in Google Drive
     const docName = `Cover Letter - ${companyName} - ${targetRole}`;
     const createdDoc = await driveClient.createDocFromHtml(docName, htmlContent, folderId);
-    
+
     // 5. Optionally insert into DB if roleId provided
     if (roleId) {
       // Determine version
-      const existingDocs = await db.select().from(documents).where(eq(documents.roleId, roleId)).orderBy(desc(documents.version));
-      const clDocs = existingDocs.filter(d => d.type === "cover_letter");
+      const existingDocs = await db
+        .select()
+        .from(documents)
+        .where(eq(documents.roleId, roleId))
+        .orderBy(desc(documents.version));
+      const clDocs = existingDocs.filter((d) => d.type === "cover_letter");
       const nextVersion = clDocs.length > 0 ? clDocs[0].version + 1 : 1;
 
       await db.insert(documents).values({
@@ -179,7 +196,8 @@ docsGeneratorRouter.openapi(
     return c.json({
       success: true,
       documentId: createdDoc.id,
-      documentUrl: createdDoc.webViewLink || `https://docs.google.com/document/d/${createdDoc.id}/edit`,
+      documentUrl:
+        createdDoc.webViewLink || `https://docs.google.com/document/d/${createdDoc.id}/edit`,
     });
-  }) as any
+  }) as any,
 );

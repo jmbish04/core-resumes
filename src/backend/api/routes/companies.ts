@@ -1,8 +1,8 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { eq } from "drizzle-orm";
 
-import { extractBrandColors } from "@/backend/ai/tools/google/templates/brand-colors";
 import { BrowserRendering } from "@/backend/ai/tools/browser-rendering";
+import { extractBrandColors } from "@/backend/ai/tools/google/templates/brand-colors";
 import { getDb } from "@/backend/db";
 import { companies, roles, selectCompanySchema } from "@/backend/db/schema";
 import { getCloudflareAccountId, getCloudflareImagesToken } from "@/backend/utils/secrets";
@@ -109,7 +109,8 @@ companiesRouter.openapi(
         const withSalary = compRoles.filter((r) => r.salaryMin || r.salaryMax);
         if (withSalary.length === 0) return null;
         const total = withSalary.reduce((sum, r) => {
-          const avg = ((r.salaryMin ?? 0) + (r.salaryMax ?? 0)) / (r.salaryMin && r.salaryMax ? 2 : 1);
+          const avg =
+            ((r.salaryMin ?? 0) + (r.salaryMax ?? 0)) / (r.salaryMin && r.salaryMax ? 2 : 1);
           return sum + avg;
         }, 0);
         return { name: c.name, id: c.id, value: Math.round(total / withSalary.length) };
@@ -338,7 +339,7 @@ companiesRouter.openapi(
           Authorization: `Bearer ${imagesToken}`,
         },
         body: formData,
-      }
+      },
     );
 
     if (!response.ok) {
@@ -347,7 +348,7 @@ companiesRouter.openapi(
       return c.json({ error: "Failed to generate upload URL" }, 500);
     }
 
-    const data = await response.json() as any;
+    const data = (await response.json()) as any;
     if (!data.success) {
       return c.json({ error: "Failed to generate upload URL" }, 500);
     }
@@ -453,5 +454,3 @@ companiesRouter.openapi(
     return c.json(updated);
   },
 );
-
-

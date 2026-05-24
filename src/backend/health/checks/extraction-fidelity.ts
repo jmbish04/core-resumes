@@ -19,12 +19,12 @@
 import type { HealthStepResult } from "@/backend/health/types";
 
 import { extractRolePostingHybrid } from "@/ai/tasks/extract/role-hybrid";
+import { HYBRID_SCRAPE_SELECTORS } from "@/ai/tools/role/html-bullet-parser";
 import {
   BrowserRendering,
   type ScrapeResult,
   type ScrapeResultItem,
 } from "@/backend/ai/tools/browser-rendering";
-import { HYBRID_SCRAPE_SELECTORS } from "@/ai/tools/role/html-bullet-parser";
 
 import { findSFAreaJob } from "./greenhouse-boards";
 

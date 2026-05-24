@@ -7,7 +7,6 @@ import { ChevronDown, ChevronRight, Database, KeyRound, Link2 } from "lucide-rea
 import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 
 type Column = {
   cid: number;

@@ -153,9 +153,7 @@
       "indexes": {
         "roles_status_idx": {
           "name": "roles_status_idx",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         }
       },
@@ -221,9 +219,7 @@
       "indexes": {
         "documents_role_id_idx": {
           "name": "documents_role_id_idx",
-          "columns": [
-            "role_id"
-          ],
+          "columns": ["role_id"],
           "isUnique": false
         }
       },
@@ -232,12 +228,8 @@
           "name": "documents_role_id_roles_id_fk",
           "tableFrom": "documents",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -284,12 +276,8 @@
           "name": "threads_role_id_roles_id_fk",
           "tableFrom": "threads",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -368,9 +356,7 @@
       "indexes": {
         "messages_thread_id_idx": {
           "name": "messages_thread_id_idx",
-          "columns": [
-            "thread_id"
-          ],
+          "columns": ["thread_id"],
           "isUnique": false
         }
       },
@@ -379,12 +365,8 @@
           "name": "messages_thread_id_threads_id_fk",
           "tableFrom": "messages",
           "tableTo": "threads",
-          "columnsFrom": [
-            "thread_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["thread_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -392,12 +374,8 @@
           "name": "messages_role_id_roles_id_fk",
           "tableFrom": "messages",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -540,30 +518,22 @@
       "indexes": {
         "emails_processed_status_idx": {
           "name": "emails_processed_status_idx",
-          "columns": [
-            "processed_status"
-          ],
+          "columns": ["processed_status"],
           "isUnique": false
         },
         "emails_role_id_idx": {
           "name": "emails_role_id_idx",
-          "columns": [
-            "role_id"
-          ],
+          "columns": ["role_id"],
           "isUnique": false
         },
         "emails_sender_domain_idx": {
           "name": "emails_sender_domain_idx",
-          "columns": [
-            "sender_domain"
-          ],
+          "columns": ["sender_domain"],
           "isUnique": false
         },
         "emails_message_id_idx": {
           "name": "emails_message_id_idx",
-          "columns": [
-            "message_id"
-          ],
+          "columns": ["message_id"],
           "isUnique": false
         }
       },
@@ -572,12 +542,8 @@
           "name": "emails_role_id_roles_id_fk",
           "tableFrom": "emails",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -643,23 +609,17 @@
       "indexes": {
         "email_parties_email_id_idx": {
           "name": "email_parties_email_id_idx",
-          "columns": [
-            "email_id"
-          ],
+          "columns": ["email_id"],
           "isUnique": false
         },
         "email_parties_domain_idx": {
           "name": "email_parties_domain_idx",
-          "columns": [
-            "domain"
-          ],
+          "columns": ["domain"],
           "isUnique": false
         },
         "email_parties_is_self_idx": {
           "name": "email_parties_is_self_idx",
-          "columns": [
-            "is_self"
-          ],
+          "columns": ["is_self"],
           "isUnique": false
         }
       },
@@ -668,12 +628,8 @@
           "name": "email_parties_email_id_emails_id_fk",
           "tableFrom": "email_parties",
           "tableTo": "emails",
-          "columnsFrom": [
-            "email_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["email_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -752,9 +708,7 @@
       "indexes": {
         "email_attachments_email_id_idx": {
           "name": "email_attachments_email_id_idx",
-          "columns": [
-            "email_id"
-          ],
+          "columns": ["email_id"],
           "isUnique": false
         }
       },
@@ -763,12 +717,8 @@
           "name": "email_attachments_email_id_emails_id_fk",
           "tableFrom": "email_attachments",
           "tableTo": "emails",
-          "columnsFrom": [
-            "email_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["email_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -946,23 +896,17 @@
       "indexes": {
         "resume_bullets_active_idx": {
           "name": "resume_bullets_active_idx",
-          "columns": [
-            "is_active"
-          ],
+          "columns": ["is_active"],
           "isUnique": false
         },
         "resume_bullets_category_idx": {
           "name": "resume_bullets_category_idx",
-          "columns": [
-            "category"
-          ],
+          "columns": ["category"],
           "isUnique": false
         },
         "resume_bullets_replaced_by_idx": {
           "name": "resume_bullets_replaced_by_idx",
-          "columns": [
-            "replaced_by"
-          ],
+          "columns": ["replaced_by"],
           "isUnique": false
         }
       },
@@ -1092,9 +1036,7 @@
       "indexes": {
         "role_analyses_role_id_idx": {
           "name": "role_analyses_role_id_idx",
-          "columns": [
-            "role_id"
-          ],
+          "columns": ["role_id"],
           "isUnique": false
         }
       },
@@ -1103,12 +1045,8 @@
           "name": "role_analyses_role_id_roles_id_fk",
           "tableFrom": "role_analyses",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1174,16 +1112,12 @@
       "indexes": {
         "role_bullets_role_id_idx": {
           "name": "role_bullets_role_id_idx",
-          "columns": [
-            "role_id"
-          ],
+          "columns": ["role_id"],
           "isUnique": false
         },
         "role_bullets_type_idx": {
           "name": "role_bullets_type_idx",
-          "columns": [
-            "type"
-          ],
+          "columns": ["type"],
           "isUnique": false
         }
       },
@@ -1192,12 +1126,8 @@
           "name": "role_bullets_role_id_roles_id_fk",
           "tableFrom": "role_bullets",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1256,17 +1186,12 @@
       "indexes": {
         "role_bullet_analyses_bullet_id_idx": {
           "name": "role_bullet_analyses_bullet_id_idx",
-          "columns": [
-            "bullet_id"
-          ],
+          "columns": ["bullet_id"],
           "isUnique": false
         },
         "role_bullet_analyses_revision_idx": {
           "name": "role_bullet_analyses_revision_idx",
-          "columns": [
-            "bullet_id",
-            "revision_number"
-          ],
+          "columns": ["bullet_id", "revision_number"],
           "isUnique": false
         }
       },
@@ -1275,12 +1200,8 @@
           "name": "role_bullet_analyses_bullet_id_role_bullets_id_fk",
           "tableFrom": "role_bullet_analyses",
           "tableTo": "role_bullets",
-          "columnsFrom": [
-            "bullet_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bullet_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1320,12 +1241,8 @@
           "name": "role_bullet_pattern_map_pattern_id_role_bullet_patterns_id_fk",
           "tableFrom": "role_bullet_pattern_map",
           "tableTo": "role_bullet_patterns",
-          "columnsFrom": [
-            "pattern_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["pattern_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1333,12 +1250,8 @@
           "name": "role_bullet_pattern_map_role_bullet_id_role_bullets_id_fk",
           "tableFrom": "role_bullet_pattern_map",
           "tableTo": "role_bullets",
-          "columnsFrom": [
-            "role_bullet_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_bullet_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1399,12 +1312,8 @@
           "name": "role_bullet_patterns_role_id_roles_id_fk",
           "tableFrom": "role_bullet_patterns",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1486,12 +1395,8 @@
           "name": "role_resume_bullets_role_id_roles_id_fk",
           "tableFrom": "role_resume_bullets",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1528,10 +1433,7 @@
       "indexes": {
         "role_resume_bullets_map_resume_bullet_id_role_bullet_id_unique": {
           "name": "role_resume_bullets_map_resume_bullet_id_role_bullet_id_unique",
-          "columns": [
-            "resume_bullet_id",
-            "role_bullet_id"
-          ],
+          "columns": ["resume_bullet_id", "role_bullet_id"],
           "isUnique": true
         }
       },
@@ -1540,12 +1442,8 @@
           "name": "role_resume_bullets_map_resume_bullet_id_role_resume_bullets_id_fk",
           "tableFrom": "role_resume_bullets_map",
           "tableTo": "role_resume_bullets",
-          "columnsFrom": [
-            "resume_bullet_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["resume_bullet_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1553,12 +1451,8 @@
           "name": "role_resume_bullets_map_role_bullet_id_role_bullets_id_fk",
           "tableFrom": "role_resume_bullets_map",
           "tableTo": "role_bullets",
-          "columnsFrom": [
-            "role_bullet_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_bullet_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1630,23 +1524,17 @@
       "indexes": {
         "alignment_scores_analysis_id_idx": {
           "name": "alignment_scores_analysis_id_idx",
-          "columns": [
-            "analysis_id"
-          ],
+          "columns": ["analysis_id"],
           "isUnique": false
         },
         "alignment_scores_role_id_idx": {
           "name": "alignment_scores_role_id_idx",
-          "columns": [
-            "role_id"
-          ],
+          "columns": ["role_id"],
           "isUnique": false
         },
         "alignment_scores_type_idx": {
           "name": "alignment_scores_type_idx",
-          "columns": [
-            "type"
-          ],
+          "columns": ["type"],
           "isUnique": false
         }
       },
@@ -1655,12 +1543,8 @@
           "name": "role_alignment_scores_analysis_id_role_analyses_id_fk",
           "tableFrom": "role_alignment_scores",
           "tableTo": "role_analyses",
-          "columnsFrom": [
-            "analysis_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["analysis_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1668,12 +1552,8 @@
           "name": "role_alignment_scores_role_id_roles_id_fk",
           "tableFrom": "role_alignment_scores",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1817,12 +1697,8 @@
           "name": "health_results_run_id_health_runs_id_fk",
           "tableFrom": "health_results",
           "tableTo": "health_runs",
-          "columnsFrom": [
-            "run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["run_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1934,9 +1810,7 @@
       "indexes": {
         "interview_notes_role_id_idx": {
           "name": "interview_notes_role_id_idx",
-          "columns": [
-            "role_id"
-          ],
+          "columns": ["role_id"],
           "isUnique": false
         }
       },
@@ -1945,12 +1819,8 @@
           "name": "interview_notes_role_id_roles_id_fk",
           "tableFrom": "interview_notes",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2030,16 +1900,12 @@
       "indexes": {
         "interview_recordings_role_id_idx": {
           "name": "interview_recordings_role_id_idx",
-          "columns": [
-            "role_id"
-          ],
+          "columns": ["role_id"],
           "isUnique": false
         },
         "interview_recordings_status_idx": {
           "name": "interview_recordings_status_idx",
-          "columns": [
-            "transcription_status"
-          ],
+          "columns": ["transcription_status"],
           "isUnique": false
         }
       },
@@ -2048,12 +1914,8 @@
           "name": "interview_recordings_role_id_roles_id_fk",
           "tableFrom": "interview_recordings",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2061,12 +1923,8 @@
           "name": "interview_recordings_note_id_interview_notes_id_fk",
           "tableFrom": "interview_recordings",
           "tableTo": "interview_notes",
-          "columnsFrom": [
-            "note_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["note_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2190,30 +2048,22 @@
       "indexes": {
         "transcription_jobs_recording_id_idx": {
           "name": "transcription_jobs_recording_id_idx",
-          "columns": [
-            "recording_id"
-          ],
+          "columns": ["recording_id"],
           "isUnique": false
         },
         "transcription_jobs_podcast_id_idx": {
           "name": "transcription_jobs_podcast_id_idx",
-          "columns": [
-            "podcast_id"
-          ],
+          "columns": ["podcast_id"],
           "isUnique": false
         },
         "transcription_jobs_role_id_idx": {
           "name": "transcription_jobs_role_id_idx",
-          "columns": [
-            "role_id"
-          ],
+          "columns": ["role_id"],
           "isUnique": false
         },
         "transcription_jobs_status_idx": {
           "name": "transcription_jobs_status_idx",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         }
       },
@@ -2222,12 +2072,8 @@
           "name": "transcription_jobs_recording_id_interview_recordings_id_fk",
           "tableFrom": "transcription_jobs",
           "tableTo": "interview_recordings",
-          "columnsFrom": [
-            "recording_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["recording_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2235,12 +2081,8 @@
           "name": "transcription_jobs_podcast_id_role_podcasts_id_fk",
           "tableFrom": "transcription_jobs",
           "tableTo": "role_podcasts",
-          "columnsFrom": [
-            "podcast_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["podcast_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2248,12 +2090,8 @@
           "name": "transcription_jobs_role_id_roles_id_fk",
           "tableFrom": "transcription_jobs",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2333,10 +2171,7 @@
       "indexes": {
         "transcription_chunks_job_chunk_idx": {
           "name": "transcription_chunks_job_chunk_idx",
-          "columns": [
-            "job_id",
-            "chunk_index"
-          ],
+          "columns": ["job_id", "chunk_index"],
           "isUnique": false
         }
       },
@@ -2345,12 +2180,8 @@
           "name": "transcription_chunks_job_id_transcription_jobs_id_fk",
           "tableFrom": "transcription_chunks",
           "tableTo": "transcription_jobs",
-          "columnsFrom": [
-            "job_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["job_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2443,16 +2274,12 @@
       "indexes": {
         "companies_name_idx": {
           "name": "companies_name_idx",
-          "columns": [
-            "name"
-          ],
+          "columns": ["name"],
           "isUnique": false
         },
         "companies_greenhouse_token_idx": {
           "name": "companies_greenhouse_token_idx",
-          "columns": [
-            "greenhouse_token"
-          ],
+          "columns": ["greenhouse_token"],
           "isUnique": false
         }
       },
@@ -2560,30 +2387,22 @@
       "indexes": {
         "career_memory_role_id_idx": {
           "name": "career_memory_role_id_idx",
-          "columns": [
-            "role_id"
-          ],
+          "columns": ["role_id"],
           "isUnique": false
         },
         "career_memory_category_idx": {
           "name": "career_memory_category_idx",
-          "columns": [
-            "category"
-          ],
+          "columns": ["category"],
           "isUnique": false
         },
         "career_memory_active_idx": {
           "name": "career_memory_active_idx",
-          "columns": [
-            "is_active"
-          ],
+          "columns": ["is_active"],
           "isUnique": false
         },
         "career_memory_source_idx": {
           "name": "career_memory_source_idx",
-          "columns": [
-            "source"
-          ],
+          "columns": ["source"],
           "isUnique": false
         }
       },
@@ -2592,12 +2411,8 @@
           "name": "career_memory_role_id_roles_id_fk",
           "tableFrom": "career_memory",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -2765,23 +2580,17 @@
       "indexes": {
         "role_podcasts_role_id_idx": {
           "name": "role_podcasts_role_id_idx",
-          "columns": [
-            "role_id"
-          ],
+          "columns": ["role_id"],
           "isUnique": false
         },
         "role_podcasts_status_idx": {
           "name": "role_podcasts_status_idx",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         },
         "role_podcasts_notebooklm_artifact_id_idx": {
           "name": "role_podcasts_notebooklm_artifact_id_idx",
-          "columns": [
-            "notebooklm_artifact_id"
-          ],
+          "columns": ["notebooklm_artifact_id"],
           "isUnique": false
         }
       },
@@ -2790,12 +2599,8 @@
           "name": "role_podcasts_role_id_roles_id_fk",
           "tableFrom": "role_podcasts",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2876,16 +2681,12 @@
       "indexes": {
         "scoring_rubrics_type_idx": {
           "name": "scoring_rubrics_type_idx",
-          "columns": [
-            "type"
-          ],
+          "columns": ["type"],
           "isUnique": false
         },
         "scoring_rubrics_active_idx": {
           "name": "scoring_rubrics_active_idx",
-          "columns": [
-            "is_active"
-          ],
+          "columns": ["is_active"],
           "isUnique": false
         }
       },
@@ -2979,17 +2780,12 @@
       "indexes": {
         "role_insights_role_type_idx": {
           "name": "role_insights_role_type_idx",
-          "columns": [
-            "role_id",
-            "type"
-          ],
+          "columns": ["role_id", "type"],
           "isUnique": false
         },
         "role_insights_hash_idx": {
           "name": "role_insights_hash_idx",
-          "columns": [
-            "input_hash"
-          ],
+          "columns": ["input_hash"],
           "isUnique": false
         }
       },
@@ -2998,12 +2794,8 @@
           "name": "role_insights_role_id_roles_id_fk",
           "tableFrom": "role_insights",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3107,9 +2899,7 @@
       "indexes": {
         "mock_interviews_role_id_idx": {
           "name": "mock_interviews_role_id_idx",
-          "columns": [
-            "role_id"
-          ],
+          "columns": ["role_id"],
           "isUnique": false
         }
       },
@@ -3118,12 +2908,8 @@
           "name": "mock_interviews_role_id_roles_id_fk",
           "tableFrom": "mock_interviews",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3297,44 +3083,32 @@
       "indexes": {
         "notebooklm_blobs_role_id_idx": {
           "name": "notebooklm_blobs_role_id_idx",
-          "columns": [
-            "role_id"
-          ],
+          "columns": ["role_id"],
           "isUnique": false
         },
         "notebooklm_blobs_type_idx": {
           "name": "notebooklm_blobs_type_idx",
-          "columns": [
-            "notebooklm_type"
-          ],
+          "columns": ["notebooklm_type"],
           "isUnique": false
         },
         "notebooklm_blobs_source_uuid_idx": {
           "name": "notebooklm_blobs_source_uuid_idx",
-          "columns": [
-            "notebooklm_source_uuid"
-          ],
+          "columns": ["notebooklm_source_uuid"],
           "isUnique": false
         },
         "notebooklm_blobs_md5_idx": {
           "name": "notebooklm_blobs_md5_idx",
-          "columns": [
-            "md5"
-          ],
+          "columns": ["md5"],
           "isUnique": false
         },
         "notebooklm_blobs_active_idx": {
           "name": "notebooklm_blobs_active_idx",
-          "columns": [
-            "is_active"
-          ],
+          "columns": ["is_active"],
           "isUnique": false
         },
         "notebooklm_blobs_doc_type_idx": {
           "name": "notebooklm_blobs_doc_type_idx",
-          "columns": [
-            "pipeline_doc_type"
-          ],
+          "columns": ["pipeline_doc_type"],
           "isUnique": false
         }
       },
@@ -3343,12 +3117,8 @@
           "name": "notebooklm_blobs_role_id_roles_id_fk",
           "tableFrom": "notebooklm_blobs",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3434,24 +3204,17 @@
       "indexes": {
         "nlm_podcast_transcript_role_id_idx": {
           "name": "nlm_podcast_transcript_role_id_idx",
-          "columns": [
-            "role_id"
-          ],
+          "columns": ["role_id"],
           "isUnique": false
         },
         "nlm_podcast_transcript_podcast_id_idx": {
           "name": "nlm_podcast_transcript_podcast_id_idx",
-          "columns": [
-            "podcast_id"
-          ],
+          "columns": ["podcast_id"],
           "isUnique": false
         },
         "nlm_podcast_transcript_order_idx": {
           "name": "nlm_podcast_transcript_order_idx",
-          "columns": [
-            "podcast_id",
-            "line_order"
-          ],
+          "columns": ["podcast_id", "line_order"],
           "isUnique": false
         }
       },
@@ -3460,12 +3223,8 @@
           "name": "notebooklm_podcast_transcript_role_id_roles_id_fk",
           "tableFrom": "notebooklm_podcast_transcript",
           "tableTo": "roles",
-          "columnsFrom": [
-            "role_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["role_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

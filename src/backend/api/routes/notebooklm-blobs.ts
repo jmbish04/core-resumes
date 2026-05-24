@@ -26,7 +26,6 @@ import {
   roles,
 } from "@/backend/db/schema";
 
-
 // ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
@@ -244,10 +243,7 @@ function hydratePrompt(
  * Fetch the prompt template for a given action from global_config.
  * Returns null if no config row exists (caller should use hardcoded default).
  */
-async function getPromptTemplate(
-  env: Env,
-  action: string,
-): Promise<string | null> {
+async function getPromptTemplate(env: Env, action: string): Promise<string | null> {
   const configKey = ACTION_TO_CONFIG_KEY[action];
   if (!configKey) return null;
 
@@ -283,9 +279,7 @@ notebooklmBlobsRouter.openapi(
               prompt: z.string(),
               isDefault: z.boolean(),
               configKey: z.string(),
-              templateTags: z.array(
-                z.object({ tag: z.string(), description: z.string() }),
-              ),
+              templateTags: z.array(z.object({ tag: z.string(), description: z.string() })),
             }),
           },
         },
@@ -298,11 +292,7 @@ notebooklmBlobsRouter.openapi(
     const action = c.req.param("action");
     const db = getDb(c.env);
 
-    const [role] = await db
-      .select()
-      .from(roles)
-      .where(eq(roles.id, roleId))
-      .limit(1);
+    const [role] = await db.select().from(roles).where(eq(roles.id, roleId)).limit(1);
     if (!role) return c.json({ error: "Role not found" }, 404);
 
     const configKey = ACTION_TO_CONFIG_KEY[action] ?? `notebooklm_prompt_${action}`;
@@ -390,11 +380,7 @@ notebooklmBlobsRouter.openapi(
     const { action, instruction, prompt: userPrompt } = body;
     const db = getDb(c.env);
 
-    const [role] = await db
-      .select()
-      .from(roles)
-      .where(eq(roles.id, roleId))
-      .limit(1);
+    const [role] = await db.select().from(roles).where(eq(roles.id, roleId)).limit(1);
     if (!role) return c.json({ error: "Role not found" }, 404);
 
     const pipelineDocTypeMap: Record<string, string> = {
@@ -462,20 +448,13 @@ notebooklmBlobsRouter.openapi(
         blobId,
         action,
         promptUsed: fullPrompt,
-        result:
-          action === "create_mind_map"
-            ? { id: (result as any).id }
-            : result,
+        result: action === "create_mind_map" ? { id: (result as any).id } : result,
       });
     }
 
     if (action === "deep_research") {
-      const { startResearch } = await import(
-        "@/backend/ai/tools/notebooklm/notebooklm-sources"
-      );
-      const query =
-        userPrompt ??
-        (await resolvePrompt());
+      const { startResearch } = await import("@/backend/ai/tools/notebooklm/notebooklm-sources");
+      const query = userPrompt ?? (await resolvePrompt());
       const task = await startResearch(c.env, query, "web", "deep");
 
       const blobId = crypto.randomUUID();

@@ -17,9 +17,9 @@ CREATE TABLE IF NOT EXISTS  `transcription_jobs` (
 	FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE INDEX `transcription_jobs_recording_id_idx` ON `transcription_jobs` (`recording_id`);--> statement-breakpoint
-CREATE INDEX `transcription_jobs_role_id_idx` ON `transcription_jobs` (`role_id`);--> statement-breakpoint
-CREATE INDEX `transcription_jobs_status_idx` ON `transcription_jobs` (`status`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `transcription_jobs_recording_id_idx` ON `transcription_jobs` (`recording_id`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `transcription_jobs_role_id_idx` ON `transcription_jobs` (`role_id`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `transcription_jobs_status_idx` ON `transcription_jobs` (`status`);--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS  `transcription_chunks` (
 	`id` text PRIMARY KEY NOT NULL,
 	`job_id` text NOT NULL,
@@ -33,4 +33,4 @@ CREATE TABLE IF NOT EXISTS  `transcription_chunks` (
 	FOREIGN KEY (`job_id`) REFERENCES `transcription_jobs`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE INDEX `transcription_chunks_job_chunk_idx` ON `transcription_chunks` (`job_id`,`chunk_index`);
+CREATE INDEX IF NOT EXISTS `transcription_chunks_job_chunk_idx` ON `transcription_chunks` (`job_id`,`chunk_index`);

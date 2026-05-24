@@ -5,7 +5,7 @@ import type { DraftDocType } from "./types";
 import type { Role } from "../../../db/schema";
 import { embed } from "../embed";
 import { getModelRegistry } from "../../models";
-import { getProvider } from "../../providers";
+import { AiProvider } from "../../providers";
 import { extractText } from "../../utils/extract-text";
 
 interface ATSTags {
@@ -169,7 +169,7 @@ export async function evaluateDraft(opts: {
 }): Promise<DraftEval> {
   const { env, role, docType, draftContent, roleContext, keywordTargets } = opts;
 
-  const provider = await getProvider(env);
+  const provider = new AiProvider(env);
   const model = getModelRegistry(env).analyze;
 
   const keywords = (keywordTargets?.filter(Boolean) ?? []).length

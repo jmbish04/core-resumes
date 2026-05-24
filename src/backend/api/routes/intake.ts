@@ -9,10 +9,9 @@ import {
   type ScrapeResult as DomScrapeResult,
   type ScrapedPage,
 } from "../../ai/tools/browser-rendering";
-import { HYBRID_SCRAPE_SELECTORS } from "../../ai/tools/role/html-bullet-parser";
-import { GoogleDocsClient } from "../../ai/tools/google/docs";
 import { GoogleDriveClient } from "../../ai/tools/google/drive";
 import { parseGreenhouseUrl, scrapeGreenhouseJob } from "../../ai/tools/greenhouse";
+import { HYBRID_SCRAPE_SELECTORS } from "../../ai/tools/role/html-bullet-parser";
 import { getDb } from "../../db";
 import {
   companies,
@@ -422,7 +421,7 @@ intakeRouter.openapi(
     let folderId: string | null = null;
     const { Logger } = await import("@/backend/lib/logger");
     const logger = new Logger(c.env);
-    
+
     try {
       const folder = await new GoogleDriveClient(c.env).createFolder(
         `${body.companyName} - ${body.jobTitle}`,
@@ -430,7 +429,9 @@ intakeRouter.openapi(
       );
       folderId = folder.id;
     } catch (driveError) {
-      await logger.error("Google Drive folder creation failed (non-fatal)", { error: String(driveError) });
+      await logger.error("Google Drive folder creation failed (non-fatal)", {
+        error: String(driveError),
+      });
     }
 
     // Separate transient/extracted fields from core role columns
@@ -560,7 +561,9 @@ intakeRouter.openapi(
         },
       });
     } catch (extractErr) {
-      await logger.error("Orchestrator job_extract enqueue failed (non-fatal)", { error: String(extractErr) });
+      await logger.error("Orchestrator job_extract enqueue failed (non-fatal)", {
+        error: String(extractErr),
+      });
       bgErrors.push({
         taskType: "job_extract_enqueue",
         error: extractErr instanceof Error ? extractErr.message : String(extractErr),
@@ -575,7 +578,9 @@ intakeRouter.openapi(
         payload: { companyId },
       });
     } catch (companyErr) {
-      await logger.error("Orchestrator company_analysis enqueue failed (non-fatal)", { error: String(companyErr) });
+      await logger.error("Orchestrator company_analysis enqueue failed (non-fatal)", {
+        error: String(companyErr),
+      });
       bgErrors.push({
         taskType: "company_analysis_enqueue",
         error: companyErr instanceof Error ? companyErr.message : String(companyErr),
@@ -594,7 +599,9 @@ intakeRouter.openapi(
         },
       });
     } catch (wfErr) {
-      await logger.error("Orchestrator role_assets enqueue failed (non-fatal)", { error: String(wfErr) });
+      await logger.error("Orchestrator role_assets enqueue failed (non-fatal)", {
+        error: String(wfErr),
+      });
       bgErrors.push({
         taskType: "role_assets_enqueue",
         error: wfErr instanceof Error ? wfErr.message : String(wfErr),
@@ -627,7 +634,9 @@ intakeRouter.openapi(
             await db.insert(roleBulletsTable).values(chunk);
           }
         } catch (bulletErr) {
-          await logger.error("Role bullet insertion failed (non-fatal)", { error: String(bulletErr) });
+          await logger.error("Role bullet insertion failed (non-fatal)", {
+            error: String(bulletErr),
+          });
         }
       }
     }
@@ -648,7 +657,9 @@ intakeRouter.openapi(
           })
           .where(eq(roles.id, role.id));
       } catch (metaErr) {
-        await logger.error("Failed to persist background errors to role metadata", { error: String(metaErr) });
+        await logger.error("Failed to persist background errors to role metadata", {
+          error: String(metaErr),
+        });
       }
     }
 

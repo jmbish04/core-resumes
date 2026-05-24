@@ -14,6 +14,6 @@ CREATE TABLE IF NOT EXISTS  `resume_bullets` (
 	`updated_at` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE INDEX `resume_bullets_active_idx` ON `resume_bullets` (`is_active`);--> statement-breakpoint
-CREATE INDEX `resume_bullets_category_idx` ON `resume_bullets` (`category`);--> statement-breakpoint
-CREATE INDEX `resume_bullets_replaced_by_idx` ON `resume_bullets` (`replaced_by`);
+CREATE INDEX IF NOT EXISTS `resume_bullets_active_idx` ON `resume_bullets` (`is_active`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `resume_bullets_category_idx` ON `resume_bullets` (`category`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `resume_bullets_replaced_by_idx` ON `resume_bullets` (`replaced_by`);

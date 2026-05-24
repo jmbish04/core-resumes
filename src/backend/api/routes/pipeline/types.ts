@@ -44,6 +44,8 @@ export const syncApiCompaniesBody = z.object({
       token: z.string(),
       system: z.string(),
       source: z.string(),
+      isRecommended: z.boolean().optional().default(false),
+      recommendationReason: z.string().optional().nullable(),
     }),
   ),
 });

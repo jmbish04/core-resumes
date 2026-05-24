@@ -83,7 +83,10 @@ const STATUS_COLORS: Record<string, string> = {
   archived: "text-zinc-500 bg-zinc-500/10 border-zinc-500/30",
 };
 
-const TRIGGER_META: Record<string, { icon: React.ComponentType<{ className?: string }>; label: string; color: string }> = {
+const TRIGGER_META: Record<
+  string,
+  { icon: React.ComponentType<{ className?: string }>; label: string; color: string }
+> = {
   user: { icon: User, label: "Manual", color: "text-blue-400 bg-blue-500/10" },
   agent: { icon: Bot, label: "Agent", color: "text-violet-400 bg-violet-500/10" },
   email_inference: { icon: Mail, label: "Email AI", color: "text-amber-400 bg-amber-500/10" },
@@ -151,10 +154,7 @@ export function RoleStatusLog({ roleId }: { roleId: string }) {
       createdAt: e.createdAt,
       data: e,
     })),
-  ].sort(
-    (a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   if (mergedEntries.length === 0) {
     return (
@@ -180,13 +180,9 @@ export function RoleStatusLog({ roleId }: { roleId: string }) {
             <div className="space-y-3">
               {mergedEntries.map((entry) => {
                 if (entry.type === "status") {
-                  return (
-                    <StatusLogItem key={entry.id} entry={entry.data as StatusLogEntry} />
-                  );
+                  return <StatusLogItem key={entry.id} entry={entry.data as StatusLogEntry} />;
                 }
-                return (
-                  <ActivityLogItem key={entry.id} entry={entry.data as ActivityLogEntry} />
-                );
+                return <ActivityLogItem key={entry.id} entry={entry.data as ActivityLogEntry} />;
               })}
             </div>
           </div>
@@ -208,9 +204,7 @@ function StatusLogItem({ entry }: { entry: StatusLogEntry }) {
   const prevLabel = entry.previousStatus
     ? entry.previousStatus.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
     : "—";
-  const newLabel = entry.newStatus
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  const newLabel = entry.newStatus.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
   return (
     <div className="relative flex items-start gap-3 pl-[6px]">

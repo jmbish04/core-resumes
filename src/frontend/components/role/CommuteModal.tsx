@@ -1,10 +1,16 @@
 "use client";
 
-import { useState, useMemo } from "react";
 import { Clock, Train, Car, Bus, BrainCircuit, ChevronUp, ChevronDown } from "lucide-react";
+import { useState, useMemo } from "react";
 import { CartesianGrid, Legend, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import { Button } from "@/components/ui/button";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Table,
@@ -14,12 +20,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -38,13 +38,15 @@ type CommuteRow = {
 
 const MODE_CONFIG: Record<string, { icon: typeof Train; color: string; chartVar: string }> = {
   "BART + Walk": { icon: Train, color: "text-emerald-500", chartVar: "var(--chart-1)" },
-  "Driving": { icon: Car, color: "text-violet-500", chartVar: "var(--chart-2)" },
+  Driving: { icon: Car, color: "text-violet-500", chartVar: "var(--chart-2)" },
   // "Driving": { icon: Car, color: "text-violet-500", chartVar: "var(--chart-2)" },
   "Muni + Walk": { icon: Bus, color: "text-amber-500", chartVar: "var(--chart-3)" },
 };
 
 function getModeConfig(mode: string) {
-  return MODE_CONFIG[mode] ?? { icon: Bus, color: "text-muted-foreground", chartVar: "var(--chart-4)" };
+  return (
+    MODE_CONFIG[mode] ?? { icon: Bus, color: "text-muted-foreground", chartVar: "var(--chart-4)" }
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -120,9 +122,7 @@ export function CommuteModal({ commuteData }: { commuteData: CommuteRow[] }) {
       .map((time) => {
         const point: Record<string, string | number | null> = { time };
         modes.forEach((mode) => {
-          const match = commuteData.find(
-            (x) => x.mode === mode && x.departureTime === time,
-          );
+          const match = commuteData.find((x) => x.mode === mode && x.departureTime === time);
           point[mode] = match?.durationMinutes ?? null;
         });
         return point;
@@ -136,9 +136,7 @@ export function CommuteModal({ commuteData }: { commuteData: CommuteRow[] }) {
       .map((time) => {
         const point: Record<string, string | number | null> = { time };
         modes.forEach((mode) => {
-          const match = commuteData.find(
-            (x) => x.mode === mode && x.departureTime === time,
-          );
+          const match = commuteData.find((x) => x.mode === mode && x.departureTime === time);
           point[mode] = match?.durationMinutes ?? null;
         });
         return point;
@@ -189,19 +187,14 @@ export function CommuteModal({ commuteData }: { commuteData: CommuteRow[] }) {
                 typeof value === "string" ? value.replace(/:00\s/, " ") : value
               }
             />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) => `${value}m`}
-            />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent />}
-            />
+            <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `${value}m`} />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
             <Legend
               verticalAlign="bottom"
               height={36}
-              formatter={(value: string) => <span className="text-sm text-muted-foreground">{value}</span>}
+              formatter={(value: string) => (
+                <span className="text-sm text-muted-foreground">{value}</span>
+              )}
             />
             {modes.map((mode, index) => (
               <Line
@@ -223,6 +216,12 @@ export function CommuteModal({ commuteData }: { commuteData: CommuteRow[] }) {
 
   return (
     <div className="mt-4">
+      {/* ---- Charts (Now Inline) ---- */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+        {renderLineChart(morningData, "Morning Commute Duration", "7 AM – 10 AM")}
+        {renderLineChart(eveningData, "Evening Commute Duration", "3 PM – 6 PM")}
+      </div>
+
       {/* ---- Summary Table (always visible) ---- */}
       <h4 className="text-sm font-semibold mb-3">Commute Options</h4>
       <div className="overflow-x-auto rounded-md border">
@@ -251,11 +250,7 @@ export function CommuteModal({ commuteData }: { commuteData: CommuteRow[] }) {
                   <TableCell>{stat.min != null ? `${stat.min}m` : "—"}</TableCell>
                   <TableCell>{stat.mean != null ? `${stat.mean}m` : "—"}</TableCell>
                   <TableCell
-                    className={
-                      stat.max != null && stat.max >= 60
-                        ? "text-red-400 font-medium"
-                        : ""
-                    }
+                    className={stat.max != null && stat.max >= 60 ? "text-red-400 font-medium" : ""}
                   >
                     {stat.max != null ? `${stat.max}m` : "—"}
                   </TableCell>
@@ -272,7 +267,7 @@ export function CommuteModal({ commuteData }: { commuteData: CommuteRow[] }) {
       {/* ---- Open Modal Button ---- */}
       <Button variant="outline" className="w-full mt-3" onClick={() => setOpen(true)}>
         <Clock className="size-4 mr-2" />
-        View Commute Details
+        Deep Dive: Departure Time Breakdown
       </Button>
 
       {/* ---- Detail Modal ---- */}
@@ -286,18 +281,10 @@ export function CommuteModal({ commuteData }: { commuteData: CommuteRow[] }) {
             <div className="flex items-center gap-3">
               <Clock className="size-5 text-muted-foreground" />
               <DialogTitle className="text-xl font-semibold tracking-tight">
-                Commute Analysis Details
+                Departure Time Breakdown
               </DialogTitle>
             </div>
           </DialogHeader>
-
-          {/* Charts — side by side on xl, stacked on mobile */}
-          <div className="p-6">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              {renderLineChart(morningData, "Morning Commute Duration", "7 AM – 10 AM")}
-              {renderLineChart(eveningData, "Evening Commute Duration", "3 PM – 6 PM")}
-            </div>
-          </div>
 
           {/* Pivot Table — Mode × Departure Time (duration only, no cost) */}
           <div className="px-6 pb-6">
@@ -334,9 +321,7 @@ export function CommuteModal({ commuteData }: { commuteData: CommuteRow[] }) {
                           );
                           return (
                             <TableCell key={t} className="text-right">
-                              {match?.durationMinutes != null
-                                ? `${match.durationMinutes}m`
-                                : "—"}
+                              {match?.durationMinutes != null ? `${match.durationMinutes}m` : "—"}
                             </TableCell>
                           );
                         })}
@@ -355,19 +340,20 @@ export function CommuteModal({ commuteData }: { commuteData: CommuteRow[] }) {
                 <BrainCircuit className="size-5 text-primary" />
               </div>
               <div className="flex-1">
-                <div
-                  className="flex items-center justify-between cursor-pointer group"
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between cursor-pointer group"
                   onClick={() => setIsInsightExpanded(!isInsightExpanded)}
                 >
                   <h4 className="font-semibold">AI Assessment: Commute Feasibility</h4>
-                  <button className="text-muted-foreground group-hover:text-foreground transition-colors bg-muted/50 p-1 rounded-md">
+                  <span className="text-muted-foreground group-hover:text-foreground transition-colors bg-muted/50 p-1 rounded-md">
                     {isInsightExpanded ? (
                       <ChevronUp className="size-4" />
                     ) : (
                       <ChevronDown className="size-4" />
                     )}
-                  </button>
-                </div>
+                  </span>
+                </button>
 
                 {/* Always-visible headline */}
                 <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
@@ -396,7 +382,8 @@ export function CommuteModal({ commuteData }: { commuteData: CommuteRow[] }) {
                           {stat.min === stat.max
                             ? `Consistent ${stat.min}m commute regardless of departure time.`
                             : `Ranges from ${stat.min}m to ${stat.max}m depending on departure time (avg ${stat.mean}m).`}
-                          {stat.cost != null && ` Estimated monthly cost: $${stat.cost.toLocaleString()}.`}
+                          {stat.cost != null &&
+                            ` Estimated monthly cost: $${stat.cost.toLocaleString()}.`}
                         </p>
                       );
                     })}

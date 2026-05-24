@@ -1,7 +1,7 @@
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
-import { roles } from "./roles";
+import { roles } from "../applications/roles";
 
 // ---------------------------------------------------------------------------
 // Table & column documentation (consumed by /api/docs/schema)
@@ -18,14 +18,11 @@ export const NOTEBOOKLM_PODCAST_TRANSCRIPT_COLUMN_DESCRIPTIONS: Record<string, s
   notebooklm_msg_id:
     "D1 identifier linking to the message/prompt that initiated the podcast creation in NotebookLM.",
   podcast_id: "Foreign key to the role_podcasts entry this transcript was generated from.",
-  line_order:
-    "Sequential line number (0-indexed) for deterministic ordering of transcript lines.",
-  speaker_name:
-    "Name of the speaker for this transcript segment (e.g., 'Host', 'Guest').",
+  line_order: "Sequential line number (0-indexed) for deterministic ordering of transcript lines.",
+  speaker_name: "Name of the speaker for this transcript segment (e.g., 'Host', 'Guest').",
   speaker_usec_start:
     "Microsecond timestamp marking when the speaker started this segment. Used for ordering and playback sync.",
-  speaker_usec_stop:
-    "Microsecond timestamp marking when the speaker stopped this segment.",
+  speaker_usec_stop: "Microsecond timestamp marking when the speaker stopped this segment.",
   speaker_message: "The verbatim text of what the speaker said during this segment.",
   created_at: "Unix timestamp (seconds) of when this transcript line was inserted.",
 };

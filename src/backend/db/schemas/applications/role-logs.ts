@@ -15,10 +15,13 @@ export const ROLE_LOGS_TABLE_DESCRIPTION =
 export const ROLE_LOGS_COLUMN_DESCRIPTIONS: Record<string, string> = {
   id: "UUID primary key for each log entry.",
   role_id: "Optional FK to roles.id. Null for global events not scoped to a specific role.",
-  category: "Event category for grouping and badge coloring: agentic, user_action, email, notebooklm, document, system.",
-  action: "Machine-readable action identifier (e.g. 'resume_generated', 'email_received', 'interview_scheduled').",
+  category:
+    "Event category for grouping and badge coloring: agentic, user_action, email, notebooklm, document, system.",
+  action:
+    "Machine-readable action identifier (e.g. 'resume_generated', 'email_received', 'interview_scheduled').",
   message: "Human-readable log message displayed in the frontend timeline.",
-  metadata: "JSON blob for structured context: task IDs, document IDs, email subjects, confidence scores, etc.",
+  metadata:
+    "JSON blob for structured context: task IDs, document IDs, email subjects, confidence scores, etc.",
   created_at: "Unix timestamp (seconds) of when this event occurred.",
 };
 

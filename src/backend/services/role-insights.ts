@@ -10,11 +10,10 @@
 import { desc, eq, and } from "drizzle-orm";
 import { z } from "zod";
 
-import type { RoleInsightType, RoleInsight } from "@/backend/db/schemas/role-insights";
+import type { RoleInsightType, RoleInsight } from "@/backend/db/schemas/applications/role-insights";
 
-import { generateStructuredOutput } from "@/backend/ai/providers";
-import { kimi_k2_5 } from "@/backend/ai/models/kimi-k2.5";
 import { runLocationAnalysisAgents } from "@/ai/tasks/analyze/location";
+import { getModelRegistry } from "@/backend/ai/models";
 import { getDb } from "@/backend/db";
 import {
   globalConfig,
@@ -232,7 +231,8 @@ export class RoleInsightsService {
         const openRoute = new OpenRouteService(env);
         const summary = await openRoute.getCommuteSummary(homeAddress, location);
         if (summary.success) {
-          const sourceLabel = summary.source === "google_maps" ? "Google Maps API (fallback)" : "OpenRoute API";
+          const sourceLabel =
+            summary.source === "google_maps" ? "Google Maps API (fallback)" : "OpenRoute API";
           commuteFactualData = `${sourceLabel} Driving Data: ${summary.distanceMiles.toFixed(1)} miles, ${summary.durationMinutes} minutes each way.`;
         } else {
           console.warn("OpenRoute commute summary failed:", summary.error);
@@ -345,7 +345,9 @@ export class RoleInsightsService {
       future_promotion_path: z
         .number()
         .nullable()
-        .describe("Estimated compensation for the next promotion level, computed as roughly 15-20% above the advertised max. Output as raw number (e.g., 280000)."),
+        .describe(
+          "Estimated compensation for the next promotion level, computed as roughly 15-20% above the advertised max. Output as raw number (e.g., 280000).",
+        ),
     });
 
     const baselineText = compensationBaseline
@@ -372,7 +374,8 @@ You must respond with a valid JSON object matching the requested schema. DO NOT 
 Salary Range: ${role.salaryMin ? `$${role.salaryMin.toLocaleString()}` : "Not disclosed"} – ${role.salaryMax ? `$${role.salaryMax.toLocaleString()}` : "Not disclosed"}
 Currency: ${role.salaryCurrency ?? "USD"}`;
 
-    let result = await generateStructuredOutput(env, {
+    const { AiProvider } = await import("@/backend/ai/providers/index");
+    let result = await new AiProvider(env).generateStructuredOutput({
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
@@ -381,7 +384,7 @@ Currency: ${role.salaryCurrency ?? "USD"}`;
       schemaName: "CompensationInsight",
       temperature: 0,
       max_tokens: 8096,
-      model: kimi_k2_5,
+      model: getModelRegistry(env).analyze,
     });
 
     // ---------------------------------------------------------------------------
@@ -400,8 +403,6 @@ Currency: ${role.salaryCurrency ?? "USD"}`;
       );
 
       try {
-        const { gpt_oss_120b } = await import("@/backend/ai/models/gpt-oss-120b");
-
         const retrySystemPrompt = `${systemPrompt}
 
 <RETRY_CONTEXT>
@@ -423,7 +424,8 @@ You MUST provide non-null values for ALL of these fields:
 If salary data is "Not disclosed", estimate based on market data for the role title and company, and note the estimate in your rationale.
 </STRICT_COMPLETENESS_REQUIREMENT>`;
 
-        const retryResult = await generateStructuredOutput(env, {
+        const { AiProvider } = await import("@/backend/ai/providers/index");
+        const retryResult = await new AiProvider(env).generateStructuredOutput({
           messages: [
             { role: "system", content: retrySystemPrompt },
             { role: "user", content: userPrompt },
@@ -432,7 +434,7 @@ If salary data is "Not disclosed", estimate based on market data for the role ti
           schemaName: "CompensationInsight",
           temperature: 0.1,
           max_tokens: 8096,
-          model: kimi_k2_5,
+          model: getModelRegistry(env).analyze,
         });
 
         // Merge: prefer retry values for fields that were null, keep originals otherwise
@@ -446,7 +448,10 @@ If salary data is "Not disclosed", estimate based on market data for the role ti
           future_promotion_path: retryResult.future_promotion_path ?? result.future_promotion_path,
         };
 
-        const stillMissing = missingFields.filter((f) => result[f as keyof typeof result] == null || result[f as keyof typeof result] === "");
+        const stillMissing = missingFields.filter(
+          (f) =>
+            result[f as keyof typeof result] == null || result[f as keyof typeof result] === "",
+        );
         if (stillMissing.length > 0) {
           console.warn(`[CompensationInsight] Retry still missing: ${stillMissing.join(", ")}`);
         } else {
@@ -555,9 +560,10 @@ You must respond with a valid JSON object matching the requested schema. DO NOT 
     const userPrompt = `Role: ${role.jobTitle} at ${role.companyName}
 Synthesize the location and compensation analyses into a single value assessment.`;
 
+    const { AiProvider } = await import("@/backend/ai/providers/index");
     let result: { score: number; rationale: string };
     try {
-      result = await generateStructuredOutput(env, {
+      result = await new AiProvider(env).generateStructuredOutput({
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -566,7 +572,7 @@ Synthesize the location and compensation analyses into a single value assessment
         schemaName: "CombinedInsight",
         temperature: 0,
         max_tokens: 8096,
-        model: kimi_k2_5,
+        model: getModelRegistry(env).analyze,
       });
     } catch (err) {
       console.error("[CombinedInsight] AI failed to produce valid score:", err);
@@ -616,14 +622,18 @@ Synthesize the location and compensation analyses into a single value assessment
   ) {
     // ─── Try multi-agent pipeline first ─────────────────────────────────
     try {
-      console.log("[executeLocationAI] Attempting multi-agent pipeline (CommuteAgent + LocationAnalystAgent)");
+      console.log(
+        "[executeLocationAI] Attempting multi-agent pipeline (CommuteAgent + LocationAnalystAgent)",
+      );
       const result = await runLocationAnalysisAgents(env, {
         roleData,
         locationData,
         commuteFactualData,
         rubrics,
       });
-      console.log(`[executeLocationAI] Multi-agent pipeline succeeded — score: ${result.score}, rows: ${result.commute_table.length}`);
+      console.log(
+        `[executeLocationAI] Multi-agent pipeline succeeded — score: ${result.score}, rows: ${result.commute_table.length}`,
+      );
       return result;
     } catch (agentError) {
       console.warn(
@@ -642,11 +652,23 @@ Synthesize the location and compensation analyses into a single value assessment
       rationale: z.string().describe("Detailed rationale for the location score"),
       commute_table: z.array(
         z.object({
-          direction: z.enum(["to_office", "to_home"]).describe("Whether commuting to office or back home"),
+          direction: z
+            .enum(["to_office", "to_home"])
+            .describe("Whether commuting to office or back home"),
           departure_time: z.string().describe("Departure time, e.g. '8:30 AM', '5:00 PM'"),
-          mode: z.string().describe("Transportation mode, e.g. 'Driving (Tesla Model 3)', 'BART + Walk', 'Muni + Walk'"),
-          duration_minutes: z.number().nullable().describe("Estimated door-to-door commute duration in minutes"),
-          monthly_cost: z.number().nullable().describe("Estimated monthly cost for this commute mode at full-time frequency"),
+          mode: z
+            .string()
+            .describe(
+              "Transportation mode, e.g. 'Driving (Tesla Model 3)', 'BART + Walk', 'Muni + Walk'",
+            ),
+          duration_minutes: z
+            .number()
+            .nullable()
+            .describe("Estimated door-to-door commute duration in minutes"),
+          monthly_cost: z
+            .number()
+            .nullable()
+            .describe("Estimated monthly cost for this commute mode at full-time frequency"),
         }),
       ),
       workplace_assessment: z.string().describe("Assessment of WFH/hybrid/onsite fit"),
@@ -694,7 +716,8 @@ Factual Commute Data: ${commuteFactualData}
 
 Provide a comprehensive location analysis with the commute table covering all requested departure times and transportation modes.`;
 
-    return await generateStructuredOutput(env, {
+    const { AiProvider } = await import("@/backend/ai/providers/index");
+    return await new AiProvider(env).generateStructuredOutput({
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
@@ -703,7 +726,7 @@ Provide a comprehensive location analysis with the commute table covering all re
       schemaName: "LocationInsight",
       temperature: 0,
       max_tokens: 8096,
-      model: kimi_k2_5,
+      model: getModelRegistry(env).analyze,
     });
   }
 }

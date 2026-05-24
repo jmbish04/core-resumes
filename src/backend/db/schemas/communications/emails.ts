@@ -1,7 +1,7 @@
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
-import { roles } from "./roles";
+import { roles } from "../applications/roles";
 
 // ---------------------------------------------------------------------------
 // Table & column documentation (consumed by /api/docs/schema)
@@ -35,8 +35,10 @@ export const EMAILS_COLUMN_DESCRIPTIONS: Record<string, string> = {
   classification_json:
     "Full AI classification output including intent, confidence, company/person extraction, and suggested next action.",
   draft_reply: "AI-generated draft reply text, shown alongside the email in the UI.",
-  ai_role_match_confidence: "AI confidence score (integer) representing how strongly this email maps to the associated role.",
-  ai_role_match_rationale: "AI reasoning for why it associated (or failed to associate) the email with a role.",
+  ai_role_match_confidence:
+    "AI confidence score (integer) representing how strongly this email maps to the associated role.",
+  ai_role_match_rationale:
+    "AI reasoning for why it associated (or failed to associate) the email with a role.",
   processed_status:
     "Email lifecycle status. One of: pending, associated, unmatched, responded, ignored, action_taken.",
   received_at: "Unix timestamp (seconds) of when the email was received by the Worker.",

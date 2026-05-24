@@ -31,6 +31,10 @@ export default defineConfig({
         "RoleAssetsWorkflow",
         "RoleAnalysisWorkflow",
         "Sandbox",
+        "JobScannerAgent",
+        "JobAnalysisAgent",
+        "SyncBroadcastAgent",
+        "RoleChatAgent",
       ],
     },
   }),
@@ -44,8 +48,14 @@ export default defineConfig({
           find: "@/backend",
           replacement: fileURLToPath(new URL("./src/backend", import.meta.url)),
         },
-        { find: "@/db", replacement: fileURLToPath(new URL("./src/backend/db", import.meta.url)) },
-        { find: "@/ai", replacement: fileURLToPath(new URL("./src/backend/ai", import.meta.url)) },
+        {
+          find: "@/db",
+          replacement: fileURLToPath(new URL("./src/backend/db", import.meta.url)),
+        },
+        {
+          find: "@/ai",
+          replacement: fileURLToPath(new URL("./src/backend/ai", import.meta.url)),
+        },
         {
           find: "@/utils",
           replacement: fileURLToPath(new URL("./src/backend/utils", import.meta.url)),
@@ -71,7 +81,10 @@ export default defineConfig({
           replacement: fileURLToPath(new URL("./src/backend/health", import.meta.url)),
         },
         // General @ prefix — maps to frontend (must be last)
-        { find: "@", replacement: fileURLToPath(new URL("./src/frontend", import.meta.url)) },
+        {
+          find: "@",
+          replacement: fileURLToPath(new URL("./src/frontend", import.meta.url)),
+        },
         // Library shims
         { find: "playwright", replacement: "@cloudflare/playwright" },
       ],

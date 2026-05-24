@@ -12,7 +12,7 @@
 
 import { z } from "zod";
 
-import { generateStructuredOutput } from "../../providers";
+import { AiProvider } from "../../providers";
 
 // ---------------------------------------------------------------------------
 // Schema — ATS extraction output
@@ -21,34 +21,20 @@ import { generateStructuredOutput } from "../../providers";
 export const ATSExtractionSchema = z.object({
   programmingLanguagesAndFrameworks: z
     .array(z.string())
-    .describe(
-      "Extract BOTH languages AND frameworks as separate atomic entries.",
-    ),
+    .describe("Extract BOTH languages AND frameworks as separate atomic entries."),
   testingAndQuality: z
     .array(z.string())
-    .describe(
-      "Testing frameworks, methodologies, and quality practices.",
-    ),
+    .describe("Testing frameworks, methodologies, and quality practices."),
   engineeringPractices: z
     .array(z.string())
-    .describe(
-      "Software engineering principles and architectural patterns.",
-    ),
-  businessDomain: z
-    .array(z.string())
-    .describe(
-      "Industry verticals and business model tags.",
-    ),
+    .describe("Software engineering principles and architectural patterns."),
+  businessDomain: z.array(z.string()).describe("Industry verticals and business model tags."),
   infrastructureAndDevOps: z
     .array(z.string())
-    .describe(
-      "Cloud, infrastructure, and DevOps tooling.",
-    ),
+    .describe("Cloud, infrastructure, and DevOps tooling."),
   impliedSkills: z
     .array(z.string())
-    .describe(
-      "Skills inferred from contextual phrasing. E.g., 'high traffic' → 'scalability'.",
-    ),
+    .describe("Skills inferred from contextual phrasing. E.g., 'high traffic' → 'scalability'."),
 });
 
 export type ATSExtraction = z.infer<typeof ATSExtractionSchema>;
@@ -71,9 +57,7 @@ export const ATSScoreResultSchema = z.object({
         missing: z.string().describe("The missing keyword from the job posting."),
         suggestion: z
           .string()
-          .describe(
-            "A synonym or alternative phrasing the candidate could add to their resume.",
-          ),
+          .describe("A synonym or alternative phrasing the candidate could add to their resume."),
       }),
     )
     .describe("Actionable synonym suggestions for missing keywords."),
@@ -144,7 +128,7 @@ export async function scoreATSAlignment(
   jobDescription: string,
   resumeText: string,
 ): Promise<ATSScoreResult> {
-  return generateStructuredOutput(env, {
+  return new AiProvider(env).generateStructuredOutput({
     messages: [
       {
         role: "system",
@@ -176,11 +160,8 @@ ${resumeText}`,
  * Used during job intake to pre-populate the taxonomy tags before the
  * candidate has linked a resume document.
  */
-export async function extractATSKeywords(
-  env: Env,
-  jobDescription: string,
-): Promise<ATSExtraction> {
-  return generateStructuredOutput(env, {
+export async function extractATSKeywords(env: Env, jobDescription: string): Promise<ATSExtraction> {
+  return new AiProvider(env).generateStructuredOutput({
     messages: [
       {
         role: "system",

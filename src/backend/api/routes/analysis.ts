@@ -19,7 +19,7 @@ import { enqueueOrchestratorTask } from "../../ai/agents/orchestrator";
 import { scoreATSAlignment, extractATSKeywords } from "../../ai/tasks/analyze/ats-score";
 import { GoogleDocsClient } from "../../ai/tools/google/docs";
 import { getDb } from "../../db";
-import { mockInterviews, roleAlignmentScores, roleAnalyses, roleBullets, roles } from "../../db/schema";
+import { mockInterviews, roleAlignmentScores, roleAnalyses, roles } from "../../db/schema";
 import { CareerMemoryService } from "../../services/career-memory";
 
 // ---------------------------------------------------------------------------
@@ -280,7 +280,6 @@ analysisRouter.post("/:roleId/analysis/clarify-and-reprocess", async (c) => {
   return c.json({ status: "queued", taskId: task.id }, 202);
 });
 
-
 // ---------------------------------------------------------------------------
 // POST /:roleId/comments/respond — trigger automated comment responses
 // ---------------------------------------------------------------------------
@@ -399,11 +398,7 @@ analysisRouter.post("/:roleId/ats-score", async (c) => {
   const db = getDb(c.env);
 
   // Load role to get the job description
-  const [role] = await db
-    .select()
-    .from(roles)
-    .where(eq(roles.id, roleId))
-    .limit(1);
+  const [role] = await db.select().from(roles).where(eq(roles.id, roleId)).limit(1);
 
   if (!role) {
     return c.json({ error: "Role not found" }, 404);
@@ -421,7 +416,9 @@ analysisRouter.post("/:roleId/ats-score", async (c) => {
     resumeText = await docsClient.read(body.gdocId);
   } catch (error) {
     return c.json(
-      { error: `Failed to read Google Doc: ${error instanceof Error ? error.message : String(error)}` },
+      {
+        error: `Failed to read Google Doc: ${error instanceof Error ? error.message : String(error)}`,
+      },
       502,
     );
   }
@@ -451,11 +448,7 @@ analysisRouter.post("/:roleId/ats-extract", async (c) => {
   const { roleId } = c.req.param();
   const db = getDb(c.env);
 
-  const [role] = await db
-    .select()
-    .from(roles)
-    .where(eq(roles.id, roleId))
-    .limit(1);
+  const [role] = await db.select().from(roles).where(eq(roles.id, roleId)).limit(1);
 
   if (!role) {
     return c.json({ error: "Role not found" }, 404);

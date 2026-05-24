@@ -17,9 +17,12 @@ export const ROLE_STATUS_LOG_COLUMN_DESCRIPTIONS: Record<string, string> = {
   role_id: "FK to roles.id — the role whose status changed.",
   previous_status: "The status before this transition. Null for the initial status assignment.",
   new_status: "The status after this transition.",
-  trigger: "What caused the transition: 'user' (manual dropdown), 'agent' (orchestrator action), 'email_inference' (AI email classification), or 'system' (automated pipeline).",
-  notes: "Optional rich-text notes (TipTap HTML) provided during the transition. Used for interview notes, offer details, withdrawal reasons, etc.",
-  metadata: "JSON blob for extra context: email ID, task ID, confidence score, or other structured data related to the transition.",
+  trigger:
+    "What caused the transition: 'user' (manual dropdown), 'agent' (orchestrator action), 'email_inference' (AI email classification), or 'system' (automated pipeline).",
+  notes:
+    "Optional rich-text notes (TipTap HTML) provided during the transition. Used for interview notes, offer details, withdrawal reasons, etc.",
+  metadata:
+    "JSON blob for extra context: email ID, task ID, confidence score, or other structured data related to the transition.",
   created_at: "Unix timestamp (seconds) of when this transition occurred.",
 };
 

@@ -73,7 +73,10 @@ ${errorBlocks}
 Please fix all errors above so the role can be reprocessed successfully.`;
 
     await navigator.clipboard.writeText(prompt);
-    toast({ title: "Copied", description: "Error prompt copied to clipboard — paste into your coding agent." });
+    toast({
+      title: "Copied",
+      description: "Error prompt copied to clipboard — paste into your coding agent.",
+    });
   }
 
   if (errors.length === 0) return null;
@@ -84,21 +87,14 @@ Please fix all errors above so the role can be reprocessed successfully.`;
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertTriangle className="size-5 text-destructive" />
-            <CardTitle className="text-destructive">
-              Processing Errors ({errors.length})
-            </CardTitle>
+            <CardTitle className="text-destructive">Processing Errors ({errors.length})</CardTitle>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="gap-1.5" onClick={copyAll}>
               <Clipboard className="size-3.5" />
               Copy All
             </Button>
-            <Button
-              size="sm"
-              className="gap-1.5"
-              onClick={handleReprocess}
-              disabled={reprocessing}
-            >
+            <Button size="sm" className="gap-1.5" onClick={handleReprocess} disabled={reprocessing}>
               <RefreshCw className={`size-3.5 ${reprocessing ? "animate-spin" : ""}`} />
               {reprocessing ? "Reprocessing…" : "Reprocess Role"}
             </Button>

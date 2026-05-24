@@ -3,14 +3,7 @@
  * roles. Shows stats cards at the top and the reusable EmailInbox widget below.
  */
 
-import {
-  AlertTriangle,
-  Bot,
-  Inbox,
-  Link2,
-  Loader2,
-  MailOpen,
-} from "lucide-react";
+import { AlertTriangle, Bot, Inbox, Link2, MailOpen } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,7 +51,8 @@ export function EmailsPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Emails</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          All inbound recruiting emails. Associate orphaned emails with roles or triage unmatched messages.
+          All inbound recruiting emails. Associate orphaned emails with roles or triage unmatched
+          messages.
         </p>
       </div>
 

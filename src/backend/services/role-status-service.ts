@@ -9,9 +9,10 @@
 
 import { desc, eq } from "drizzle-orm";
 
+import type { RoleStatusLogRow, StatusRow } from "../db/schema";
+
 import { getDb } from "../db";
 import { roles, roleStatusLog, statuses } from "../db/schema";
-import type { RoleStatusLogRow, StatusRow } from "../db/schema";
 
 // ---------------------------------------------------------------------------
 // Types

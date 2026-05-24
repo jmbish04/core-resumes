@@ -40,9 +40,7 @@ export function MarkdownText({ text }: { text: string }) {
               );
             }
             return (
-              <code className="bg-muted/50 rounded px-1 py-0.5 text-xs font-mono">
-                {children}
-              </code>
+              <code className="bg-muted/50 rounded px-1 py-0.5 text-xs font-mono">{children}</code>
             );
           },
           pre: ({ children }) => <pre className="my-2">{children}</pre>,
@@ -65,9 +63,7 @@ export function MarkdownText({ text }: { text: string }) {
               {children}
             </th>
           ),
-          td: ({ children }) => (
-            <td className="border border-border px-2 py-1">{children}</td>
-          ),
+          td: ({ children }) => <td className="border border-border px-2 py-1">{children}</td>,
         }}
       >
         {text}

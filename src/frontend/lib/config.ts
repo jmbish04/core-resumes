@@ -38,6 +38,8 @@ export type SiteConfig = {
     href: string;
     /** Display label. */
     label: string;
+    /** Optional Lucide icon string identifier. */
+    icon?: string;
     /** If true, opens in a new tab with `rel="noreferrer"`. */
     external?: boolean;
   }[];
@@ -60,16 +62,18 @@ export const siteConfig: SiteConfig = {
     github: "https://github.com/jmbish04/core-resumes",
   },
   navItems: [
-    { href: "/", label: "Dashboard" },
-    { href: "/roles", label: "Roles" },
-    { href: "/emails", label: "Emails" },
-    { href: "/notebook", label: "Notebook" },
-    { href: "/memory", label: "Memory" },
-    { href: "/config", label: "Config" },
-    { href: "/health", label: "Health" },
-    { href: "/docs", label: "Docs" },
-    { href: "/openapi.json", label: "OpenAPI" },
-    { href: "/scalar", label: "Scalar" },
-    { href: "/swagger", label: "Swagger" },
+    { href: "/", label: "Dashboard", icon: "LayoutDashboard" },
+    { href: "/companies", label: "Companies", icon: "Building2" },
+    { href: "/roles", label: "Roles", icon: "BriefcaseBusiness" },
+    { href: "/emails", label: "Emails", icon: "Mail" },
+    { href: "/pipeline", label: "Pipeline", icon: "RefreshCw" },
+    { href: "/notebook", label: "Notebook", icon: "BookOpen" },
+    { href: "/memory", label: "Memory", icon: "Brain" },
+    { href: "/config", label: "Config", icon: "Settings" },
+    { href: "/health", label: "Health", icon: "Activity" },
+    { href: "/docs", label: "Docs", icon: "ScrollText" },
+    { href: "/openapi.json", label: "OpenAPI", icon: "FileJson" },
+    { href: "/scalar", label: "Scalar", icon: "BarChart3" },
+    { href: "/swagger", label: "Swagger", icon: "Sparkles" },
   ],
 };

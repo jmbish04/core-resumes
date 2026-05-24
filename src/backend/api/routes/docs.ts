@@ -14,91 +14,100 @@ import { OrchestratorAgent } from "../../ai/agents/orchestrator";
 import {
   DOCUMENTS_TABLE_DESCRIPTION,
   DOCUMENTS_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/documents";
-import { EMAILS_TABLE_DESCRIPTION, EMAILS_COLUMN_DESCRIPTIONS } from "../../db/schemas/emails";
-import {
-  EMAIL_PARTIES_TABLE_DESCRIPTION,
-  EMAIL_PARTIES_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/email-parties";
-import {
-  EMAIL_ATTACHMENTS_TABLE_DESCRIPTION,
-  EMAIL_ATTACHMENTS_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/email-attachments";
-import {
-  GLOBAL_CONFIG_TABLE_DESCRIPTION,
-  GLOBAL_CONFIG_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/global-config";
-import {
-  INTERVIEW_NOTES_TABLE_DESCRIPTION,
-  INTERVIEW_NOTES_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/interview-notes";
-import {
-  INTERVIEW_RECORDINGS_TABLE_DESCRIPTION,
-  INTERVIEW_RECORDINGS_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/interview-recordings";
-import {
-  JOB_FAILURES_TABLE_DESCRIPTION,
-  JOB_FAILURES_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/job-failures";
-import {
-  MESSAGES_TABLE_DESCRIPTION,
-  MESSAGES_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/messages";
-import {
-  RESUME_BULLETS_TABLE_DESCRIPTION,
-  RESUME_BULLETS_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/resume-bullets";
+} from "../../db/schemas/applications/documents";
 import {
   ROLE_BULLET_ANALYSES_TABLE_DESCRIPTION,
   ROLE_BULLET_ANALYSES_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/role-bullet-analyses";
+} from "../../db/schemas/applications/role-bullet-analyses";
 import {
   ROLE_BULLETS_TABLE_DESCRIPTION,
   ROLE_BULLETS_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/role-bullets";
+} from "../../db/schemas/applications/role-bullets";
 // Import table & column descriptions from schema modules
 import {
   ROLE_INSIGHTS_TABLE_DESCRIPTION,
   ROLE_INSIGHTS_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/role-insights";
-import {
-  ROLE_PODCASTS_TABLE_DESCRIPTION,
-  ROLE_PODCASTS_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/role-podcasts";
-import { ROLES_TABLE_DESCRIPTION, ROLES_COLUMN_DESCRIPTIONS } from "../../db/schemas/roles";
-import {
-  SCORING_RUBRICS_TABLE_DESCRIPTION,
-  SCORING_RUBRICS_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/scoring-rubrics";
-import { THREADS_TABLE_DESCRIPTION, THREADS_COLUMN_DESCRIPTIONS } from "../../db/schemas/threads";
-import {
-  TRANSCRIPTION_CHUNKS_TABLE_DESCRIPTION,
-  TRANSCRIPTION_CHUNKS_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/transcription-chunks";
-import {
-  TRANSCRIPTION_JOBS_TABLE_DESCRIPTION,
-  TRANSCRIPTION_JOBS_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/transcription-jobs";
-import {
-  NOTEBOOKLM_BLOBS_TABLE_DESCRIPTION,
-  NOTEBOOKLM_BLOBS_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/notebooklm-blobs";
-import {
-  NOTEBOOKLM_PODCAST_TRANSCRIPT_TABLE_DESCRIPTION,
-  NOTEBOOKLM_PODCAST_TRANSCRIPT_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/notebooklm-podcast-transcript";
-import {
-  STATUSES_TABLE_DESCRIPTION,
-  STATUSES_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/statuses";
-import {
-  ROLE_STATUS_LOG_TABLE_DESCRIPTION,
-  ROLE_STATUS_LOG_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/role-status-log";
+} from "../../db/schemas/applications/role-insights";
 import {
   ROLE_LOGS_TABLE_DESCRIPTION,
   ROLE_LOGS_COLUMN_DESCRIPTIONS,
-} from "../../db/schemas/role-logs";
+} from "../../db/schemas/applications/role-logs";
+import {
+  ROLE_PODCASTS_TABLE_DESCRIPTION,
+  ROLE_PODCASTS_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/applications/role-podcasts";
+import {
+  ROLE_STATUS_LOG_TABLE_DESCRIPTION,
+  ROLE_STATUS_LOG_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/applications/role-status-log";
+import {
+  ROLES_TABLE_DESCRIPTION,
+  ROLES_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/applications/roles";
+import {
+  SCORING_RUBRICS_TABLE_DESCRIPTION,
+  SCORING_RUBRICS_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/applications/scoring-rubrics";
+import {
+  RESUME_BULLETS_TABLE_DESCRIPTION,
+  RESUME_BULLETS_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/career/resume-bullets";
+import {
+  EMAIL_ATTACHMENTS_TABLE_DESCRIPTION,
+  EMAIL_ATTACHMENTS_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/communications/email-attachments";
+import {
+  EMAIL_PARTIES_TABLE_DESCRIPTION,
+  EMAIL_PARTIES_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/communications/email-parties";
+import {
+  EMAILS_TABLE_DESCRIPTION,
+  EMAILS_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/communications/emails";
+import {
+  MESSAGES_TABLE_DESCRIPTION,
+  MESSAGES_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/communications/messages";
+import {
+  THREADS_TABLE_DESCRIPTION,
+  THREADS_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/communications/threads";
+import {
+  INTERVIEW_NOTES_TABLE_DESCRIPTION,
+  INTERVIEW_NOTES_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/interviews/interview-notes";
+import {
+  INTERVIEW_RECORDINGS_TABLE_DESCRIPTION,
+  INTERVIEW_RECORDINGS_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/interviews/interview-recordings";
+import {
+  TRANSCRIPTION_CHUNKS_TABLE_DESCRIPTION,
+  TRANSCRIPTION_CHUNKS_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/interviews/transcription-chunks";
+import {
+  TRANSCRIPTION_JOBS_TABLE_DESCRIPTION,
+  TRANSCRIPTION_JOBS_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/interviews/transcription-jobs";
+import {
+  NOTEBOOKLM_BLOBS_TABLE_DESCRIPTION,
+  NOTEBOOKLM_BLOBS_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/notebooks/notebooklm-blobs";
+import {
+  NOTEBOOKLM_PODCAST_TRANSCRIPT_TABLE_DESCRIPTION,
+  NOTEBOOKLM_PODCAST_TRANSCRIPT_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/notebooks/notebooklm-podcast-transcript";
+import {
+  GLOBAL_CONFIG_TABLE_DESCRIPTION,
+  GLOBAL_CONFIG_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/system/global-config";
+import {
+  JOB_FAILURES_TABLE_DESCRIPTION,
+  JOB_FAILURES_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/system/job-failures";
+import {
+  STATUSES_TABLE_DESCRIPTION,
+  STATUSES_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/system/statuses";
 
 // ---------------------------------------------------------------------------
 // Registry — maps D1 table name → descriptions from schema modules

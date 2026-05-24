@@ -1,36 +1,20 @@
-export * from "./schemas/roles";
-export * from "./schemas/documents";
-export * from "./schemas/threads";
-export * from "./schemas/messages";
-export * from "./schemas/emails";
-export * from "./schemas/email-parties";
-export * from "./schemas/email-attachments";
-export * from "./schemas/global-config";
-export * from "./schemas/job-failures";
-export * from "./schemas/resume-bullets";
-export * from "./schemas/role-analyses";
-export * from "./schemas/role-bullets";
-export * from "./schemas/role-bullet-analyses";
-export * from './schemas/role-bullet-patterns';
-export * from './schemas/role-resume-bullets';
-export * from './schemas/role-resume-bullets-map';
-export * from "./schemas/role-alignment-scores";
+/**
+ * @file Top-level barrel re-export for all D1 schema definitions.
+ *
+ * Organized by use-case domain:
+ * - applications/    — roles, analyses, alignment scores, documents, bullets, insights, podcasts, companies
+ * - career/          — resume bullets, career memory
+ * - communications/  — threads, messages, emails, email parties, email attachments
+ * - interviews/      — interview notes, recordings, mock interviews, transcription pipeline
+ * - notebooks/       — NotebookLM blobs, podcast transcripts
+ * - system/          — global config, job failures, health checks, logs, statuses, maps usage
+ * - jobs/            — greenhouse job scanner domain (boards, postings, analysis, taxonomy, HITL, sessions, lists)
+ */
 
-export * from "./schemas/health";
-export * from "./schemas/interview-notes";
-export * from "./schemas/interview-recordings";
-export * from "./schemas/transcription-jobs";
-export * from "./schemas/transcription-chunks";
-export * from "./schemas/companies";
-export * from "./schemas/career-memory";
-export * from "./schemas/role-podcasts";
-export * from "./schemas/scoring-rubrics";
-export * from "./schemas/role-insights";
-export * from "./schemas/google-maps-usage";
-export * from "./schemas/mock-interviews";
-export * from "./schemas/logs";
-export * from "./schemas/notebooklm-blobs";
-export * from "./schemas/notebooklm-podcast-transcript";
-export * from "./schemas/statuses";
-export * from "./schemas/role-status-log";
-export * from "./schemas/role-logs";
+export * from "./schemas/applications";
+export * from "./schemas/career";
+export * from "./schemas/communications";
+export * from "./schemas/interviews";
+export * from "./schemas/notebooks";
+export * from "./schemas/system";
+export * from "./schemas/jobs";

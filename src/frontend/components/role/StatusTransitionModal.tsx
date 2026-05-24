@@ -82,9 +82,7 @@ export function StatusTransitionModal({
     }
   }
 
-  const fromLabel = fromStatus
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  const fromLabel = fromStatus.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -100,12 +98,8 @@ export function StatusTransitionModal({
 
         <div className="space-y-3 py-2">
           <div>
-            <label
-              htmlFor="transition-notes"
-              className="text-sm font-medium text-foreground"
-            >
-              Notes{" "}
-              <span className="text-muted-foreground font-normal">(optional)</span>
+            <label htmlFor="transition-notes" className="text-sm font-medium text-foreground">
+              Notes <span className="text-muted-foreground font-normal">(optional)</span>
             </label>
             <Textarea
               id="transition-notes"
@@ -119,20 +113,11 @@ export function StatusTransitionModal({
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button
-            variant="ghost"
-            onClick={() => void handleSubmit(false)}
-            disabled={isSubmitting}
-          >
+          <Button variant="ghost" onClick={() => void handleSubmit(false)} disabled={isSubmitting}>
             Skip Notes
           </Button>
-          <Button
-            onClick={() => void handleSubmit(true)}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : null}
+          <Button onClick={() => void handleSubmit(true)} disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
             Save & Transition
           </Button>
         </DialogFooter>

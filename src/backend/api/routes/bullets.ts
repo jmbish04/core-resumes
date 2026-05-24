@@ -1,5 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 import { getDb } from "../../db";
 import { resumeBullets, selectResumeBulletSchema, type ResumeBullet } from "../../db/schema";

@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS  `scoring_rubrics` (
 	`updated_at` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE INDEX `scoring_rubrics_type_idx` ON `scoring_rubrics` (`type`);--> statement-breakpoint
-CREATE INDEX `scoring_rubrics_active_idx` ON `scoring_rubrics` (`is_active`);
+CREATE INDEX IF NOT EXISTS `scoring_rubrics_type_idx` ON `scoring_rubrics` (`type`);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `scoring_rubrics_active_idx` ON `scoring_rubrics` (`is_active`);

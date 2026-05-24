@@ -79,6 +79,14 @@ const defaultConfig = [
     value:
       'Research the company {{companyName}} and the role "{{jobTitle}}". Focus on: company culture, recent news and developments, hiring manager background, interview tips from employee reviews, competitive landscape, and any insider knowledge that would help with the application.{{instruction}}',
   },
+  {
+    key: "pipeline_a_rules",
+    value: { keywords: ["software engineer", "frontend", "backend", "fullstack", "react", "node"] },
+  },
+  {
+    key: "pipeline_b_rules",
+    value: { minSalary: 120000, locations: ["Remote", "New York", "San Francisco"] },
+  },
 ];
 
 export const configRouter = new OpenAPIHono<{ Bindings: Env }>();

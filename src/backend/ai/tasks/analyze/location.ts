@@ -13,6 +13,7 @@
 
 import { Agent, Runner } from "@openai/agents";
 import { z } from "zod";
+
 import {
   getAIGatewayCompatClient,
   AIGatewayModelProvider,
@@ -26,9 +27,17 @@ import {
 const CommuteRowSchema = z.object({
   direction: z.enum(["to_office", "to_home"]).describe("Whether commuting to office or back home"),
   departure_time: z.string().describe("Departure time, e.g. '8:30 AM', '5:00 PM'"),
-  mode: z.string().describe("Transportation mode, e.g. 'Driving (Tesla Model 3)', 'BART + Walk', 'Muni + Walk'"),
-  duration_minutes: z.number().nullable().describe("Estimated door-to-door commute duration in minutes"),
-  monthly_cost: z.number().nullable().describe("Estimated monthly cost for this commute mode at full-time frequency"),
+  mode: z
+    .string()
+    .describe("Transportation mode, e.g. 'Driving (Tesla Model 3)', 'BART + Walk', 'Muni + Walk'"),
+  duration_minutes: z
+    .number()
+    .nullable()
+    .describe("Estimated door-to-door commute duration in minutes"),
+  monthly_cost: z
+    .number()
+    .nullable()
+    .describe("Estimated monthly cost for this commute mode at full-time frequency"),
 });
 
 const LocationInsightSchema = z.object({
@@ -175,9 +184,7 @@ Produce a JSON object with a single key "commute_table" containing an array of e
     throw new Error("CommuteAgent returned empty commute table");
   }
 
-  console.log(
-    `[analyze-location] CommuteAgent produced ${commuteTable.length} rows`,
-  );
+  console.log(`[analyze-location] CommuteAgent produced ${commuteTable.length} rows`);
 
   // ─── Phase 2: Location Scoring ────────────────────────────────────────
   const analystPrompt = `Analyze this location for the following role and produce a score, rationale, and workplace assessment.
@@ -216,15 +223,23 @@ Produce a JSON object with keys: "score" (number 0-100), "rationale" (string), "
   const SafeLocationInsightSchema = z.object({
     score: z.number().int().min(0).max(100).optional().default(0).catch(0),
     rationale: z.string().optional().default("").catch(""),
-    commute_table: z.array(
-      z.object({
-        direction: z.enum(["to_office", "to_home"]).optional().default("to_office").catch("to_office"),
-        departure_time: z.string().optional().default("").catch(""),
-        mode: z.string().optional().default("").catch(""),
-        duration_minutes: z.number().nullable().optional().default(null).catch(null),
-        monthly_cost: z.number().nullable().optional().default(null).catch(null),
-      }),
-    ).optional().default([]).catch([]),
+    commute_table: z
+      .array(
+        z.object({
+          direction: z
+            .enum(["to_office", "to_home"])
+            .optional()
+            .default("to_office")
+            .catch("to_office"),
+          departure_time: z.string().optional().default("").catch(""),
+          mode: z.string().optional().default("").catch(""),
+          duration_minutes: z.number().nullable().optional().default(null).catch(null),
+          monthly_cost: z.number().nullable().optional().default(null).catch(null),
+        }),
+      )
+      .optional()
+      .default([])
+      .catch([]),
     workplace_assessment: z.string().optional().default("").catch(""),
   });
 
@@ -281,7 +296,7 @@ function parseAgentJson(text: string): any {
 
   try {
     return JSON.parse(cleaned);
-  } catch (e) {
+  } catch {
     // Try to find JSON object/array in the text
     const jsonMatch = cleaned.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
     if (jsonMatch) {

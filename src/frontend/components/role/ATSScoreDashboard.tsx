@@ -5,7 +5,6 @@
  * Rendered inside the Analysis tab of RoleViewport.
  */
 
-import { useState } from "react";
 import {
   CheckCircle2,
   AlertCircle,
@@ -17,16 +16,13 @@ import {
   ChevronUp,
   Lightbulb,
 } from "lucide-react";
+import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { apiPost, toast } from "@/lib/api-client";
 
 // ---------------------------------------------------------------------------
@@ -157,10 +153,9 @@ export function ATSScoreDashboard({ roleId }: { roleId: string }) {
 
     setLoading(true);
     try {
-      const data = await apiPost<ATSScoreResponse>(
-        `/api/roles/${roleId}/ats-score`,
-        { gdocId: gdocId.trim() },
-      );
+      const data = await apiPost<ATSScoreResponse>(`/api/roles/${roleId}/ats-score`, {
+        gdocId: gdocId.trim(),
+      });
       setResult(data);
       toast({
         title: "ATS Score Refreshed",
@@ -228,9 +223,7 @@ export function ATSScoreDashboard({ roleId }: { roleId: string }) {
               className={`flex items-center justify-between rounded-lg border px-4 py-3 ${scoreBg(result.overallMatchPercent)}`}
             >
               <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Overall ATS Match
-                </p>
+                <p className="text-sm font-medium text-muted-foreground">Overall ATS Match</p>
                 <p className={`text-3xl font-bold ${scoreColor(result.overallMatchPercent)}`}>
                   {result.overallMatchPercent}%
                 </p>
@@ -243,9 +236,7 @@ export function ATSScoreDashboard({ roleId }: { roleId: string }) {
 
             {/* Category breakdown */}
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-foreground">
-                Category Breakdown
-              </h4>
+              <h4 className="text-sm font-semibold text-foreground">Category Breakdown</h4>
               {CATEGORY_META.map(({ key, label, extractionKey, icon }) => {
                 const score = result.categoryScores[key];
                 const keywords = result.extraction[extractionKey];
@@ -267,11 +258,7 @@ export function ATSScoreDashboard({ roleId }: { roleId: string }) {
                           </Badge>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span
-                            className={`text-sm font-bold ${scoreColor(score)}`}
-                          >
-                            {score}%
-                          </span>
+                          <span className={`text-sm font-bold ${scoreColor(score)}`}>{score}%</span>
                           {isExpanded ? (
                             <ChevronUp className="size-3.5 text-muted-foreground" />
                           ) : (
@@ -343,13 +330,9 @@ export function ATSScoreDashboard({ roleId }: { roleId: string }) {
                       key={s.missing}
                       className="flex items-center justify-between rounded-md border border-border/20 bg-muted/20 px-3 py-1.5 text-xs"
                     >
-                      <span className="text-red-400 line-through">
-                        {s.missing}
-                      </span>
+                      <span className="text-red-400 line-through">{s.missing}</span>
                       <span className="text-muted-foreground">→</span>
-                      <span className="text-emerald-400 font-medium">
-                        {s.suggestion}
-                      </span>
+                      <span className="text-emerald-400 font-medium">{s.suggestion}</span>
                     </div>
                   ))}
                 </div>

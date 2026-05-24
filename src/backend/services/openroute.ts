@@ -4,6 +4,7 @@
  */
 
 import { getOpenRouteApiKey } from "@/backend/utils/secrets";
+
 import { GoogleMapsService } from "./google-maps";
 
 export interface OpenRouteDirectionsResponse {
@@ -94,12 +95,16 @@ export class OpenRouteService {
   async getDrivingDirections(
     startCoords: [number, number],
     endCoords: [number, number],
-    timeoutMs = 5000
+    timeoutMs = 5000,
   ): Promise<{ distanceMeters: number; durationSeconds: number } | null> {
     try {
-      const data = (await this.fetchOpenRoute("/openrouteservice/v2/directions/driving-car", {
-        coordinates: [startCoords, endCoords],
-      }, timeoutMs)) as OpenRouteDirectionsResponse;
+      const data = (await this.fetchOpenRoute(
+        "/openrouteservice/v2/directions/driving-car",
+        {
+          coordinates: [startCoords, endCoords],
+        },
+        timeoutMs,
+      )) as OpenRouteDirectionsResponse;
 
       const summary = data.features?.[0]?.properties?.summary;
       if (summary) {
@@ -114,8 +119,6 @@ export class OpenRouteService {
       throw e;
     }
   }
-
-
 
   /**
    * Helper to get a full commute summary (driving) by geocoding address strings.
@@ -151,7 +154,11 @@ export class OpenRouteService {
         const endCoords = await this.geocode(endAddress, PER_CALL_TIMEOUT_MS);
         if (!endCoords) throw new Error("Could not geocode end address via OpenRoute");
 
-        const directions = await this.getDrivingDirections(startCoords, endCoords, PER_CALL_TIMEOUT_MS);
+        const directions = await this.getDrivingDirections(
+          startCoords,
+          endCoords,
+          PER_CALL_TIMEOUT_MS,
+        );
         if (!directions) throw new Error("No route found between locations via OpenRoute");
 
         distanceMeters = directions.distanceMeters;
@@ -169,17 +176,20 @@ export class OpenRouteService {
           distanceMeters = gmResult.distanceMiles / 0.000621371; // Convert back to meters for consistent checking
           durationSeconds = gmResult.durationMinutes * 60; // Convert back to seconds
         } catch (gmErr) {
-          return { success: false, error: `Both OpenRoute and Google Maps fallback failed: ${(gmErr as Error).message}` };
+          return {
+            success: false,
+            error: `Both OpenRoute and Google Maps fallback failed: ${(gmErr as Error).message}`,
+          };
         }
       }
 
       if (distanceMeters === undefined || durationSeconds === undefined) {
-          return { success: false, error: "Failed to resolve commute duration." };
+        return { success: false, error: "Failed to resolve commute duration." };
       }
 
       return {
         success: true,
-        source: openRouteFailed ? "google_maps" as const : "openroute" as const,
+        source: openRouteFailed ? ("google_maps" as const) : ("openroute" as const),
         distanceMiles: distanceMeters * 0.000621371, // meters to miles
         durationMinutes: Math.round(durationSeconds / 60), // seconds to minutes
       };

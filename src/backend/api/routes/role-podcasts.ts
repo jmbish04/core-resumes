@@ -88,11 +88,11 @@ rolePodcastsRouter.openapi(
     const roleId = c.req.param("roleId");
     const db = getDb(c.env);
     const [role] = await db.select().from(roles).where(eq(roles.id, roleId)).limit(1);
-    
+
     if (!role) {
       return c.json({ error: "Role not found" }, 404);
     }
-    
+
     const { Logger } = await import("@/backend/lib/logger");
     const logger = new Logger(c.env);
     await logger.info(`Generating podcast requested for role ${roleId}`);
@@ -102,7 +102,7 @@ rolePodcastsRouter.openapi(
       roleId: roleId,
       payload: { mode: "podcast" },
     });
-    
+
     return c.json({ success: true });
   }) as any,
 );

@@ -20,10 +20,10 @@ The Gemini Canvas prompts revealed a key gap: our current Phase 1 bullet scoring
 
 Add two new columns to the existing table:
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `interview_tip` | text (nullable) | Forward-looking advice: how to speak to this bullet if asked |
-| `mitigation_strategy` | text (nullable) | For low-scoring bullets: how to reframe or bridge the gap |
+| Column                | Type            | Purpose                                                      |
+| --------------------- | --------------- | ------------------------------------------------------------ |
+| `interview_tip`       | text (nullable) | Forward-looking advice: how to speak to this bullet if asked |
+| `mitigation_strategy` | text (nullable) | For low-scoring bullets: how to reframe or bridge the gap    |
 
 Update `ROLE_BULLET_ANALYSES_COLUMN_DESCRIPTIONS` to document the new columns.
 
@@ -33,17 +33,17 @@ Update `ROLE_BULLET_ANALYSES_COLUMN_DESCRIPTIONS` to document the new columns.
 
 New table `role_resume_bullets` — potential resume lines mapped to specific JD requirements.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | integer PK auto | — |
-| `role_bullet_id` | integer FK → `role_bullets.id` | Which JD requirement this resume bullet addresses |
-| `potential_resume_bullet` | text | The actual line that would appear on the resume |
-| `source` | text enum | `verbatim_config` · `modified_config` · `past_role` · `ai_generated` |
-| `ai_rationale` | text | Why this bullet was selected or generated |
-| `interview_tip` | text (nullable) | How this resume bullet creates an interview opportunity |
-| `category` | text | Strategic · Technical · Impact · Collaboration |
-| `impact` | text (nullable) | e.g., "$16M annual savings", "300% adoption" |
-| `created_at` | integer timestamp | — |
+| Column                    | Type                           | Description                                                          |
+| ------------------------- | ------------------------------ | -------------------------------------------------------------------- |
+| `id`                      | integer PK auto                | —                                                                    |
+| `role_bullet_id`          | integer FK → `role_bullets.id` | Which JD requirement this resume bullet addresses                    |
+| `potential_resume_bullet` | text                           | The actual line that would appear on the resume                      |
+| `source`                  | text enum                      | `verbatim_config` · `modified_config` · `past_role` · `ai_generated` |
+| `ai_rationale`            | text                           | Why this bullet was selected or generated                            |
+| `interview_tip`           | text (nullable)                | How this resume bullet creates an interview opportunity              |
+| `category`                | text                           | Strategic · Technical · Impact · Collaboration                       |
+| `impact`                  | text (nullable)                | e.g., "$16M annual savings", "300% adoption"                         |
+| `created_at`              | integer timestamp              | —                                                                    |
 
 Indexes: `role_bullet_id`, composite `(role_bullet_id, source)`.
 
@@ -55,22 +55,22 @@ Two tables for cross-bullet pattern intelligence:
 
 **`role_bullet_patterns`** — holistic observations across bullets
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | integer PK auto | — |
-| `role_id` | text FK → `roles.id` | — |
-| `observation` | text | Pattern detected (e.g., "no-code/low-code emphasis in 4/6 categories") |
-| `recommendation` | text | Actionable advice for downstream agents building resumes/cover letters/podcasts |
-| `insight` | text | Strategic insight for the frontend (what this signals about the role and hiring manager priorities) |
-| `created_at` | integer timestamp | — |
+| Column           | Type                 | Description                                                                                         |
+| ---------------- | -------------------- | --------------------------------------------------------------------------------------------------- |
+| `id`             | integer PK auto      | —                                                                                                   |
+| `role_id`        | text FK → `roles.id` | —                                                                                                   |
+| `observation`    | text                 | Pattern detected (e.g., "no-code/low-code emphasis in 4/6 categories")                              |
+| `recommendation` | text                 | Actionable advice for downstream agents building resumes/cover letters/podcasts                     |
+| `insight`        | text                 | Strategic insight for the frontend (what this signals about the role and hiring manager priorities) |
+| `created_at`     | integer timestamp    | —                                                                                                   |
 
 **`role_bullet_pattern_map`** — M:M relationship linking patterns ↔ bullets
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | integer PK auto | — |
-| `pattern_id` | integer FK → `role_bullet_patterns.id` | — |
-| `role_bullet_id` | integer FK → `role_bullets.id` | — |
+| Column           | Type                                   | Description |
+| ---------------- | -------------------------------------- | ----------- |
+| `id`             | integer PK auto                        | —           |
+| `pattern_id`     | integer FK → `role_bullet_patterns.id` | —           |
+| `role_bullet_id` | integer FK → `role_bullets.id`         | —           |
 
 ---
 
@@ -84,15 +84,15 @@ Add barrel exports for the 2 new schema files.
 
 > [!IMPORTANT]
 > **Architecture Decision: `AgentWorkflow`**
-> 
+>
 > After reviewing the [Cloudflare Agents SDK Workflows docs](file:///Volumes/Projects/workers/core-resumes/docs/cloudflare-docs/agents-llm-full.md), `AgentWorkflow` is the correct primitive here. Key advantages:
-> 
+>
 > - **30 min per step** — each LLM call gets its own step with independent timeout
 > - **Automatic retries** — `step.do("name", { retries: { limit: 3, delay: "10 seconds", backoff: "exponential" } }, fn)` handles AI Gateway intermittent failures
 > - **Durable state sync** — `step.mergeAgentState()` broadcasts progress to connected WebSocket clients (our `RoleProcessingStatus.tsx` component)
 > - **Agent RPC** — the workflow has a typed `this.agent` stub back to the `OrchestratorAgent` for persistence calls
 > - **Real-time frontend** — `this.reportProgress()` + `this.broadcastToClients()` give granular step-by-step visibility that our current `ctx.waitUntil()` approach can't provide
-> 
+>
 > The `OrchestratorAgent` will orchestrate workflows via `this.runWorkflow("ROLE_ANALYSIS_WORKFLOW", params)` and handle lifecycle callbacks (`onWorkflowProgress`, `onWorkflowComplete`, `onWorkflowError`).
 
 #### [NEW] [role-analysis-workflow.ts](file:///Volumes/Projects/workers/core-resumes/src/backend/ai/workflows/role-analysis-workflow.ts)
@@ -106,7 +106,7 @@ Step 1: "score-bullets"
 ├── Persist to role_bullet_analyses
 └── reportProgress({ step: "score-bullets", status: "complete", percent: 0.25 })
 
-Step 2: "holistic-analysis"  
+Step 2: "holistic-analysis"
 ├── Load Phase 1 scored bullets as context
 ├── Generate holistic analysis (hire_likelihood, hook, strategy, counter_positioning)
 ├── Persist to role_analyses + role_alignment_scores
@@ -162,12 +162,17 @@ const BulletScoringSchema = z.object({
       bullet_id: z.number(),
       score: z.number().int().min(0).max(100),
       rationale: z.string(),
-      interview_tip: z.string().describe(
-        "Actionable advice for how to speak to this requirement in an interview. Reference specific evidence."
-      ),
-      mitigation_strategy: z.string().nullable().describe(
-        "For scores below 75: how to bridge this gap or reframe the narrative. null if score >= 75."
-      ),
+      interview_tip: z
+        .string()
+        .describe(
+          "Actionable advice for how to speak to this requirement in an interview. Reference specific evidence.",
+        ),
+      mitigation_strategy: z
+        .string()
+        .nullable()
+        .describe(
+          "For scores below 75: how to bridge this gap or reframe the narrative. null if score >= 75.",
+        ),
     }),
   ),
 });
@@ -207,6 +212,7 @@ New AI task for Phase 4 pattern recognition. The prompt will receive ALL scored 
 
 > [!NOTE]
 > Frontend changes will be scoped in a follow-up plan after the backend pipeline is stable. Key surfaces to update:
+>
 > - `RoleProcessingStatus.tsx` — consume workflow progress events for step-by-step status
 > - `AlignmentBreakdown.tsx` — show `interview_tip` and `mitigation_strategy` per bullet
 > - New `ResumeIdeation.tsx` component — browse/filter suggested resume bullets by role requirement
@@ -217,11 +223,13 @@ New AI task for Phase 4 pattern recognition. The prompt will receive ALL scored 
 ## Verification Plan
 
 ### Automated
+
 1. `pnpm run db:generate` — verify Drizzle migrations generate cleanly
 2. `pnpm run build` — verify TypeScript compilation with new schemas
 3. Deploy to staging and trigger a role analysis via `OrchestratorAgent.enqueueTask({ type: "role_analysis", roleId })`
 
 ### Manual
+
 1. Verify `role_bullet_analyses` rows now contain `interview_tip` and `mitigation_strategy`
 2. Verify `role_resume_bullets` populates with a mix of sources
 3. Verify `role_bullet_patterns` correctly links to multiple bullets via the map table

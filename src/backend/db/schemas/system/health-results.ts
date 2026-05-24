@@ -1,7 +1,7 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
-import { healthRuns } from "./runs";
+import { healthRuns } from "./health-runs";
 
 // ---------------------------------------------------------------------------
 // Table & column documentation (consumed by /api/docs/schema)
@@ -14,7 +14,7 @@ export const HEALTH_RESULTS_COLUMN_DESCRIPTIONS: Record<string, string> = {
   id: "Unique result identifier (UUID v4).",
   run_id: "Foreign key to health_runs.id. Cascade-deletes when the parent run is removed.",
   category:
-    "Logical grouping: database, ai, providers, agents, google, binding, auth, api, custom.",
+    "Logical grouping: database, ai, providers, agents, google, binding, auth, api, greenhouse, custom.",
   name: "Human-readable check name (e.g. 'd1_roundtrip', 'workers_ai_embedding').",
   status: "Check outcome: ok, warn, fail, skipped, timeout.",
   message: "Human-readable summary of the check result.",
@@ -34,7 +34,18 @@ export const healthResults = sqliteTable("health_results", {
     .notNull()
     .references(() => healthRuns.id, { onDelete: "cascade" }),
   category: text("category", {
-    enum: ["database", "ai", "providers", "agents", "google", "binding", "auth", "api", "custom"],
+    enum: [
+      "database",
+      "ai",
+      "providers",
+      "agents",
+      "google",
+      "binding",
+      "auth",
+      "api",
+      "greenhouse",
+      "custom",
+    ],
   }).notNull(),
   name: text("name").notNull(),
   status: text("status", {

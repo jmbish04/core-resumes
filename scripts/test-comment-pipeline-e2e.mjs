@@ -20,7 +20,6 @@
 
 import { execSync } from "child_process";
 
-const WORKER_URL = "https://core-resumes.hacolby.workers.dev";
 const TEST_ROLE_ID = "test-role-comment-pipeline";
 
 // ---------------------------------------------------------------------------

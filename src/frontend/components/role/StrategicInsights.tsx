@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  SparklesIcon,
-  TargetIcon,
-  ZapIcon,
-  ShieldAlertIcon,
-} from "lucide-react";
+import { SparklesIcon, TargetIcon, ZapIcon, ShieldAlertIcon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 import {

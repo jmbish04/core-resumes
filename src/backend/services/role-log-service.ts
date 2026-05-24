@@ -9,15 +9,22 @@
 
 import { desc, eq } from "drizzle-orm";
 
+import type { RoleLogRow } from "../db/schema";
+
 import { getDb } from "../db";
 import { roleLogs } from "../db/schema";
-import type { RoleLogRow } from "../db/schema";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export type LogCategory = "agentic" | "user_action" | "email" | "notebooklm" | "document" | "system";
+export type LogCategory =
+  | "agentic"
+  | "user_action"
+  | "email"
+  | "notebooklm"
+  | "document"
+  | "system";
 
 export interface LogEntry {
   roleId?: string | null;

@@ -15,7 +15,7 @@ export type ScrapedPage = {
   pdfUrl?: string;
 };
 
-export type JsonExtractionOptions<T = unknown> = {
+export type JsonExtractionOptions = {
   /** Natural-language instruction for the AI extractor. */
   prompt?: string;
   /** JSON Schema describing the desired output shape. */
@@ -318,10 +318,7 @@ export class BrowserRendering {
    * endpoint. This sends the page through Workers AI which extracts data
    * according to the provided `prompt` and/or `responseFormat` JSON schema.
    */
-  public async extractJson<T = unknown>(
-    url: string,
-    options: JsonExtractionOptions<T>,
-  ): Promise<T> {
+  public async extractJson<T = unknown>(url: string, options: JsonExtractionOptions): Promise<T> {
     const base = await this.getBaseUrl();
     const headers = await this.getHeaders();
 
@@ -374,10 +371,7 @@ export class BrowserRendering {
   }
 
   /** Alias for extractJson to match requested naming convention */
-  public async captureJSON<T = unknown>(
-    url: string,
-    options: JsonExtractionOptions<T>,
-  ): Promise<T> {
+  public async captureJSON<T = unknown>(url: string, options: JsonExtractionOptions): Promise<T> {
     return this.extractJson<T>(url, options);
   }
 

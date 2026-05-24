@@ -185,10 +185,7 @@ emailsRouter.openapi(
   }),
   async (c) => {
     const { id } = c.req.valid("param");
-    const rows = await getDb(c.env)
-      .select()
-      .from(emailParties)
-      .where(eq(emailParties.emailId, id));
+    const rows = await getDb(c.env).select().from(emailParties).where(eq(emailParties.emailId, id));
 
     return c.json(rows);
   },
@@ -250,10 +247,7 @@ emailsRouter.openapi(
     const rootId = email.parentEmailId || email.id;
 
     // Get root + all children
-    const threadEmails = await db
-      .select()
-      .from(emails)
-      .where(eq(emails.parentEmailId, rootId));
+    const threadEmails = await db.select().from(emails).where(eq(emails.parentEmailId, rootId));
 
     // Include the root itself
     const [root] = await db.select().from(emails).where(eq(emails.id, rootId)).limit(1);
@@ -300,9 +294,7 @@ emailsRouter.openapi(
     // Trigger full workflow (classify, draft, Drive, etc.)
     // Use waitUntil so the response returns immediately
     const ctx = c.executionCtx;
-    ctx.waitUntil(
-      associateEmailWithRole(c.env, null, id, role, email.subject, email.sender),
-    );
+    ctx.waitUntil(associateEmailWithRole(c.env, null, id, role, email.subject, email.sender));
 
     // Immediate update for the response
     const [updated] = await db

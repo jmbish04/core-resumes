@@ -15,7 +15,7 @@ import { getModelRegistry } from "../../models";
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-import { getProvider } from "../../providers";
+import { AiProvider } from "../../providers";
 import { extractText } from "../../utils/extract-text";
 import { enforceTokenLimit } from "../../utils/token-estimator";
 
@@ -42,7 +42,7 @@ export async function prepareNotebookQuery(
     queryPurpose?: string;
   },
 ): Promise<PreparedQuery> {
-  const provider = await getProvider(env);
+  const provider = new AiProvider(env);
   const model = getModelRegistry(env).chat;
 
   const contextBlock = context
@@ -106,7 +106,7 @@ export async function evaluateNotebookResponse(
   query: string,
   answer: string,
 ): Promise<ResponseEvaluation> {
-  const provider = await getProvider(env);
+  const provider = new AiProvider(env);
   const model = getModelRegistry(env).chat;
 
   enforceTokenLimit(answer, 120000, "NotebookLM Answer");

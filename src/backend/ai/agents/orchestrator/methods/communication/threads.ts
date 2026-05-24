@@ -1,7 +1,8 @@
 import { eq } from "drizzle-orm";
 
-import { classifyEmailStatus, draftEmailReply } from "@/ai/tasks";
 import type { EmailClassification } from "@/ai/tasks/types";
+
+import { classifyEmailStatus, draftEmailReply } from "@/ai/tasks";
 import { getDb } from "@/db";
 import { emails, roles } from "@/db/schema";
 
@@ -43,8 +44,8 @@ export async function handleDraftEmailReply(agent: OrchestratorAgent, env: Env, 
       email.subject,
       email.body,
       email.roleId
-        ? (await db.select().from(roles).where(eq(roles.id, email.roleId)).limit(1))[0]?.status ??
-            "applied"
+        ? ((await db.select().from(roles).where(eq(roles.id, email.roleId)).limit(1))[0]?.status ??
+            "applied")
         : "applied",
     );
 
@@ -102,10 +103,7 @@ export async function handleDraftEmailReply(agent: OrchestratorAgent, env: Env, 
     }
 
     if (classification.availabilityOptions?.length) {
-      parts.push(
-        "",
-        `🗓️ Interview time options: ${classification.availabilityOptions.join(", ")}`,
-      );
+      parts.push("", `🗓️ Interview time options: ${classification.availabilityOptions.join(", ")}`);
     }
 
     await agent.addMessage(thread.id, email.roleId, "agent", parts.join("\n"), {
