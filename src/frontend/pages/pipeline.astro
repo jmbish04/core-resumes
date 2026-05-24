@@ -1,0 +1,28 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { Sidebar } from "@/components/Sidebar";
+import { PipelineOperations } from "@/components/pipeline/PipelineOperations";
+---
+
+<BaseLayout title="Pipeline Operations | Colby" description="Manage and monitor the Greenhouse Aggregator (Pipeline A) and Greenhouse Board Tracker (Pipeline B) sync processes.">
+  <div class="flex flex-1 relative w-full">
+    {/* Always render the main Sidebar */}
+    <Sidebar client:load />
+    
+    {/* Full-page responsive main section */}
+    <section class="min-w-0 flex-1 w-full">
+      <div class="mx-auto w-full gap-6 px-4 py-6 lg:px-8">
+        <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
+          <div>
+            <h1 class="text-2xl font-bold tracking-tight">Pipeline Operations</h1>
+            <p class="mt-1 text-sm text-muted-foreground">
+              Monitor, sync, and maintain Greenhouse Aggregator (Pipeline A) and Greenhouse Tracker (Pipeline B) in real time.
+            </p>
+          </div>
+        </div>
+        
+        <PipelineOperations client:only="react" />
+      </div>
+    </section>
+  </div>
+</BaseLayout>
