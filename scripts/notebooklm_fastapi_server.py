@@ -113,7 +113,7 @@ sync_cookies.configure_logging()
 
 def storage_path(profile: str = DEFAULT_NOTEBOOKLM_PROFILE) -> Path:
     """Return the explicit notebooklm-py storage path."""
-    return Path("/Users/126colby/.notebooklm/storage_state.json")
+    return Path.home() / ".notebooklm" / "storage_state.json"
 
 
 class BridgeSettings(BaseModel):
@@ -378,7 +378,7 @@ async def refresh_storage(settings: BridgeSettings) -> dict[str, Any]:
     cookie_header, path = await asyncio.to_thread(sync_cookies.refresh_from_chrome, args)
     
     # Copy the cookies generated from sync-cookies.py to the targeted storage_state.json
-    target = Path("/Users/126colby/.notebooklm/storage_state.json")
+    target = Path.home() / ".notebooklm" / "storage_state.json"
     if Path(path) != target:
         import shutil
         import stat

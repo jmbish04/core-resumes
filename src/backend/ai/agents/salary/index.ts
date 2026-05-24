@@ -108,7 +108,14 @@ export class SalaryAgent extends Agent<Env, Record<string, never>> {
 
       // 5. Read computed metrics
       const resultsText = await sandbox.readFile("/workspace/output_results.json");
-      const results = JSON.parse(resultsText);
+      let results: any;
+      try {
+        results = JSON.parse(resultsText);
+      } catch (jsonErr) {
+        throw new Error(
+          `Failed to parse broad trends sandbox JSON output. Raw stdout was: ${runResult.stdout}. Parse error: ${String(jsonErr)}`
+        );
+      }
 
       // Save raw sandbox run in D1
       await db.insert(marketSandboxRuns).values({
@@ -284,7 +291,14 @@ Be highly factual and professional. Avoid fluffy adjectives or hype. Include mar
 
       // 7. Parse results
       const resultsText = await sandbox.readFile("/workspace/output_results.json");
-      const results = JSON.parse(resultsText);
+      let results: any;
+      try {
+        results = JSON.parse(resultsText);
+      } catch (jsonErr) {
+        throw new Error(
+          `Failed to parse role compensation sandbox JSON output. Raw stdout was: ${execResult.stdout}. Parse error: ${String(jsonErr)}`
+        );
+      }
 
       // Save raw sandbox run in D1
       await db.insert(marketSandboxRuns).values({
@@ -471,7 +485,9 @@ Please try rephrasing your calculation request.`;
         let parsedOutput: any = { rawStdout: execResult.stdout };
         try {
           parsedOutput = JSON.parse(execResult.stdout.trim());
-        } catch {}
+        } catch (jsonErr) {
+          console.warn("[SalaryAgent] Custom Q&A sandbox output was not valid JSON, using raw fallback:", jsonErr);
+        }
 
         // Check if a visualization chart was saved to /workspace/chart.png
         let chartUrl: string | undefined;

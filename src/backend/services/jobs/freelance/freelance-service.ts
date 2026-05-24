@@ -99,50 +99,79 @@ export class FreelanceService {
   async upsertOpportunities(
     opps: Omit<NewFreelanceOpportunity, "id">[],
   ): Promise<UpsertResult> {
+    if (opps.length === 0) {
+      return { inserted: 0, updated: 0, unchanged: 0 };
+    }
+
     let inserted = 0;
     let updated = 0;
     let unchanged = 0;
+    const now = new Date();
 
-    for (const opp of opps) {
-      // Generate content hash if not set
-      const contentHash =
-        opp.contentHash ?? (await generateContentHash(opp.title, opp.description));
+    // 1. Generate content hashes in parallel
+    const oppsWithHashes = await Promise.all(
+      opps.map(async (opp) => {
+        const contentHash =
+          opp.contentHash ?? (await generateContentHash(opp.title, opp.description));
+        return { ...opp, contentHash };
+      })
+    );
 
-      const existing = await this.db
-        .select({ id: freelanceOpportunities.id, contentHash: freelanceOpportunities.contentHash })
-        .from(freelanceOpportunities)
-        .where(eq(freelanceOpportunities.platformJobId, opp.platformJobId))
-        .get();
+    // 2. Fetch all existing records in a single query
+    const jobIds = opps.map((o) => o.platformJobId);
+    const existingList = await this.db
+      .select({
+        id: freelanceOpportunities.id,
+        contentHash: freelanceOpportunities.contentHash,
+        platformJobId: freelanceOpportunities.platformJobId,
+      })
+      .from(freelanceOpportunities)
+      .where(inArray(freelanceOpportunities.platformJobId, jobIds))
+      .all();
+
+    const existingMap = new Map(existingList.map((e) => [e.platformJobId, e]));
+
+    // 3. Build a batch of queries to run
+    const batchQueries = [];
+    for (const opp of oppsWithHashes) {
+      const existing = existingMap.get(opp.platformJobId);
 
       if (existing) {
-        if (existing.contentHash !== contentHash) {
+        if (existing.contentHash !== opp.contentHash) {
           // Content changed — update
-          await this.db
-            .update(freelanceOpportunities)
-            .set({
-              ...opp,
-              contentHash,
-              lastSeenAt: new Date(),
-              updatedAt: new Date(),
-            })
-            .where(eq(freelanceOpportunities.id, existing.id));
+          batchQueries.push(
+            this.db
+              .update(freelanceOpportunities)
+              .set({
+                ...opp,
+                lastSeenAt: now,
+                updatedAt: now,
+              })
+              .where(eq(freelanceOpportunities.id, existing.id))
+          );
           updated++;
         } else {
           // Just bump lastSeenAt
-          await this.db
-            .update(freelanceOpportunities)
-            .set({ lastSeenAt: new Date() })
-            .where(eq(freelanceOpportunities.id, existing.id));
+          batchQueries.push(
+            this.db
+              .update(freelanceOpportunities)
+              .set({ lastSeenAt: now })
+              .where(eq(freelanceOpportunities.id, existing.id))
+          );
           unchanged++;
         }
       } else {
         // New listing
-        await this.db.insert(freelanceOpportunities).values({
-          ...opp,
-          contentHash,
-        });
+        batchQueries.push(
+          this.db.insert(freelanceOpportunities).values(opp)
+        );
         inserted++;
       }
+    }
+
+    // 4. Execute all queries in a single roundtrip!
+    if (batchQueries.length > 0) {
+      await this.db.batch(batchQueries as any);
     }
 
     return { inserted, updated, unchanged };
@@ -256,6 +285,15 @@ export class FreelanceService {
    */
   async saveTriage(triage: Omit<NewFreelanceTriage, "id">): Promise<void> {
     await this.db.insert(freelanceTriage).values(triage);
+  }
+
+  /**
+   * Save a batch of triage decisions for opportunities.
+   */
+  async saveTriageBatch(triages: Omit<NewFreelanceTriage, "id">[]): Promise<void> {
+    if (triages.length === 0) return;
+    const queries = triages.map((t) => this.db.insert(freelanceTriage).values(t));
+    await this.db.batch(queries as any);
   }
 
   /**

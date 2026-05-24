@@ -111,49 +111,69 @@ salaryStatsRouter.openapi(
       const INSERT_CHUNK = 10;
 
       // 2. Batch insert stats
-      let statsCount = 0;
+      const statsQueries = [];
       for (let i = 0; i < body.stats.length; i += INSERT_CHUNK) {
         const chunk = body.stats.slice(i, i + INSERT_CHUNK);
-        const rows = await db
-          .insert(marketSalaryStats)
-          .values(
-            chunk.map((item) => ({
-              snapshotId: snapshot.id,
-              roleType: item.roleType,
-              metricKey: item.metricKey,
-              metricLabel: item.metricLabel,
-              p25: item.p25,
-              median: item.median,
-              p75: item.p75,
-              sampleSize: item.sampleSize,
-              createdAt: now,
-            }))
-          )
-          .returning({ id: marketSalaryStats.id });
-        statsCount += rows.length;
+        statsQueries.push(
+          db
+            .insert(marketSalaryStats)
+            .values(
+              chunk.map((item) => ({
+                snapshotId: snapshot.id,
+                roleType: item.roleType,
+                metricKey: item.metricKey,
+                metricLabel: item.metricLabel,
+                p25: item.p25,
+                median: item.median,
+                p75: item.p75,
+                sampleSize: item.sampleSize,
+                createdAt: now,
+              }))
+            )
+            .returning({ id: marketSalaryStats.id })
+        );
       }
 
       // 3. Batch insert company salaries
-      let companyCount = 0;
+      const companyQueries = [];
       for (let i = 0; i < body.companySalaries.length; i += INSERT_CHUNK) {
         const chunk = body.companySalaries.slice(i, i + INSERT_CHUNK);
-        const rows = await db
-          .insert(marketCompanySalaries)
-          .values(
-            chunk.map((item) => ({
-              snapshotId: snapshot.id,
-              companyName: item.companyName.toLowerCase(),
-              jobTitle: item.jobTitle.toLowerCase(),
-              seniority: item.seniority,
-              p25: item.p25,
-              median: item.median,
-              p75: item.p75,
-              sampleSize: item.sampleSize,
-              createdAt: now,
-            }))
-          )
-          .returning({ id: marketCompanySalaries.id });
-        companyCount += rows.length;
+        companyQueries.push(
+          db
+            .insert(marketCompanySalaries)
+            .values(
+              chunk.map((item) => ({
+                snapshotId: snapshot.id,
+                companyName: item.companyName.toLowerCase(),
+                jobTitle: item.jobTitle.toLowerCase(),
+                seniority: item.seniority,
+                p25: item.p25,
+                median: item.median,
+                p75: item.p75,
+                sampleSize: item.sampleSize,
+                createdAt: now,
+              }))
+            )
+            .returning({ id: marketCompanySalaries.id })
+        );
+      }
+
+      let statsCount = 0;
+      let companyCount = 0;
+
+      // Execute all inserts in a single db.batch roundtrip!
+      const totalQueries = [...statsQueries, ...companyQueries];
+      if (totalQueries.length > 0) {
+        const batchResults = await db.batch(totalQueries as any);
+        const statsResults = batchResults.slice(0, statsQueries.length);
+        const companyResults = batchResults.slice(statsQueries.length);
+
+        for (const res of statsResults) {
+          statsCount += (res as any).length;
+        }
+        for (const res of companyResults) {
+          companyCount += (res as any).length;
+        }
       }
 
       // 4. Cleanup old snapshots to prevent database bloat (Keep only last 10 successful snapshots)

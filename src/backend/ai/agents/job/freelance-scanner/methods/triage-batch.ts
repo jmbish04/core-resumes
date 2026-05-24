@@ -131,31 +131,42 @@ Return a JSON object with a "decisions" array. Each element must have:
       return { triaged: 0, errors: untriaged.length };
     }
 
-    // Save each decision
-    for (const decision of parsed.decisions) {
-      try {
-        await service.saveTriage({
-          opportunityId: decision.opportunityId,
-          decision: decision.decision,
-          confidence: decision.confidence,
-          rationale: decision.rationale,
-          skillsMatched: decision.skillsMatched,
-          skillsMissing: decision.skillsMissing,
-          budgetMatch: decision.budgetMatch,
-          competitionAssessment: decision.competitionAssessment,
-          winProbability: decision.winProbability,
-          recommendedBid: decision.recommendedBid,
-          recommendedBidCurrency: decision.recommendedBidCurrency,
-          bidStrategy: decision.bidStrategy,
-          modelUsed: String(env.MODEL_TRIAGE),
-          decidedAt: new Date(),
-        });
-        triaged++;
-      } catch (err) {
-        errors++;
-        logger.error(`[FreelanceScannerAgent] Failed to save triage for opp ${decision.opportunityId}`, {
-          error: String(err),
-        });
+    // Save all decisions in a single batch!
+    const triageValues = parsed.decisions.map((decision) => ({
+      opportunityId: decision.opportunityId,
+      decision: decision.decision,
+      confidence: decision.confidence,
+      rationale: decision.rationale,
+      skillsMatched: decision.skillsMatched,
+      skillsMissing: decision.skillsMissing,
+      budgetMatch: decision.budgetMatch,
+      competitionAssessment: decision.competitionAssessment,
+      winProbability: decision.winProbability,
+      recommendedBid: decision.recommendedBid,
+      recommendedBidCurrency: decision.recommendedBidCurrency,
+      bidStrategy: decision.bidStrategy,
+      modelUsed: String(env.MODEL_TRIAGE),
+      decidedAt: new Date(),
+    }));
+
+    try {
+      if (triageValues.length > 0) {
+        await service.saveTriageBatch(triageValues);
+        triaged = triageValues.length;
+      }
+    } catch (err) {
+      // Fallback: try inserting one-by-one to identify specific errors
+      logger.warn(`[FreelanceScannerAgent] Batch triage insert failed, falling back to sequential: ${String(err)}`);
+      for (const val of triageValues) {
+        try {
+          await service.saveTriage(val);
+          triaged++;
+        } catch (singleErr) {
+          errors++;
+          logger.error(`[FreelanceScannerAgent] Failed to save triage for opp ${val.opportunityId}`, {
+            error: String(singleErr),
+          });
+        }
       }
     }
 
