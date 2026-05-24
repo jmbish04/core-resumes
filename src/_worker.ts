@@ -27,15 +27,27 @@ import { Sandbox } from "@cloudflare/sandbox";
 import { routeAgentRequest } from "agents";
 import { App } from "astro/app";
 
+import { RoleChatAgent } from "./backend/ai/agents/chat";
+import { JobAnalysisAgent } from "./backend/ai/agents/job/analysis";
+import { JobScannerAgent } from "./backend/ai/agents/job/scanner";
 import { NotebookLMAgent } from "./backend/ai/agents/notebooklm";
 import { NotebookLMMcpAgent } from "./backend/ai/agents/notebooklm-mcp";
 import { OrchestratorAgent } from "./backend/ai/agents/orchestrator";
+import { SyncBroadcastAgent } from "./backend/ai/agents/sync-broadcast";
 import { TranscriptionAgent } from "./backend/ai/agents/transcription";
 import { app as honoApp } from "./backend/api";
 import { handleInboundEmail } from "./backend/email/handler";
 import { HealthCoordinator } from "./backend/health";
 import { RoleAssetsWorkflow, RoleAnalysisWorkflow } from "./backend/workflows";
-export { Sandbox, RoleAssetsWorkflow, RoleAnalysisWorkflow };
+export {
+  Sandbox,
+  RoleAssetsWorkflow,
+  RoleAnalysisWorkflow,
+  JobScannerAgent,
+  JobAnalysisAgent,
+  SyncBroadcastAgent,
+  RoleChatAgent,
+};
 
 /**
  * Create the Worker's default and named exports from the Astro build manifest.
@@ -68,7 +80,7 @@ export function createExports(manifest: any) {
       if (authHeader !== `Bearer ${expectedKey}`) {
         return new Response("Unauthorized", { status: 401 });
       }
-      return NotebookLMMcpAgent.serve("/mcp/notebooklm").fetch(request, env, ctx);
+      return routeAgentRequest(request, env, ctx);
     }
 
     // Layer 2: Agents SDK (WebSocket / RPC for Durable Objects)
@@ -101,7 +113,7 @@ export function createExports(manifest: any) {
    * Executes the full modular health screening, persists results to D1,
    * and logs the aggregate status.
    */
-  const scheduled = async (_controller: any, env: any, ctx: any) => {
+  const scheduled = async (_controller: any, env: any, _ctx: any) => {
     try {
       const coordinator = new HealthCoordinator(env);
       const { run } = await coordinator.runAllChecks("scheduled");
@@ -121,6 +133,10 @@ export function createExports(manifest: any) {
     TranscriptionAgent,
     RoleAssetsWorkflow,
     RoleAnalysisWorkflow,
+    JobScannerAgent,
+    JobAnalysisAgent,
+    SyncBroadcastAgent,
+    RoleChatAgent,
     Sandbox,
   };
 }
