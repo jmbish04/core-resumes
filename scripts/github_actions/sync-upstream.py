@@ -13,36 +13,65 @@ Required Environment Variables:
 - WORKER_API_KEY: The API key required to authenticate with the Worker API
 """
 
+import atexit
 import os
-import requests
-import json
 import sys
+from concurrent.futures import ThreadPoolExecutor
+
+import requests
+
+# Background pool for fire-and-forget progress POSTs. Each call returns
+# immediately so the main script never blocks on an upstream/worker hiccup.
+# Capped at 4 workers — progress events are small and infrequent.
+_progress_pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix="sync-progress")
+
+
+def _shutdown_progress_pool():
+    """Flush any in-flight progress POSTs before the process exits."""
+    _progress_pool.shutdown(wait=True, cancel_futures=False)
+
+
+atexit.register(_shutdown_progress_pool)
+
+
+def _post_progress(url, headers, payload):
+    """Single attempt with one retry. Runs on a background worker thread."""
+    for attempt in (1, 2):
+        try:
+            requests.post(url, headers=headers, json=payload, timeout=15)
+            return
+        except Exception as e:
+            if attempt == 2:
+                print(f"[progress] dropped after retry: {payload.get('status')} — {e}",
+                      file=sys.stderr)
+
 
 def send_progress(worker_url, worker_key, status, current=None, total=None, message=""):
+    """Fire-and-forget progress update. Returns immediately.
+
+    Failures are logged but never propagated to the caller. The worker handler
+    is responsible for fanning out to dashboard WebSockets; if that fan-out
+    fails the REST POST still succeeds (HTTP 200) so the GitHub Action keeps
+    moving forward.
+    """
     url = f"{worker_url.rstrip('/')}/api/pipeline/api-companies/sync-progress"
+    payload = {"status": status, "message": message}
+    if current is not None:
+        payload["current"] = current
+    if total is not None:
+        payload["total"] = total
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {worker_key}",
+    }
+
     try:
-        payload = {"status": status, "message": message}
-        if current is not None: payload["current"] = current
-        if total is not None: payload["total"] = total
-        
-        requests.post(
-            url,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {worker_key}"
-            },
-            json=payload,
-            timeout=30
-        )
-            url,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {worker_key}"
-            },
-            json=payload
-        )
-    except Exception as e:
-        print(f"Failed to send progress: {e}")
+        _progress_pool.submit(_post_progress, url, headers, payload)
+    except RuntimeError:
+        # Pool already shut down (process is exiting) — do a best-effort
+        # synchronous send so the final "completed"/"failed" event isn't lost.
+        _post_progress(url, headers, payload)
 
 def fetch_upstream(worker_url, worker_key):
     """
