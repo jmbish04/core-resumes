@@ -30,7 +30,7 @@ interface JSXPreviewContextValue {
 
 const JSXPreviewContext = createContext<JSXPreviewContextValue | null>(null);
 
-const TAG_REGEX = /<\/?([a-zA-Z][a-zA-Z0-9]*)\s*([^>]*?)(\/)?>/;
+const TAG_REGEX = /<\/?([a-zA-Z][a-zA-Z0-9]*)\s*((?:[^'">]|"[^"]*"|'[^']*')*?)(\/)?>/;
 
 export const useJSXPreview = () => {
   const context = useContext(JSXPreviewContext);
@@ -116,8 +116,8 @@ const completeJsxTag = (code: string) => {
 
   return (
     result +
-    stack
-      .toReversed()
+    [...stack]
+      .reverse()
       .map((tag) => `</${tag}>`)
       .join("")
   );

@@ -77,7 +77,7 @@ Direct SQLite access for custom queries:
 ```typescript
 // CREATE TABLE IF NOT EXISTS
 this.sql`
-  CREATE TABLE IF NOT EXISTS  IF NOT EXISTS items (
+  CREATE TABLE IF NOT EXISTS items (
     id TEXT PRIMARY KEY,
     name TEXT,
     created_at INTEGER DEFAULT (unixepoch())

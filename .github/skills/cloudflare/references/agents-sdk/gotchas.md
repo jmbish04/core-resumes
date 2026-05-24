@@ -146,7 +146,7 @@ onStart() {
 
 ### SQL Usage
 
-- CREATE TABLE IF NOT EXISTS s in `onStart()`, not `onRequest()`
+- CREATE TABLE IF NOT EXISTS in `onStart()`, not `onRequest()`
 - Use parameterized queries: `` sql`WHERE id = ${id}` `` (NOT `` sql`WHERE id = '${id}'` ``)
 - Index frequently queried columns
 
