@@ -29,9 +29,13 @@ export async function checkNotebookLMCredentials(env: Env): Promise<HealthStepRe
     details.fastapiUrl = fastapiUrl;
     details.connectionMode = (env as any).VPC_SERVICE ? "VPC Service Binding" : "Direct Fetch";
 
-    const fetchFn = (env as any).VPC_SERVICE
-      ? (env as any).VPC_SERVICE.fetch.bind((env as any).VPC_SERVICE)
-      : fetch;
+    const isLocal = typeof process !== "undefined" && process.env && 
+      (process.env.NODE_ENV === "development" || !process.env.NODE_ENV);
+    const fetchFn = isLocal
+      ? fetch
+      : (env as any).VPC_SERVICE
+        ? (env as any).VPC_SERVICE.fetch.bind((env as any).VPC_SERVICE)
+        : fetch;
 
     try {
       const controller = new AbortController();

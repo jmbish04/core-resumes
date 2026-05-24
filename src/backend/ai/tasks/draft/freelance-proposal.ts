@@ -191,14 +191,24 @@ async function generateFullProposal(
 
   let notebookEvidence = "";
   try {
-    const vpcResponse = await env.VPC_SERVICE.fetch(
-      `${env.NOTEBOOKLM_FASTAPI_URL}/api/chat`,
+    const isLocal = typeof process !== "undefined" && process.env && 
+      (process.env.NODE_ENV === "development" || !process.env.NODE_ENV);
+    const fetchFn = isLocal
+      ? fetch
+      : (env as any).VPC_SERVICE
+        ? (env as any).VPC_SERVICE.fetch.bind((env as any).VPC_SERVICE)
+        : fetch;
+
+    const vpcResponse = await fetchFn(
+      `${env.NOTEBOOKLM_FASTAPI_URL}/notebooks/${env.CAREER_NOTEBOOKLM_ID}/chat/ask`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          ...(env.NOTEBOOKLM_FASTAPI_KEY ? { "x-api-key": env.NOTEBOOKLM_FASTAPI_KEY } : {}),
+        },
         body: JSON.stringify({
-          query: evidenceQuery,
-          notebook_id: env.CAREER_NOTEBOOKLM_ID,
+          question: evidenceQuery,
         }),
       },
     );

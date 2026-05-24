@@ -492,9 +492,13 @@ class NotebookLMFastAPIProxy {
   constructor(env: Env, url: string, apiKey: string) {
     this.url = url.endsWith("/") ? url.slice(0, -1) : url;
     this.apiKey = apiKey;
-    this.fetchFn = (env as any).VPC_SERVICE
-      ? (env as any).VPC_SERVICE.fetch.bind((env as any).VPC_SERVICE)
-      : fetch;
+    const isLocal = typeof process !== "undefined" && process.env && 
+      (process.env.NODE_ENV === "development" || !process.env.NODE_ENV);
+    this.fetchFn = isLocal
+      ? fetch
+      : (env as any).VPC_SERVICE
+        ? (env as any).VPC_SERVICE.fetch.bind((env as any).VPC_SERVICE)
+        : fetch;
   }
 
   get notebooks() { return this.createNamespaceProxy("notebooks"); }
