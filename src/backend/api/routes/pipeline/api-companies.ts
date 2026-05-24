@@ -303,7 +303,7 @@ apiCompaniesRouter.openapi(
     const now = new Date();
 
     // Poll the GitHub runs API up to 2 times with a 1.5s delay to allow GitHub to register the dispatch event
-    for (let attempt = 1; attempt <= 2; attempt++) {
+    for (let attempt = 1; attempt <= 6; attempt++) {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       try {
