@@ -85,6 +85,53 @@ def send_progress(worker_url, worker_key, status, current=None, total=None, mess
                 file=sys.stderr,
             )
 
+def send_recommendation(worker_url, worker_key, token, system, source, reason, jobs=None):
+    """
+    Direct REST API post to save a company recommendation and job postings in real-time.
+    Runs on the background progress thread pool to be completely non-blocking.
+    """
+    url = f"{worker_url.rstrip('/')}/api/pipeline/api-companies/recommend"
+    payload = {
+        "token": token,
+        "system": system,
+        "source": source,
+        "recommendationReason": reason,
+    }
+    if jobs:
+        payload["jobs"] = [
+            {
+                "id": j["id"],
+                "title": j["title"],
+                "location": j["location"]
+            }
+            for j in jobs
+        ]
+        
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {worker_key}",
+    }
+    
+    try:
+        _progress_pool.submit(_post_recommendation, url, headers, payload)
+    except Exception:
+        # Fall back to synchronous post if pool is saturated/shut down
+        try:
+            _post_recommendation(url, headers, payload)
+        except Exception:
+            pass
+
+def _post_recommendation(url, headers, payload):
+    """Sends the recommendation payload to the worker REST API."""
+    for attempt in (1, 2):
+        try:
+            res = requests.post(url, headers=headers, json=payload, timeout=10)
+            res.raise_for_status()
+            return
+        except Exception as e:
+            if attempt == 2:
+                print(f"[recommendation] Failed to post match to REST API for {payload.get('token')}: {e}", file=sys.stderr)
+
 def fetch_search_terms(worker_url, worker_key):
     """Fetch matching title and location keywords from the worker."""
     url = f"{worker_url.rstrip('/')}/api/pipeline/api-companies/search-terms"
@@ -359,6 +406,18 @@ def fetch_upstream(worker_url, worker_key):
                     
                     matches_found += 1
                     print(f"[recommendation] matched {company['token']}: {company['recommendationReason']}")
+                    
+                    # Push recommendation to REST API in real-time. This provides immediate D1 coverage
+                    # and successfully posts matching jobs even if the final huge sync POST gets interrupted.
+                    send_recommendation(
+                        worker_url,
+                        worker_key,
+                        company["token"],
+                        company["system"],
+                        company["source"],
+                        company["recommendationReason"],
+                        matching_jobs
+                    )
             except Exception as scan_err:
                 print(f"[recommendation] error checking {company['token']}: {scan_err}")
                 

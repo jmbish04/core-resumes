@@ -709,3 +709,97 @@ apiCompaniesRouter.openapi(
   },
 );
 
+/**
+ * POST /api-companies/recommend — Receive a real-time matching recommendation and job posting.
+ */
+apiCompaniesRouter.openapi(
+  createRoute({
+    method: "post",
+    path: "/api-companies/recommend",
+    operationId: "apiCompaniesRecommend",
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: z.object({
+              token: z.string(),
+              system: z.string(),
+              source: z.string(),
+              recommendationReason: z.string(),
+              jobs: z.array(
+                z.object({
+                  id: z.string(),
+                  title: z.string(),
+                  location: z.string(),
+                })
+              ).optional(),
+            }),
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: "Recommendation processed and saved",
+        content: {
+          "application/json": {
+            schema: z.object({
+              success: z.boolean(),
+              jobsInserted: z.number(),
+            }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    const db = getDb(c.env);
+    const body = c.req.valid("json");
+    const now = new Date();
+    const logger = new Logger(c.env);
+
+    try {
+      // 1. Update the company to be recommended
+      await db
+        .update(apiCompanies)
+        .set({
+          isRecommended: true,
+          recommendationReason: body.recommendationReason,
+        })
+        .where(eq(apiCompanies.jobBoardToken, body.token));
+
+      // 2. Ingest any recommended jobs directly
+      let jobsInserted = 0;
+      if (body.jobs && body.jobs.length > 0) {
+        const jobValues = body.jobs.map((job) => ({
+          jobSiteId: job.id.toString(),
+          jobTitle: job.title,
+          company: body.token,
+          triagePassed: true,
+          triageReason: `Discovered and matched during real-time REST API recommend push: '${job.title}' in '${job.location}'`,
+        }));
+
+        const rows = await db
+          .insert(jobsPostings)
+          .values(jobValues)
+          .onConflictDoNothing()
+          .returning({ id: jobsPostings.id });
+        jobsInserted = rows.length;
+      }
+
+      await logger.info(`[Aggregator Sync] Saved real-time matching recommendation for ${body.token} (${jobsInserted} jobs).`, {
+        status: "completed",
+        company: body.token,
+        jobsAdded: jobsInserted,
+      });
+
+      return c.json({ success: true, jobsInserted }, 200);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await logger.error(`[Aggregator Sync] Failed to save real-time recommendation for ${body.token}: ${message}`);
+      return c.json({ error: message }, 500);
+    }
+  }
+);
+
+
