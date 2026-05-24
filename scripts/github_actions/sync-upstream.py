@@ -31,6 +31,14 @@ def send_progress(worker_url, worker_key, status, current=None, total=None, mess
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {worker_key}"
             },
+            json=payload,
+            timeout=30
+        )
+            url,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {worker_key}"
+            },
             json=payload
         )
     except Exception as e:
