@@ -46,16 +46,21 @@ export function PipelineAAggregatorDocs() {
       return val.toString();
     };
 
+    // Dynamically retrieve denominators from FUNNEL_DATA to avoid hardcoding inconsistencies
+    const totalGithubCompanies = FUNNEL_DATA.find((d) => d.name === "Total GitHub Companies")?.value || 12500;
+    const rawJobsScraped = FUNNEL_DATA.find((d) => d.name === "Raw Jobs Scraped")?.value || 45000;
+    const matchJobs = FUNNEL_DATA.find((d) => d.name === "Salary/Title/Location Match")?.value || 2100;
+
     // Calculate conversion percentage (e.g. active boards vs total github companies)
     let percentageStr = "";
     if (name === "Active Job Boards") {
-      const pct = ((item.value / 12500) * 100).toFixed(1);
+      const pct = ((item.value / totalGithubCompanies) * 100).toFixed(1);
       percentageStr = ` · ${pct}%`;
     } else if (name === "Salary/Title/Location Match") {
-      const pct = ((item.value / 45000) * 100).toFixed(1);
+      const pct = ((item.value / rawJobsScraped) * 100).toFixed(1);
       percentageStr = ` · ${pct}%`;
     } else if (name === "Processed in Tracker") {
-      const pct = ((item.value / 2100) * 100).toFixed(1);
+      const pct = ((item.value / matchJobs) * 100).toFixed(1);
       percentageStr = ` · ${pct}%`;
     }
 

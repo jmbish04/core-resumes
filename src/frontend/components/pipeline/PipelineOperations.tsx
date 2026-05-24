@@ -35,7 +35,7 @@ export function PipelineOperations() {
   const [syncError, setSyncError] = useState<string | null>(null);
 
   // Safely formats timestamps without throwing RangeErrors
-  const formatTimestamp = (ts: any) => {
+  const formatTimestamp = (ts: string | number | Date | null | undefined) => {
     if (!ts) return "Unknown Date";
     try {
       const date = new Date(ts);
