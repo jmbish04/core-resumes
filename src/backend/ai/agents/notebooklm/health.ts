@@ -4,8 +4,6 @@ import type { ModuleResult } from "@/backend/health/types";
 
 import { checkNotebookLMSession } from "@/ai/tools/notebooklm/notebooklm";
 
-import type { NotebookLMAgent } from "./index";
-
 /**
  * Agent RPC health check — verifies the NotebookLMAgent Durable Object is
  * reachable and can respond to RPC calls.
@@ -17,7 +15,7 @@ import type { NotebookLMAgent } from "./index";
 export async function checkNotebookLMAgentRPC(env: Env): Promise<ModuleResult> {
   const start = Date.now();
   try {
-    const stub = await getAgentByName<Env, NotebookLMAgent>(env.NOTEBOOKLM_AGENT as any, "global");
+    const stub = await getAgentByName(env.NOTEBOOKLM_AGENT, "global");
     const result = await stub.healthProbe();
     if (!result || typeof result !== "object" || !("status" in result)) {
       throw new Error("Invalid response from agent");

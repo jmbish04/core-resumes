@@ -35,10 +35,7 @@ export async function checkHealth(agent: OrchestratorAgent, env: Env) {
 export async function checkOrchestratorAgentRPC(env: Env) {
   const start = Date.now();
   try {
-    const stub = await getAgentByName<Env, OrchestratorAgent>(
-      env.ORCHESTRATOR_AGENT as any,
-      "global",
-    );
+    const stub = await getAgentByName(env.ORCHESTRATOR_AGENT, "global");
     const result = await stub.healthProbe();
     if (!result || typeof result !== "object" || !("status" in result)) {
       return {

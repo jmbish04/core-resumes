@@ -12,9 +12,6 @@ import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from "cloud
 import { NonRetryableError } from "cloudflare:workflows";
 import { eq } from "drizzle-orm";
 
-import type { TranscriptionAgent } from "@/backend/ai/agents/transcription";
-
-import { GoogleDriveClient } from "@/backend/ai/tools/google/drive";
 import {
   downloadAudioArtifactBytes,
   findNewAudioArtifact,
@@ -24,6 +21,7 @@ import {
 } from "@/ai/tools/notebooklm/notebooklm-sources";
 import { buildRoleMarkdown } from "@/ai/tools/role/markdown";
 import { buildRolePodcastPrompt } from "@/ai/tools/role/podcast-prompt";
+import { GoogleDriveClient } from "@/backend/ai/tools/google/drive";
 import { getDb } from "@/backend/db";
 import { rolePodcasts, roles, transcriptionJobs } from "@/backend/db/schema";
 
@@ -380,10 +378,7 @@ export class RoleAssetsWorkflow extends WorkflowEntrypoint<Env, RoleAssetsWorkfl
       updatedAt: new Date(),
     });
 
-    const stub = await getAgentByName<Env, TranscriptionAgent>(
-      this.env.TRANSCRIPTION_AGENT as any,
-      params.podcastId,
-    );
+    const stub = await getAgentByName(this.env.TRANSCRIPTION_AGENT, params.podcastId);
     await stub.transcribe(state.r2AudioKey, params.podcastId, state.role.id, jobId);
 
     return { ...state, transcriptionJobId: jobId };
