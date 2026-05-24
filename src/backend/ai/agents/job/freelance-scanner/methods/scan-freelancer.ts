@@ -47,9 +47,16 @@ export async function handleScanFreelancer(
     const client = new RapidApiClient(env);
     const service = new FreelanceService(env);
 
+    // Ensure we have at least 'q' or 'skills' parameter to satisfy RapidAPI requirements.
+    let searchSkills = params.skills;
+    let searchQuery = params.query;
+    if (!searchQuery && !searchSkills) {
+      searchSkills = env.FREELANCE_SCAN_SKILLS || "React,TypeScript,Node.js";
+    }
+
     const searchParams: FreelancerSearchParams = {
-      q: params.query,
-      skills: params.skills,
+      q: searchQuery,
+      skills: searchSkills,
       ...(params.filters as Partial<FreelancerSearchParams>),
     };
 
@@ -73,14 +80,14 @@ export async function handleScanFreelancer(
     // Record scan run
     await service.recordScanRun({
       platform: "freelancer",
-      sessionId,
-      query: params.query ?? null,
-      skills: params.skills ?? null,
-      found: run.found,
-      inserted: run.new,
-      updated: run.updated,
-      failed: run.failed,
+      searchQuery: searchQuery ?? null,
+      searchFilters: params.filters ?? null,
       status: "completed",
+      listingsFound: run.found,
+      listingsNew: run.new,
+      listingsUpdated: run.updated,
+      errorMessage: null,
+      triggeredBy: "manual",
     });
 
     agent.emitProgress({

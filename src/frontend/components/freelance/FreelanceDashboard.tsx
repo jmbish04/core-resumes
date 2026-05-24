@@ -571,7 +571,7 @@ export function FreelanceDashboard() {
                 className="pl-8 h-9"
               />
             </div>
-            <Select value={platformFilter} onValueChange={setPlatformFilter}>
+            <Select value={platformFilter} onValueChange={(val) => setPlatformFilter(val ?? "all")}>
               <SelectTrigger className="w-[140px] h-9">
                 <Filter className="mr-1.5 size-3" />
                 <SelectValue placeholder="Platform" />
@@ -582,7 +582,7 @@ export function FreelanceDashboard() {
                 <SelectItem value="freelancer">Freelancer</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={triageFilter} onValueChange={setTriageFilter}>
+            <Select value={triageFilter} onValueChange={(val) => setTriageFilter(val ?? "all")}>
               <SelectTrigger className="w-[140px] h-9">
                 <Target className="mr-1.5 size-3" />
                 <SelectValue placeholder="Triage" />

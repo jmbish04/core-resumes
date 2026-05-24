@@ -214,7 +214,7 @@
     "ALLOWED_EMAILS": ["justin@126colby.com", "jmbish04@gmail.com"],
     "WORKER_EMAIL_INBOX": "job-pipeline@hacolby.app",
     "RAPIDAPI_HOST_UPWORK": "upwork-jobs-api3.p.rapidapi.com",
-    "RAPIDAPI_HOST_FREELANCER": "upwork-jobs-search-api.p.rapidapi.com",
+    "RAPIDAPI_HOST_FREELANCER": "freelancer-jobs-search-api.p.rapidapi.com",
     "FREELANCE_SCAN_SKILLS": "React,TypeScript,Node.js,Next.js,Cloudflare Workers",
     "FREELANCE_DEFAULT_HOURLY_MIN": "50",
     "FREELANCE_DEFAULT_EXPERIENCE": "expert",
