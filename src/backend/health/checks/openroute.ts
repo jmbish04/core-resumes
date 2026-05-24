@@ -1,9 +1,9 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import type { HealthStepResult } from "@/backend/health/types";
 
-import { generateStructuredOutput } from "@/backend/ai/providers";
+import { AiProvider } from "@/backend/ai/providers";
 import { BrowserRendering } from "@/backend/ai/tools/browser-rendering";
 import { getDb } from "@/backend/db";
 import { scoringRubrics } from "@/backend/db/schema";
@@ -39,14 +39,8 @@ const LocationExtractionInputSchema = z.object({
     .array(z.string())
     .optional()
     .describe("Only locations in California / SF Bay Area from the job posting"),
-  workplaceType: z
-    .string()
-    .optional()
-    .describe("remote, hybrid, or onsite"),
-  rtoPolicy: z
-    .string()
-    .optional()
-    .describe("Any RTO policy details"),
+  workplaceType: z.string().optional().describe("remote, hybrid, or onsite"),
+  rtoPolicy: z.string().optional().describe("Any RTO policy details"),
 });
 
 const LocationExtractionSchema = LocationExtractionInputSchema.transform((data) => {
@@ -75,8 +69,6 @@ const LocationExtractionSchema = LocationExtractionInputSchema.transform((data) 
     rtoPolicy: data.rtoPolicy ?? "Unknown",
   };
 });
-
-
 
 export async function checkOpenRoute(env: Env): Promise<HealthStepResult> {
   const start = Date.now();
@@ -138,7 +130,7 @@ export async function checkOpenRoute(env: Env): Promise<HealthStepResult> {
   // 3. Extract Location Info via AI
   let locationData;
   try {
-    locationData = await generateStructuredOutput(env, {
+    locationData = await new AiProvider(env).generateStructuredOutput({
       messages: [
         {
           role: "system",
@@ -165,9 +157,7 @@ DO NOT wrap your response in markdown fences.`,
     });
     details.extractedLocation = locationData;
   } catch (e) {
-    issues.push(
-      `AI Location Extraction failed: ${e instanceof Error ? e.message : String(e)}`,
-    );
+    issues.push(`AI Location Extraction failed: ${e instanceof Error ? e.message : String(e)}`);
     return {
       status: "fail",
       latencyMs: Date.now() - start,
@@ -195,11 +185,7 @@ DO NOT wrap your response in markdown fences.`,
 
     try {
       const gmService = new GoogleMapsService(env);
-      const gmResult = await gmService.computeCommute(
-        homeAddress,
-        searchQuery,
-        details,
-      );
+      const gmResult = await gmService.computeCommute(homeAddress, searchQuery, details);
       commuteSummaryStr = gmResult.commuteSummary;
       details.openRouteStatus = "ok"; // Successfully obtained commute data (via Google Maps)
     } catch (e) {
@@ -228,7 +214,8 @@ DO NOT wrap your response in markdown fences.`,
     try {
       const summary = await openRoute.getCommuteSummary(homeAddress, selectedLocation);
       if (summary.success) {
-        const sourceLabel = summary.source === "google_maps" ? "Google Maps API (fallback)" : "OpenRoute API";
+        const sourceLabel =
+          summary.source === "google_maps" ? "Google Maps API (fallback)" : "OpenRoute API";
         commuteSummaryStr = `${sourceLabel} Driving Data: ${summary.distanceMiles.toFixed(1)} miles, ${summary.durationMinutes} minutes each way.`;
         details.openRouteResponse = summary;
         details.commuteSource = summary.source;

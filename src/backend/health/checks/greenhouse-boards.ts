@@ -5,10 +5,10 @@
 
 import { isNotNull } from "drizzle-orm";
 
+import type { GreenhouseJob } from "@/backend/health";
+
 import { getDb } from "@/backend/db";
 import { companies } from "@/backend/db/schema";
-
-import type { GreenhouseJob } from "@/backend/health";
 
 // Fallback board if no D1 boards have SF-area jobs
 const FALLBACK_BOARD_TOKEN = "anthropic";
@@ -76,9 +76,7 @@ export async function findSFAreaJob(env: Env): Promise<GreenhouseBoardResult> {
   for (const [token, companyName] of uniqueBoards) {
     boardsChecked.push(token);
     try {
-      const res = await fetch(
-        `https://boards-api.greenhouse.io/v1/boards/${token}/jobs`,
-      );
+      const res = await fetch(`https://boards-api.greenhouse.io/v1/boards/${token}/jobs`);
       if (!res.ok) continue;
 
       const data = (await res.json()) as { jobs: GreenhouseJob[] };
@@ -128,7 +126,8 @@ export async function findSFAreaJob(env: Env): Promise<GreenhouseBoardResult> {
   const nonRemoteJobs = fallbackData.jobs.filter(
     (j) => !j.location.name.toLowerCase().includes("remote"),
   );
-  const jobList = sfJobs.length > 0 ? sfJobs : nonRemoteJobs.length > 0 ? nonRemoteJobs : fallbackData.jobs;
+  const jobList =
+    sfJobs.length > 0 ? sfJobs : nonRemoteJobs.length > 0 ? nonRemoteJobs : fallbackData.jobs;
   const randomJob = jobList[Math.floor(Math.random() * jobList.length)];
 
   return {

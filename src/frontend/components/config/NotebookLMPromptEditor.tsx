@@ -80,7 +80,8 @@ const TEMPLATE_TAGS = [
   { tag: "{{companyName}}", description: 'The company name (e.g., "Google")' },
   {
     tag: "{{instruction}}",
-    description: "User-provided instructions appended at runtime. Replaced with input or removed if empty.",
+    description:
+      "User-provided instructions appended at runtime. Replaced with input or removed if empty.",
   },
 ];
 
@@ -91,8 +92,9 @@ export function NotebookLMPromptEditor() {
         <CardHeader>
           <CardTitle>Artifact Prompts</CardTitle>
           <CardDescription>
-            Customize the default prompts used when generating artifacts. 
-            When generating an artifact from a role profile, you'll optionally be able to review and modify these prompts before they are sent to NotebookLM.
+            Customize the default prompts used when generating artifacts. When generating an
+            artifact from a role profile, you'll optionally be able to review and modify these
+            prompts before they are sent to NotebookLM.
           </CardDescription>
         </CardHeader>
         <CardContent>

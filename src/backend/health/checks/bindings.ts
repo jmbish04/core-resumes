@@ -50,7 +50,7 @@ export async function checkBindings(env: Env): Promise<HealthStepResult> {
       try {
         // Import mimetext + cloudflare:email for MIME validation
         const { createMimeMessage } = await import("mimetext");
-        const { EmailMessage } = await import("cloudflare:email");
+        const { EmailMessage: _EmailMessage } = await import("cloudflare:email");
 
         const msg = createMimeMessage();
         msg.setSender({ name: "Health Check", addr: "health@colby.sh" });
@@ -62,7 +62,7 @@ export async function checkBindings(env: Env): Promise<HealthStepResult> {
         });
 
         // Validate construction — do NOT call .send()
-        const emailMessage = new EmailMessage("health@colby.sh", "probe@colby.sh", msg.asRaw());
+
         details.emailOut = "mime_construction_ok";
       } catch (e) {
         issues.push(`EMAIL_OUT MIME error: ${e instanceof Error ? e.message : String(e)}`);

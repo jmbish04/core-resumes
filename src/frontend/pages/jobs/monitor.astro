@@ -1,0 +1,17 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { JobPipelineMonitor } from "../../components/jobs/JobPipelineMonitor";
+---
+
+<BaseLayout title="Pipeline Monitor | Colby Ecosystem" description="Live monitoring of job scanning and analysis pipelines.">
+  <div class="container py-8 max-w-6xl space-y-8">
+    <div class="flex flex-col space-y-2">
+      <h1 class="text-3xl font-bold tracking-tight">Pipeline Monitor</h1>
+      <p class="text-muted-foreground">
+        Real-time visibility into Greenhouse board scanning and AI job analysis progress.
+      </p>
+    </div>
+
+    <JobPipelineMonitor client:load />
+  </div>
+</BaseLayout>
