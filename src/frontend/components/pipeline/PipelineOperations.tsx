@@ -56,14 +56,17 @@ export function PipelineOperations() {
     }
   };
 
-  // Initialize the vertical Progress Stepper steps
-  const [steps, setSteps] = useState<WorkflowStep[]>([
+  // Canonical fallback workflow steps matching the backend steps structure
+  const fallbackSteps: WorkflowStep[] = [
     { step: 1, title: "Dispatch Sync Workflow", status: "idle", logs: [] },
     { step: 2, title: "Load Upstream Repositories", status: "idle", logs: [] },
     { step: 3, title: "Scrape and Extract Metadata", status: "idle", logs: [] },
     { step: 4, title: "Update Local Databases", status: "idle", logs: [] },
     { step: 5, title: "Finalize & Broadcast Stats", status: "idle", logs: [] },
-  ]);
+  ];
+
+  // Initialize the vertical Progress Stepper steps dynamically from the backend (single source of truth)
+  const [steps, setSteps] = useState<WorkflowStep[]>([]);
 
   // Connect to the dedicated SyncBroadcastAgent WebSocket.
   // routeAgentRequest in _worker.ts handles the upgrade at
@@ -181,9 +184,11 @@ export function PipelineOperations() {
       const res: any = await apiGet("/api/pipeline/api-companies/steps");
       if (res.steps) {
         setSteps(res.steps);
+      } else {
+        setSteps(fallbackSteps);
       }
     } catch {
-      // Keep static steps as a fallback
+      setSteps(fallbackSteps);
     }
   };
 
@@ -197,14 +202,14 @@ export function PipelineOperations() {
       setSyncError(null);
 
       // Fetch fresh steps from backend (Single Source of Truth)
-      let initialSteps = steps;
+      let initialSteps = steps.length > 0 ? steps : fallbackSteps;
       try {
         const res: any = await apiGet("/api/pipeline/api-companies/steps");
         if (res.steps) {
           initialSteps = res.steps;
         }
       } catch {
-        // Fallback to active state
+        // Fallback
       }
 
       // Reset progress steps to default active/idle state before starting sync
