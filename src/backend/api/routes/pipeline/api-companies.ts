@@ -68,21 +68,46 @@ apiCompaniesRouter.openapi(
     const upstreamSet = new Set(upstreamTokens.map((t) => t.token));
 
     try {
-      const allCompanies = await db
+      const existingTokenSet = new Set<string>();
+      const toReactivateIds: number[] = [];
+
+      // 1. Query D1 in selective, parameter-safe chunks of 90 matching tokens
+      // to identify existing tokens and reactivations without loading all 100k+ rows.
+      const SELECT_CHUNK = 90;
+      for (let i = 0; i < upstreamTokens.length; i += SELECT_CHUNK) {
+        const chunk = upstreamTokens.slice(i, i + SELECT_CHUNK);
+        const tokensInChunk = chunk.map((t) => t.token);
+
+        const dbMatches = await db
+          .select({
+            id: apiCompanies.id,
+            token: apiCompanies.jobBoardToken,
+            isActive: apiCompanies.isActive,
+          })
+          .from(apiCompanies)
+          .where(inArray(apiCompanies.jobBoardToken, tokensInChunk));
+
+        for (const match of dbMatches) {
+          existingTokenSet.add(match.token);
+          if (!match.isActive) {
+            toReactivateIds.push(match.id);
+          }
+        }
+      }
+
+      // 2. Load ONLY token and id of active companies to compute deactivations in a memory-light Set comparison
+      const activeCompanies = await db
         .select({
           id: apiCompanies.id,
           token: apiCompanies.jobBoardToken,
-          isActive: apiCompanies.isActive,
         })
-        .from(apiCompanies);
+        .from(apiCompanies)
+        .where(eq(apiCompanies.isActive, true));
 
-      const existingTokenSet = new Set(allCompanies.map((c) => c.token));
-      const toDeactivateIds = allCompanies
-        .filter((c) => c.isActive && !upstreamSet.has(c.token))
+      const toDeactivateIds = activeCompanies
+        .filter((c) => !upstreamSet.has(c.token))
         .map((c) => c.id);
-      const toReactivateIds = allCompanies
-        .filter((c) => !c.isActive && upstreamSet.has(c.token))
-        .map((c) => c.id);
+
       const newTokens = upstreamTokens.filter((t) => !existingTokenSet.has(t.token));
 
       let deactivatedCount = 0;
