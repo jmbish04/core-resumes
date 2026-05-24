@@ -116,101 +116,106 @@ export function PipelineOperations() {
   const agent = useAgent({
     agent: "SyncBroadcastAgent",
     name: "global",
-    onMessage: (message: any) => {
-      if (message?.type === "sync_progress") {
-        const payload = message.payload;
-        const status = payload.status;
-        const msgText = payload.message || status;
+    onMessage: (event: any) => {
+      try {
+        const message = JSON.parse(event.data) as any;
+        if (message?.type === "sync_progress") {
+          const payload = message.payload;
+          const status = payload.status;
+          const msgText = payload.message || status;
 
-        // Clear the self-healing timeout on any progress message from the active runner (non-dispatching statuses)
-        if (status && status !== "dispatching" && status !== "trigger-sync") {
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-            timeoutRef.current = null;
+          // Clear the self-healing timeout on any progress message from the active runner (non-dispatching statuses)
+          if (status && status !== "dispatching" && status !== "trigger-sync") {
+            if (timeoutRef.current) {
+              clearTimeout(timeoutRef.current);
+              timeoutRef.current = null;
+            }
           }
-        }
 
-        setSteps((prevSteps) => {
-          const nextSteps = [...prevSteps].map((s) => ({ ...s, logs: [...s.logs] }));
+          setSteps((prevSteps) => {
+            const nextSteps = [...prevSteps].map((s) => ({ ...s, logs: [...s.logs] }));
 
-          // Helper to mark steps as completed up to a specific step
-          const completeUpTo = (stepNum: number) => {
-            for (let i = 0; i < stepNum - 1; i++) {
-              if (nextSteps[i].status !== "completed") {
+            // Helper to mark steps as completed up to a specific step
+            const completeUpTo = (stepNum: number) => {
+              for (let i = 0; i < stepNum - 1; i++) {
+                if (nextSteps[i].status !== "completed") {
+                  nextSteps[i].status = "completed";
+                  if (nextSteps[i].logs.length === 0) {
+                    nextSteps[i].logs.push("Phase finished successfully.");
+                  }
+                }
+              }
+            };
+
+            if (status === "dispatching" || status === "trigger-sync") {
+              nextSteps[0].status = "active";
+              if (msgText) nextSteps[0].logs.push(msgText);
+            } else if (
+              status === "initializing" ||
+              status === "fetching_upstream" ||
+              status === "loading_sources"
+            ) {
+              completeUpTo(2);
+              nextSteps[1].status = "active";
+              if (msgText) nextSteps[1].logs.push(msgText);
+            } else if (
+              status === "scraping" ||
+              status === "parsing" ||
+              status === "processing" ||
+              status === "mapping"
+            ) {
+              completeUpTo(3);
+              nextSteps[2].status = "active";
+              if (msgText) nextSteps[2].logs.push(msgText);
+            } else if (
+              status === "saving_db" ||
+              status === "ingesting" ||
+              status === "writing_d1" ||
+              status === "updating_database"
+            ) {
+              completeUpTo(4);
+              nextSteps[3].status = "active";
+              if (msgText) nextSteps[3].logs.push(msgText);
+            } else if (status === "completed" || status === "success") {
+              // Complete all steps
+              for (let i = 0; i < 4; i++) {
                 nextSteps[i].status = "completed";
                 if (nextSteps[i].logs.length === 0) {
                   nextSteps[i].logs.push("Phase finished successfully.");
                 }
               }
-            }
-          };
+              nextSteps[4].status = "completed";
+              nextSteps[4].logs.push("Upstream repository synchronization completed successfully.");
+              nextSteps[4].logs.push(`Added, deactivated, and reactivated companies matching D1.`);
+              setSyncing(false);
+              setSyncError(null);
+              toast({ title: "GitHub Sync Completed", variant: "default" });
+              fetchStats(); // Refresh table
+            } else if (status === "failed" || status === "error") {
+              // Mark currently active step as failed, or default to Step 3
+              let activeIdx = nextSteps.findIndex((s) => s.status === "active");
+              if (activeIdx === -1) activeIdx = 2; // fallback to Step 3
 
-          if (status === "dispatching" || status === "trigger-sync") {
-            nextSteps[0].status = "active";
-            if (msgText) nextSteps[0].logs.push(msgText);
-          } else if (
-            status === "initializing" ||
-            status === "fetching_upstream" ||
-            status === "loading_sources"
-          ) {
-            completeUpTo(2);
-            nextSteps[1].status = "active";
-            if (msgText) nextSteps[1].logs.push(msgText);
-          } else if (
-            status === "scraping" ||
-            status === "parsing" ||
-            status === "processing" ||
-            status === "mapping"
-          ) {
-            completeUpTo(3);
-            nextSteps[2].status = "active";
-            if (msgText) nextSteps[2].logs.push(msgText);
-          } else if (
-            status === "saving_db" ||
-            status === "ingesting" ||
-            status === "writing_d1" ||
-            status === "updating_database"
-          ) {
-            completeUpTo(4);
-            nextSteps[3].status = "active";
-            if (msgText) nextSteps[3].logs.push(msgText);
-          } else if (status === "completed" || status === "success") {
-            // Complete all steps
-            for (let i = 0; i < 4; i++) {
-              nextSteps[i].status = "completed";
-              if (nextSteps[i].logs.length === 0) {
-                nextSteps[i].logs.push("Phase finished successfully.");
+              nextSteps[activeIdx].status = "failed";
+              const errMsg = msgText || "An unexpected execution failure occurred.";
+              nextSteps[activeIdx].logs.push(`CRITICAL ERROR: ${errMsg}`);
+              
+              // Set all subsequent steps to idle
+              for (let i = activeIdx + 1; i < nextSteps.length; i++) {
+                nextSteps[i].status = "idle";
               }
-            }
-            nextSteps[4].status = "completed";
-            nextSteps[4].logs.push("Upstream repository synchronization completed successfully.");
-            nextSteps[4].logs.push(`Added, deactivated, and reactivated companies matching D1.`);
-            setSyncing(false);
-            setSyncError(null);
-            toast({ title: "GitHub Sync Completed", variant: "default" });
-            fetchStats(); // Refresh table
-          } else if (status === "failed" || status === "error") {
-            // Mark currently active step as failed, or default to Step 3
-            let activeIdx = nextSteps.findIndex((s) => s.status === "active");
-            if (activeIdx === -1) activeIdx = 2; // fallback to Step 3
 
-            nextSteps[activeIdx].status = "failed";
-            const errMsg = msgText || "An unexpected execution failure occurred.";
-            nextSteps[activeIdx].logs.push(`CRITICAL ERROR: ${errMsg}`);
-            
-            // Set all subsequent steps to idle
-            for (let i = activeIdx + 1; i < nextSteps.length; i++) {
-              nextSteps[i].status = "idle";
+              setSyncing(false);
+              setSyncError(errMsg);
+              toast({ title: "GitHub Sync Failed", variant: "destructive" });
+              fetchStats(); // Refresh table
             }
 
-            setSyncing(false);
-            setSyncError(errMsg);
-            toast({ title: "GitHub Sync Failed", variant: "destructive" });
-            fetchStats(); // Refresh table
-          }
-
-          return nextSteps;
-        });
+            return nextSteps;
+          });
+        }
+      } catch (err) {
+        console.warn("[PipelineOperations] Failed to parse WebSocket message:", err);
       }
     },
   });
