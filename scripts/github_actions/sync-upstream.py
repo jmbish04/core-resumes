@@ -68,10 +68,16 @@ def send_progress(worker_url, worker_key, status, current=None, total=None, mess
 
     try:
         _progress_pool.submit(_post_progress, url, headers, payload)
-    except RuntimeError:
-        # Pool already shut down (process is exiting) — do a best-effort
-        # synchronous send so the final "completed"/"failed" event isn't lost.
-        _post_progress(url, headers, payload)
+    except Exception as submit_err:
+        # Pool unavailable (shut down, saturated, or otherwise rejecting work).
+        # Fall back to a blocking synchronous POST so the event still ships.
+        try:
+            _post_progress(url, headers, payload)
+        except Exception as post_err:
+            print(
+                f"[progress] dropped (pool: {submit_err}; sync fallback: {post_err})",
+                file=sys.stderr,
+            )
 
 def fetch_upstream(worker_url, worker_key):
     """
