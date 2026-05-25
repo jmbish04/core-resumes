@@ -74,7 +74,7 @@ export const siteConfig: SiteConfig = {
     { href: "/", label: "Dashboard", icon: "LayoutDashboard" },
     { href: "/config", label: "Config", icon: "Settings" },
     { href: "/health", label: "Health", icon: "Activity" },
-    { href: "/docs", label: "Docs", icon: "ScrollText" },
+    { href: "/docs", label: "Docs", icon: "ScrollText", external: true },
     { href: "/openapi.json", label: "OpenAPI", icon: "FileJson" },
     { href: "/scalar", label: "Scalar", icon: "BarChart3" },
     { href: "/swagger", label: "Swagger", icon: "Sparkles" },
