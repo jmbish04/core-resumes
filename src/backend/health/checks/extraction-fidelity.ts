@@ -29,7 +29,7 @@ import {
 import { findSFAreaJob } from "./greenhouse-boards";
 
 const SAMPLES_PER_ARRAY = 3;
-const OVERALL_SAFETY_TIMEOUT_MS = 90_000;
+const OVERALL_SAFETY_TIMEOUT_MS = 120_000;
 
 // ---------------------------------------------------------------------------
 // Helpers

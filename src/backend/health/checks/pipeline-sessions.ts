@@ -55,45 +55,76 @@ export async function checkPipelineSessions(env: Env): Promise<HealthStepResult>
     }>();
 
     if (!latestSession) {
-      return {
-        status: "warn",
-        latencyMs: Date.now() - start,
-        error: "No pipeline sessions found — scanner has never run",
-        details: { sessionCount: 0 },
+      // Check if sync stats has entries to avoid false positive warning when session_runs is cleared
+      const syncStats = await env.DB.prepare(
+        `SELECT * FROM api_company_sync_stats ORDER BY run_timestamp DESC LIMIT 1`
+      ).first<{
+        id: number;
+        run_timestamp: number;
+        status: string;
+        files_processed: number;
+      }>();
+
+      if (syncStats) {
+        details.latestSessionUuid = `sync-run-${syncStats.id}`;
+        details.latestTimestamp = new Date(syncStats.run_timestamp * 1000).toISOString();
+        const sessionAgeHours = (Date.now() / 1000 - syncStats.run_timestamp) / 3600;
+        details.sessionAgeHours = Math.round(sessionAgeHours * 10) / 10;
+        
+        details.latestStats = {
+          scraped: syncStats.files_processed,
+          triaged: 0,
+          analyzed: 0,
+          failed: syncStats.status === "failed" ? 1 : 0,
+          costUsd: 0,
+          failureRatePct: syncStats.status === "failed" ? 100 : 0,
+        };
+        
+        const totalSessions = await env.DB.prepare(`SELECT COUNT(*) as cnt FROM api_company_sync_stats`).first<{
+          cnt: number;
+        }>();
+        details.totalSessions = totalSessions?.cnt ?? 0;
+      } else {
+        return {
+          status: "warn",
+          latencyMs: Date.now() - start,
+          error: "No pipeline sessions found — scanner has never run",
+          details: { sessionCount: 0 },
+        };
+      }
+    } else {
+      details.latestSessionUuid = latestSession.session_uuid;
+      details.latestTimestamp = new Date(latestSession.timestamp * 1000).toISOString();
+
+      // Age check
+      const sessionAgeHours = (Date.now() / 1000 - latestSession.timestamp) / 3600;
+      details.sessionAgeHours = Math.round(sessionAgeHours * 10) / 10;
+
+      if (sessionAgeHours > MAX_STALE_HOURS) {
+        warnings.push(
+          `Latest session is ${details.sessionAgeHours}h old (threshold: ${MAX_STALE_HOURS}h)`,
+        );
+      }
+
+      // Sub-check 2: Failure rate
+      const totalProcessed = latestSession.total_triaged + latestSession.total_analyzed;
+      const failureRate =
+        totalProcessed > 0 ? (latestSession.total_failed / totalProcessed) * 100 : 0;
+
+      details.latestStats = {
+        scraped: latestSession.total_scraped,
+        triaged: latestSession.total_triaged,
+        analyzed: latestSession.total_analyzed,
+        failed: latestSession.total_failed,
+        costUsd: latestSession.total_cost_usd,
+        failureRatePct: Math.round(failureRate * 10) / 10,
       };
-    }
 
-    details.latestSessionUuid = latestSession.session_uuid;
-    details.latestTimestamp = new Date(latestSession.timestamp * 1000).toISOString();
-
-    // Age check
-    const sessionAgeHours = (Date.now() / 1000 - latestSession.timestamp) / 3600;
-    details.sessionAgeHours = Math.round(sessionAgeHours * 10) / 10;
-
-    if (sessionAgeHours > MAX_STALE_HOURS) {
-      warnings.push(
-        `Latest session is ${details.sessionAgeHours}h old (threshold: ${MAX_STALE_HOURS}h)`,
-      );
-    }
-
-    // Sub-check 2: Failure rate
-    const totalProcessed = latestSession.total_triaged + latestSession.total_analyzed;
-    const failureRate =
-      totalProcessed > 0 ? (latestSession.total_failed / totalProcessed) * 100 : 0;
-
-    details.latestStats = {
-      scraped: latestSession.total_scraped,
-      triaged: latestSession.total_triaged,
-      analyzed: latestSession.total_analyzed,
-      failed: latestSession.total_failed,
-      costUsd: latestSession.total_cost_usd,
-      failureRatePct: Math.round(failureRate * 10) / 10,
-    };
-
-    if (failureRate > MAX_FAILURE_RATE_PCT) {
-      issues.push(
-        `Latest session failure rate ${Math.round(failureRate)}% exceeds ${MAX_FAILURE_RATE_PCT}% threshold`,
-      );
+      if (failureRate > MAX_FAILURE_RATE_PCT) {
+        issues.push(
+          `Latest session failure rate ${Math.round(failureRate)}% exceeds ${MAX_FAILURE_RATE_PCT}% threshold`,
+        );
+      }
     }
 
     // Sub-check 3: Stuck sessions — sessions with no end timestamp

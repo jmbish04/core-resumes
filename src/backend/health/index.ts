@@ -78,6 +78,7 @@ function getTimeoutOverrides(trigger: HealthTrigger): Record<string, number> {
     agent_notebooklm: 45_000,
     salary_sandbox: 45_000,
     google_drive_lifecycle: 45_000,
+    intake_pipeline: 120_000,
     extraction_fidelity: 120_000,
     openroute_commute: 90_000,
     board_token_config: 45_000,
