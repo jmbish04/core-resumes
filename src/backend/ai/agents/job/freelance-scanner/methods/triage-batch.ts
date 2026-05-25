@@ -155,16 +155,24 @@ Return a JSON object with a "decisions" array. Each element must have:
         triaged = triageValues.length;
       }
     } catch (err) {
-      // Fallback: try inserting one-by-one to identify specific errors
-      logger.warn(`[FreelanceScannerAgent] Batch triage insert failed, falling back to sequential: ${String(err)}`);
-      for (const val of triageValues) {
-        try {
+      // Fallback: try inserting concurrently to identify specific errors without sequential round-trips
+      logger.warn(`[FreelanceScannerAgent] Batch triage insert failed, falling back to concurrent single inserts: ${String(err)}`);
+      const results = await Promise.allSettled(
+        triageValues.map(async (val) => {
           await service.saveTriage(val);
+          return val.opportunityId;
+        })
+      );
+
+      for (let i = 0; i < results.length; i++) {
+        const res = results[i];
+        const val = triageValues[i];
+        if (res.status === "fulfilled") {
           triaged++;
-        } catch (singleErr) {
+        } else {
           errors++;
           logger.error(`[FreelanceScannerAgent] Failed to save triage for opp ${val.opportunityId}`, {
-            error: String(singleErr),
+            error: String(res.reason),
           });
         }
       }

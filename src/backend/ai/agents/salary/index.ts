@@ -106,14 +106,20 @@ export class SalaryAgent extends Agent<Env, Record<string, never>> {
         throw new Error(`Sandbox python analysis failed: ${runResult.stderr}`);
       }
 
-      // 5. Read computed metrics
-      const resultsText = await sandbox.readFile("/workspace/output_results.json");
+      // 5. Read computed metrics and validate output
       let results: any;
       try {
+        const resultsText = await sandbox.readFile("/workspace/output_results.json");
         results = JSON.parse(resultsText);
-      } catch (jsonErr) {
+        if (!results || typeof results !== "object") {
+          throw new Error("Sandbox output is not a valid JSON object.");
+        }
+        if (!results.metrics) {
+          throw new Error("Sandbox output is missing required 'metrics' property.");
+        }
+      } catch (fileOrJsonErr) {
         throw new Error(
-          `Failed to parse broad trends sandbox JSON output. Raw stdout was: ${runResult.stdout}. Parse error: ${String(jsonErr)}`
+          `Failed to read or parse broad trends sandbox output results. Raw stdout was: ${runResult.stdout}. Error: ${String(fileOrJsonErr)}`
         );
       }
 
@@ -289,14 +295,17 @@ Be highly factual and professional. Avoid fluffy adjectives or hype. Include mar
         throw new Error(`Role salary analysis container execution failed: ${execResult.stderr}`);
       }
 
-      // 7. Parse results
-      const resultsText = await sandbox.readFile("/workspace/output_results.json");
+      // 7. Parse and validate results
       let results: any;
       try {
+        const resultsText = await sandbox.readFile("/workspace/output_results.json");
         results = JSON.parse(resultsText);
-      } catch (jsonErr) {
+        if (!results || typeof results !== "object") {
+          throw new Error("Sandbox output is not a valid JSON object.");
+        }
+      } catch (fileOrJsonErr) {
         throw new Error(
-          `Failed to parse role compensation sandbox JSON output. Raw stdout was: ${execResult.stdout}. Parse error: ${String(jsonErr)}`
+          `Failed to read or parse role compensation sandbox output. Raw stdout was: ${execResult.stdout}. Error: ${String(fileOrJsonErr)}`
         );
       }
 
@@ -484,7 +493,19 @@ Please try rephrasing your calculation request.`;
 
         let parsedOutput: any = { rawStdout: execResult.stdout };
         try {
-          parsedOutput = JSON.parse(execResult.stdout.trim());
+          const trimmedStdout = execResult.stdout.trim();
+          // Find first JSON boundaries in case there is trailing/leading debug info
+          const jsonStartIndex = trimmedStdout.indexOf("{");
+          const jsonEndIndex = trimmedStdout.lastIndexOf("}");
+          if (jsonStartIndex !== -1 && jsonEndIndex !== -1 && jsonEndIndex > jsonStartIndex) {
+            const jsonSubstring = trimmedStdout.substring(jsonStartIndex, jsonEndIndex + 1);
+            parsedOutput = JSON.parse(jsonSubstring);
+          } else {
+            parsedOutput = JSON.parse(trimmedStdout);
+          }
+          if (!parsedOutput || typeof parsedOutput !== "object") {
+            parsedOutput = { rawStdout: execResult.stdout };
+          }
         } catch (jsonErr) {
           console.warn("[SalaryAgent] Custom Q&A sandbox output was not valid JSON, using raw fallback:", jsonErr);
         }
