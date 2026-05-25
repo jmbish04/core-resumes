@@ -6,7 +6,6 @@ import { SchemaViewer } from "@/components/docs/SchemaViewer";
 import { AgentCard } from "@/components/docs/AgentCard";
 import { GoogleDocPreview } from "@/components/docs/GoogleDocPreview";
 import { NotebookInfoCard } from "@/components/docs/NotebookInfo";
-import { Sidebar } from "@/components/Sidebar";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { ChevronRight } from "lucide-react";
 
@@ -52,8 +51,7 @@ const breadcrumbs = pathParts.map((part, index) => {
 ---
 
 <BaseLayout title={`Docs | Career Orchestrator`} description="Technical documentation for the Career Orchestrator application.">
-  <div class="flex flex-1 relative">
-    <Sidebar client:load />
+  <div class="flex flex-1 relative font-sans">
     <DocsSidebar client:load />
     
     <main class="min-w-0 flex-1 relative flex">
