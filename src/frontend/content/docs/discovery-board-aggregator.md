@@ -1,8 +1,16 @@
-# Greenhouse Aggregator (Pipeline A)
+---
+title: Discovery Board Aggregator (Pipeline A)
+description: Upstream discovery and synchronization system for finding new company job boards.
+date_last_updated: "2026-05-24"
+---
 
-The **Greenhouse Aggregator (Pipeline A)** is the upstream discovery and synchronization system. Its primary role is to monitor external, massive listings of companies and job boards, ingest them, track their active statuses, and present them in a global directory for Human-in-the-Loop (HITL) promotion into the active scanning queue.
+# Discovery Board Aggregator (Pipeline A)
+
+The **Discovery Board Aggregator (Pipeline A)** is the upstream discovery and synchronization system. Its primary role is to monitor external, massive listings of companies and job boards, ingest them, track their active statuses, and present them in a global directory for Human-in-the-Loop (HITL) promotion into the active scanning queue.
 
 Rather than running expensive and continuous web crawls across arbitrary domains on the serverless edge, Pipeline A offloads bulk raw parsing to a decoupled **GitHub Actions workflow**. It then uses **Durable Object WebSockets** to broadcast real-time sync progress directly to the browser before updating the local SQLite database.
+
+It supports multiple Applicant Tracking Systems (ATS) including **Greenhouse**, **Ashby**, and others, automatically normalizing their schemas and tracking active statuses.
 
 ---
 
@@ -25,10 +33,10 @@ The aggregator follows a hybrid edge-and-CI architecture that splits concerns be
                  │ Send Progress Update (POST /sync-progress)                  │
                  └─────────────────────────────────────────────────────────────┼─ Sync Completed
                                                                                ▼  (POST /sync)
-                                                             ┌───────────────────────────────────┐
-                                                             │      D1 SQLite Database (Drizzle) │
-                                                             │     - Updates api_companies table │
-                                                             └───────────────────────────────────┘
+                                                               ┌───────────────────────────────────┐
+                                                               │      D1 SQLite Database (Drizzle) │
+                                                               │     - Updates api_companies table │
+                                                               └───────────────────────────────────┘
 ```
 
 ### Flow Lifecycle
@@ -48,14 +56,14 @@ Pipeline A uses two core tables under the `jobs` domain in D1 to manage upstream
 ### Core Tables
 
 #### 1. `api_companies`
-Tracks all discovered job boards found upstream. Each board represents a company that *could* be promoted to the active Greenhouse boards list.
+Tracks all discovered job boards found upstream. Each board represents a company that *could* be promoted to the active lists.
 
 | Column | Drizzle Property | Type | Nullable | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `id` | `id` | `INTEGER` | No | Auto-incrementing primary key. |
 | `name` | `name` | `TEXT` | Yes | Display name of the company if known. |
-| `job_board_token` | `jobBoardToken` | `TEXT` | No | Unique ATS board token (e.g. `cloudflare`, `stripe`). |
-| `system` | `system` | `TEXT` | No | The applicant tracking system (e.g., `greenhouse`, `lever`). |
+| `job_board_token` | `jobBoardToken` | `TEXT` | No | Unique ATS board token (e.g. `cloudflare`, `stripe`, `ashby-token`). |
+| `system` | `system` | `TEXT` | No | The applicant tracking system (e.g., `greenhouse`, `ashby`, `lever`). |
 | `source` | `source` | `TEXT` | No | Path to the source JSON file in the upstream aggregator repo. |
 | `timestamp_added` | `timestampAdded` | `INTEGER` | No | When this board token was first discovered and indexed. |
 | `timestamp_inactive`| `timestampInactive`| `INTEGER` | Yes | When this company was last detected as removed from upstream. |
@@ -177,7 +185,7 @@ Intake Modal (Runs Pass H + A + B Scraper and presents structured fields)
        ▼ User Confirms details are correct
 Role Confirmation (POST /api/intake/confirm)
        │
-       ├─► Saves as a fully-fledged "Greenhouse Scan" Role
+       ├─► Saves as a fully-fledged Active Role
        └─► Option to instantly "Track Company" (promotes to Pipeline B)
 ```
 
@@ -193,8 +201,7 @@ When the user clicks the **Intake** button on a matching role:
 
 ### 3. Persisted Role Origin & Origin Badging
 Upon clicking **Confirm Role**:
-*   The payload including `source: "greenhouse_scan"` and the `sourceSnapshotId` is sent to the `/api/intake/confirm` endpoint.
+*   The payload including `source: "pipeline_scan"` (supporting Greenhouse or Ashby) and the `sourceSnapshotId` is sent to the `/api/intake/confirm` endpoint.
 *   The backend saves the role and attaches the scanner origin to the SQLite table.
-*   Both the **Roles List page** and the **Roles Viewport header** dynamically render a high-fidelity `"Greenhouse Scan"` or `"Sourced from Discovery Pipeline"` badge, showing exactly where the application originated.
-*   If the company's Greenhouse board token is not currently tracked for scheduled crawls, a prominent **Track Company** button appears in the UI, allowing the user to promote it to Pipeline B with a single click.
-
+*   Both the **Roles List page** and the **Roles Viewport header** dynamically render a high-fidelity `"ATS Scan"` or `"Sourced from Discovery Pipeline"` badge, showing exactly where the application originated.
+*   If the company's board token is not currently tracked for scheduled crawls, a prominent **Track Company** button appears in the UI, allowing the user to promote it to Pipeline B with a single click.

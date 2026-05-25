@@ -51,8 +51,8 @@ const docGroups: DocGroup[] = [
     label: "Pipelines",
     icon: Workflow,
     links: [
-      { href: "/docs/greenhouse-aggregator", label: "Greenhouse Aggregator (A)" },
-      { href: "/docs/greenhouse-tracker", label: "Greenhouse Tracker (B)" },
+      { href: "/docs/discovery-board-aggregator", label: "Discovery Board Aggregator (A)" },
+      { href: "/docs/active-board-tracker", label: "Active Board Tracker (B)" },
       { href: "/docs/role-intake", label: "Role Intake" },
       { href: "/docs/role-viewport", label: "Role Viewport" },
       { href: "/docs/role-insights", label: "Role Insights" },

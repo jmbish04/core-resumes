@@ -1,6 +1,12 @@
-# Greenhouse Tracker (Pipeline B)
+---
+title: Active Board Tracker (Pipeline B)
+description: Automated background scraping, triage, deep analysis, and archiving engine of the job board ecosystem.
+date_last_updated: "2026-05-24"
+---
 
-The **Greenhouse Tracker (Pipeline B)** is the automated background scraping, triage, deep analysis, and archiving engine of the job board ecosystem. Mapped to a periodic Cloudflare Cron Trigger, it iterates through all promoted and active company tokens, extracts job postings via the Greenhouse Public Boards API, processes them through specialized AI triage and deep analysis models, indexes them for semantic search, and archives raw content for long-term historical records.
+# Active Board Tracker (Pipeline B)
+
+The **Active Board Tracker (Pipeline B)** is the automated background scraping, triage, deep analysis, and archiving engine of the job board ecosystem. Mapped to a periodic Cloudflare Cron Trigger, it iterates through all promoted and active company tokens, extracts job postings via ATS-specific Public Boards APIs (supporting Greenhouse, Ashby, and others), processes them through specialized AI triage and deep analysis models, indexes them for semantic search, and archives raw content for long-term historical records.
 
 Unlike general-purpose scrapers, Pipeline B is a **point-in-time snapshot engine**. Each time it runs, it builds a historical log of how job postings, salary offerings, and team requirements change over time, creating a rich comparative timeline of hiring activities.
 
@@ -42,11 +48,7 @@ Every pipeline execution follows a structured, sequential lifecycle designed to 
 ```
 
 ### Stage 1: Discovery
-The engine queries D1 to retrieve all active company tokens from the `board_tokens` table. For each company, it queries the Greenhouse public board API endpoint:
-```
-https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true
-```
-This returns all active listings including full HTML/text descriptions.
+The engine queries D1 to retrieve all active company tokens from the `board_tokens` table. For each company, it queries the relevant public board API endpoint (supporting Greenhouse and Ashby JSON endpoints).
 
 ### Stage 2: Deduplication
 Each discovered job has a unique public ID (`job_site_id`). The scraper checks if a parent record already exists in the `jobs_postings` table:
@@ -105,7 +107,7 @@ Declares the target company boards active in the scraper.
 | Column | Drizzle Property | Type | Nullable | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `id` | `id` | `INTEGER` | No | Auto-incrementing primary key. |
-| `token` | `token` | `TEXT` | No | Unique Greenhouse token (e.g. `cloudflare`). |
+| `token` | `token` | `TEXT` | No | Unique ATS board token (e.g. `cloudflare`). |
 | `company_name` | `companyName` | `TEXT` | Yes | Display name of the company. |
 | `company_url` | `companyUrl` | `TEXT` | Yes | Company homepage URL. |
 | `email_domain` | `emailDomain` | `TEXT` | Yes | Company domain used for inbound email routing. |
@@ -117,7 +119,7 @@ The parent listing record for a unique job posting on an external board.
 | Column | Drizzle Property | Type | Nullable | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `id` | `id` | `INTEGER` | No | Auto-incrementing primary key. |
-| `job_site_id` | `jobSiteId` | `TEXT` | No | Greenhouse unique public job ID. |
+| `job_site_id` | `jobSiteId` | `TEXT` | No | ATS unique public job ID. |
 | `job_title` | `jobTitle` | `TEXT` | No | Title of the position. |
 | `company` | `company` | `TEXT` | No | Parent company board name. |
 | `date_first_seen`| `dateFirstSeen` | `INTEGER` | No | Timestamp of initial discovery. |

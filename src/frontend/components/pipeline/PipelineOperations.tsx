@@ -417,7 +417,7 @@ Please review the logs above, isolate the failure in the system execution layer,
             <CardDescription className="flex flex-col gap-1.5">
               <span>Sync upstream jobs data from GitHub to populate API companies list in D1</span>
               <a
-                href="/docs/greenhouse-aggregator#recommendation-engine"
+                href="/docs/discovery-board-aggregator#recommendation-engine"
                 className="text-xs text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1 mt-1 font-medium w-fit"
               >
                 <ScrollText className="size-3" />
