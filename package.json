@@ -14,7 +14,7 @@
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "rm -rf dist .astro && astro build",
     "preview": "wrangler dev",
     "start": "astro dev",
     "fmt": "oxfmt",

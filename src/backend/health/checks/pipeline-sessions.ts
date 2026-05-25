@@ -13,6 +13,9 @@
  * 4. Total pipeline execution count (observability metric)
  */
 
+import { and, count, desc, eq, lt } from "drizzle-orm";
+import { getDb } from "@/backend/db";
+import { sessionRuns, apiCompanySyncStats } from "@/backend/db/schema";
 import type { HealthStepResult } from "@/backend/health/types";
 
 // ---------------------------------------------------------------------------
@@ -37,42 +40,31 @@ export async function checkPipelineSessions(env: Env): Promise<HealthStepResult>
   const warnings: string[] = [];
 
   try {
+    const db = getDb(env);
+
     // Sub-check 1: Latest session
-    const latestSession = await env.DB.prepare(
-      `SELECT *
-       FROM session_runs
-       ORDER BY timestamp DESC
-       LIMIT 1`,
-    ).first<{
-      id: number;
-      session_uuid: string;
-      timestamp: number;
-      total_scraped: number;
-      total_triaged: number;
-      total_analyzed: number;
-      total_failed: number;
-      total_cost_usd: number;
-    }>();
+    const [latestSession] = await db
+      .select()
+      .from(sessionRuns)
+      .orderBy(desc(sessionRuns.timestamp))
+      .limit(1);
 
     if (!latestSession) {
       // Check if sync stats has entries to avoid false positive warning when session_runs is cleared
-      const syncStats = await env.DB.prepare(
-        `SELECT * FROM api_company_sync_stats ORDER BY run_timestamp DESC LIMIT 1`
-      ).first<{
-        id: number;
-        run_timestamp: number;
-        status: string;
-        files_processed: number;
-      }>();
+      const [syncStats] = await db
+        .select()
+        .from(apiCompanySyncStats)
+        .orderBy(desc(apiCompanySyncStats.runTimestamp))
+        .limit(1);
 
       if (syncStats) {
         details.latestSessionUuid = `sync-run-${syncStats.id}`;
-        details.latestTimestamp = new Date(syncStats.run_timestamp * 1000).toISOString();
-        const sessionAgeHours = (Date.now() / 1000 - syncStats.run_timestamp) / 3600;
+        details.latestTimestamp = syncStats.runTimestamp.toISOString();
+        const sessionAgeHours = (Date.now() - syncStats.runTimestamp.getTime()) / 3600000;
         details.sessionAgeHours = Math.round(sessionAgeHours * 10) / 10;
         
         details.latestStats = {
-          scraped: syncStats.files_processed,
+          scraped: syncStats.filesProcessed,
           triaged: 0,
           analyzed: 0,
           failed: syncStats.status === "failed" ? 1 : 0,
@@ -80,10 +72,10 @@ export async function checkPipelineSessions(env: Env): Promise<HealthStepResult>
           failureRatePct: syncStats.status === "failed" ? 100 : 0,
         };
         
-        const totalSessions = await env.DB.prepare(`SELECT COUNT(*) as cnt FROM api_company_sync_stats`).first<{
-          cnt: number;
-        }>();
-        details.totalSessions = totalSessions?.cnt ?? 0;
+        const [totalSessionsRow] = await db
+          .select({ cnt: count() })
+          .from(apiCompanySyncStats);
+        details.totalSessions = totalSessionsRow?.cnt ?? 0;
       } else {
         return {
           status: "warn",
@@ -93,11 +85,11 @@ export async function checkPipelineSessions(env: Env): Promise<HealthStepResult>
         };
       }
     } else {
-      details.latestSessionUuid = latestSession.session_uuid;
-      details.latestTimestamp = new Date(latestSession.timestamp * 1000).toISOString();
+      details.latestSessionUuid = latestSession.sessionUuid;
+      details.latestTimestamp = latestSession.timestamp.toISOString();
 
       // Age check
-      const sessionAgeHours = (Date.now() / 1000 - latestSession.timestamp) / 3600;
+      const sessionAgeHours = (Date.now() - latestSession.timestamp.getTime()) / 3600000;
       details.sessionAgeHours = Math.round(sessionAgeHours * 10) / 10;
 
       if (sessionAgeHours > MAX_STALE_HOURS) {
@@ -107,16 +99,16 @@ export async function checkPipelineSessions(env: Env): Promise<HealthStepResult>
       }
 
       // Sub-check 2: Failure rate
-      const totalProcessed = latestSession.total_triaged + latestSession.total_analyzed;
+      const totalProcessed = latestSession.totalTriaged + latestSession.totalAnalyzed;
       const failureRate =
-        totalProcessed > 0 ? (latestSession.total_failed / totalProcessed) * 100 : 0;
+        totalProcessed > 0 ? (latestSession.totalFailed / totalProcessed) * 100 : 0;
 
       details.latestStats = {
-        scraped: latestSession.total_scraped,
-        triaged: latestSession.total_triaged,
-        analyzed: latestSession.total_analyzed,
-        failed: latestSession.total_failed,
-        costUsd: latestSession.total_cost_usd,
+        scraped: latestSession.totalScraped,
+        triaged: latestSession.totalTriaged,
+        analyzed: latestSession.totalAnalyzed,
+        failed: latestSession.totalFailed,
+        costUsd: parseFloat(latestSession.totalCost || "0.0"),
         failureRatePct: Math.round(failureRate * 10) / 10,
       };
 
@@ -129,33 +121,34 @@ export async function checkPipelineSessions(env: Env): Promise<HealthStepResult>
 
     // Sub-check 3: Stuck sessions — sessions with no end timestamp
     // (timestamp + reasonable-max-duration exceeded)
-    const cutoffEpoch = Math.floor(Date.now() / 1000) - MAX_RUNNING_MINUTES * 60;
-    const stuckSessions = await env.DB.prepare(
-      `SELECT COUNT(*) as cnt
-       FROM session_runs
-       WHERE total_scraped = 0
-         AND total_triaged = 0
-         AND total_analyzed = 0
-         AND total_failed = 0
-         AND timestamp < ?`,
-    )
-      .bind(cutoffEpoch)
-      .first<{ cnt: number }>();
+    const cutoffDate = new Date(Date.now() - MAX_RUNNING_MINUTES * 60 * 1000);
+    const [stuckSessionsRow] = await db
+      .select({ cnt: count() })
+      .from(sessionRuns)
+      .where(
+        and(
+          eq(sessionRuns.totalScraped, 0),
+          eq(sessionRuns.totalTriaged, 0),
+          eq(sessionRuns.totalAnalyzed, 0),
+          eq(sessionRuns.totalFailed, 0),
+          lt(sessionRuns.timestamp, cutoffDate)
+        )
+      );
 
-    details.stuckSessions = stuckSessions?.cnt ?? 0;
+    details.stuckSessions = stuckSessionsRow?.cnt ?? 0;
 
-    if ((stuckSessions?.cnt ?? 0) > 0) {
+    if ((stuckSessionsRow?.cnt ?? 0) > 0) {
       warnings.push(
-        `${stuckSessions!.cnt} session(s) appear stuck (started >${MAX_RUNNING_MINUTES}min ago, zero results)`,
+        `${stuckSessionsRow!.cnt} session(s) appear stuck (started >${MAX_RUNNING_MINUTES}min ago, zero results)`,
       );
     }
 
     // Sub-check 4: Total session count
-    const totalSessions = await env.DB.prepare(`SELECT COUNT(*) as cnt FROM session_runs`).first<{
-      cnt: number;
-    }>();
+    const [totalSessionsRow] = await db
+      .select({ cnt: count() })
+      .from(sessionRuns);
 
-    details.totalSessions = totalSessions?.cnt ?? 0;
+    details.totalSessions = totalSessionsRow?.cnt ?? 0;
 
     // Compute status
     const status = issues.length > 0 ? "fail" : warnings.length > 0 ? "warn" : "ok";
