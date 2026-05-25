@@ -87,14 +87,14 @@ See [Role Insights](/docs/role-insights) for details on how rubrics influence an
 
 ## Pipeline Configuration
 
-The **Config → Pipeline** tab manages which company Greenhouse job boards are monitored by the automated scanner pipeline. Each board token maps to a public Greenhouse job board API endpoint.
+The **Config → Pipeline** tab manages which company job boards (Greenhouse, Ashby, Lever, etc.) are monitored by the automated active board tracker. Each board token maps to a public ATS job board endpoint.
 
 ### Board Token Fields
 
-- **Board Token** — The Greenhouse board slug (e.g., `cloudflare` from `boards.greenhouse.io/cloudflare`)
+- **Board Token** — The ATS board slug/token (e.g., `cloudflare` from Greenhouse, or `ashby-token` from Ashby)
 - **Company Name** — Display name for dashboards and reports
 - **Website** — Company website URL
 - **Email Domain** — Used for automatic email-to-role routing
 - **Active** — Toggle to include/exclude a company from pipeline runs
 
-See [Greenhouse Pipeline](/docs/greenhouse-pipeline) for details on how the pipeline operates and how to interpret analytics.
+See [Active Board Tracker (Pipeline B)](/docs/active-board-tracker) for details on how the tracker operates and how to interpret analytics.

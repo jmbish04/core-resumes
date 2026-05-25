@@ -117,7 +117,7 @@ Every screening creates:
 | ------ | ---------------------- | ---------------------------------------------------------------------------- |
 | `POST` | `/api/health/run`      | Trigger a manual health screening. Returns full results.                     |
 | `GET`  | `/api/health/latest`   | Retrieve the most recent screening results.                                  |
-| `POST` | `/api/pipeline/health` | Run only the [Greenhouse pipeline](/docs/greenhouse-pipeline) health checks. |
+| `POST` | `/api/pipeline/health` | Run only the [Active Board Tracker](/docs/active-board-tracker) health checks. |
 
 ## Frontend
 

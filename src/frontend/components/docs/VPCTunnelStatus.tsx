@@ -248,7 +248,7 @@ export function VPCTunnelStatus() {
 
               {/* Connector 2 */}
               <div className="hidden md:flex flex-col items-center justify-center text-muted-foreground select-none">
-                <div className="text-[10px] font-mono mb-1 text-blue-400">Port 8770 / 8789</div>
+                <div className="text-[10px] font-mono mb-1 text-blue-400">Port 8770</div>
                 <ArrowRight className="size-5 text-blue-500/40" />
               </div>
 
@@ -299,7 +299,7 @@ export function VPCTunnelStatus() {
               </div>
               <div className="flex justify-between">
                 <span>FastAPI Base URL:</span>
-                <span className="text-foreground">{details.fastapiUrl || "http://127.0.0.1:8789"}</span>
+                <span className="text-foreground">{details.fastapiUrl || "http://127.0.0.1:8770"}</span>
               </div>
               <div className="flex justify-between">
                 <span>Tunnel ID:</span>
@@ -311,7 +311,7 @@ export function VPCTunnelStatus() {
               </div>
               <div className="flex justify-between">
                 <span>Uvicorn Health Port:</span>
-                <span className="text-foreground">8770 / 8789</span>
+                <span className="text-foreground">8770</span>
               </div>
             </div>
           </div>

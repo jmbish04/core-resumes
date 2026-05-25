@@ -87,8 +87,8 @@ Troubleshooting Steps for Agent:
    'launchctl list | grep colby'
 2. View background uvicorn stderr logs for startup exceptions or port-binding blockages:
    'cat /Users/126colby/.notebooklm/launchd-stderr.log'
-3. Confirm the Cloudflare Tunnel is running and properly forwarding private traffic to the host port 8789.
-4. If in local development, ensure you are testing the Worker under local dev vars matching 'http://127.0.0.1:8789'.
+3. Confirm the Cloudflare Tunnel is running and properly forwarding private traffic to the host port 8770.
+4. If in local development, ensure you are testing the Worker under local dev vars matching 'http://127.0.0.1:8770'.
       `;
       
       return {
