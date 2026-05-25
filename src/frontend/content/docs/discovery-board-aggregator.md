@@ -18,25 +18,14 @@ It supports multiple Applicant Tracking Systems (ATS) including **Greenhouse**, 
 
 The aggregator follows a hybrid edge-and-CI architecture that splits concerns between edge storage, Edge compute, and heavy runner parsing:
 
-```
-┌─────────────────────────────────┐
-│     Pipeline Dashboard (UI)     │
-│   (WebSocket Connection via)    │
-└────────────────┬────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────┐       Trigger Sync       ┌───────────────────────────────────┐
-│       SyncBroadcastAgent        │ ───────────────────────> │          GitHub Actions           │
-│   (Durable Object Singleton)    │                          │          (Sync Upstream)          │
-└────────────────┬────────────────┘                          └─────────────────┬─────────────────┘
-                 ▲                                                             │
-                 │ Send Progress Update (POST /sync-progress)                  │
-                 └─────────────────────────────────────────────────────────────┼─ Sync Completed
-                                                                               ▼  (POST /sync)
-                                                               ┌───────────────────────────────────┐
-                                                               │      D1 SQLite Database (Drizzle) │
-                                                               │     - Updates api_companies table │
-                                                               └───────────────────────────────────┘
+```mermaid
+flowchart TD
+    UI["Pipeline Dashboard (UI)"] -->|1. Trigger Sync| GH["GitHub Actions (Sync Upstream)"]
+    GH -->|2. Send Progress Update (POST /sync-progress)| Worker["Cloudflare Worker"]
+    Worker -->|3. reportProgress RPC| DO["SyncBroadcastAgent (Durable Object)"]
+    DO -->|4. WebSocket Broadcast| UI
+    GH -->|5. Sync Completed (POST /sync)| Worker
+    Worker -->|6. Batch Ingest| DB[("D1 SQLite Database (api_companies)")]
 ```
 
 ### Flow Lifecycle
@@ -170,23 +159,14 @@ To ensure high quality matching, the location field must satisfy specific geogra
 
 When a recommended company or role is identified, it enters a structured **Human-in-the-Loop Review Queue** to ensure high-fidelity data extraction and allow user validation before committing to the main system.
 
-```
-Discovered Match (Pipeline A)
-       │
-       ▼
-Triage Verification (AI Triage evaluates title, description, and seniority)
-       │
-       ▼ Passed Triage
-Review Queue (Shown in Frontend Config / Pipeline Dashboard)
-       │
-       ▼ Click Intake
-Intake Modal (Runs Pass H + A + B Scraper and presents structured fields)
-       │
-       ▼ User Confirms details are correct
-Role Confirmation (POST /api/intake/confirm)
-       │
-       ├─► Saves as a fully-fledged Active Role
-       └─► Option to instantly "Track Company" (promotes to Pipeline B)
+```mermaid
+flowchart TD
+    Match["Discovered Match (Pipeline A)"] --> Triage["Triage Verification (AI Triage seniority/tech check)"]
+    Triage -->|Passed Triage| Queue["Review Queue (Config / Dashboard)"]
+    Queue -->|Click Intake| Scraper["Intake Modal (Pass H + A + B Scraper)"]
+    Scraper -->|User Confirms details| Confirm["Role Confirmation (POST /api/intake/confirm)"]
+    Confirm -->|Persist D1| Save["Saves as Active Role in D1"]
+    Confirm -->|Promote Config| Track["Option to Track Company (Pipeline B)"]
 ```
 
 ### 1. AI Triage Verification

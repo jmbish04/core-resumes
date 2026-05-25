@@ -213,6 +213,7 @@ To bypass Google edge bot detection and prevent 1-hour session cookie expiration
 - **Organization**: Ensure the doc pages and sidebar navbar are organized logically. If a doc page becomes too large, split it into standalone pages. Create new categories if existing ones do not fit.
 - **Standalone Docs**: All standalone docs must have dedicated page URLs.
 - **Hyperlinkable Sections**: Document sections must be hyperlinkable. As the user scrolls, the URL parameter must update to reflect the active section, and loading a URL with a section parameter must scroll to that exact spot.
+- **Mermaid Diagrams**: All architectural charts, lifecycles, and flow sequences MUST be drawn as Mermaid diagrams. ASCII art or plain text graphical drawings are strictly forbidden. Always use standard syntax and enclose node labels in double quotes.
 
 ## References
 

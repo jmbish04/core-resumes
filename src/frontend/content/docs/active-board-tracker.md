@@ -16,35 +16,12 @@ Unlike general-purpose scrapers, Pipeline B is a **point-in-time snapshot engine
 
 Every pipeline execution follows a structured, sequential lifecycle designed to minimize inference costs, ensure data quality, and maximize semantic recall:
 
-```
-                  ┌───────────────────────────────┐
-                  │       Stage 1: Discovery      │
-                  │ (Reads active board_tokens)   │
-                  └───────────────┬───────────────┘
-                                  │
-                                  ▼
-                  ┌───────────────────────────────┐
-                  │     Stage 2: Deduplication    │
-                  │ (Checks unique job_site_ids)  │
-                  └───────────────┬───────────────┘
-                                  │
-                                  ▼
-                  ┌───────────────────────────────┐
-                  │       Stage 3: AI Triage      │
-                  │ (Title & profile matching check)│
-                  └───────────────┬───────────────┘
-                                  │ Passed Triage (triage_passed = 1)
-                                  ▼
-                  ┌───────────────────────────────┐
-                  │    Stage 4: Deep Analysis     │
-                  │ (Salary, verdict, match alignment)│
-                  └───────────────┬───────────────┘
-                                  │
-                                  ▼
-                  ┌───────────────────────────────┐
-                  │   Stage 5: Vectorize & R2     │
-                  │ (Embeds snapshot & saves files)│
-                  └───────────────────────────────┘
+```mermaid
+flowchart TD
+    Stage1["Stage 1: Discovery (Reads active board_tokens)"] --> Stage2["Stage 2: Deduplication (Checks unique job_site_ids)"]
+    Stage2 --> Stage3["Stage 3: AI Triage (Title & profile matching check)"]
+    Stage3 -->|Passed Triage| Stage4["Stage 4: Deep Analysis (Salary, verdict, match alignment)"]
+    Stage4 --> Stage5["Stage 5: Vectorize & R2 (Embeds snapshot & saves files)"]
 ```
 
 ### Stage 1: Discovery
