@@ -39,6 +39,7 @@ const docGroups: DocGroup[] = [
       { href: "/docs/integrations/google-drive", label: "Google Drive" },
       { href: "/docs/integrations/google-docs", label: "Google Docs" },
       { href: "/docs/integrations/openroute", label: "OpenRoute" },
+      { href: "/docs/integrations/vpc-tunnel", label: "VPC & Tunnel" },
     ],
   },
   {
