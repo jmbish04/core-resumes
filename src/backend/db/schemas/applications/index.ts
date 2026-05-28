@@ -23,4 +23,10 @@ export * from "./scoring-rubrics";
 export * from "./companies";
 export * from "./salary-stats";
 export * from "./market-insights";
-
+export * from "./salary-dashboard";
+export * from "./company-segments";
+export * from "./cost-of-living-index";
+export * from "./role-family-taxonomy";
+export * from "./salary-findings";
+export * from "./salary-agent-queries";
+export * from "./career-model-assumptions";
