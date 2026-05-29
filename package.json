@@ -14,7 +14,7 @@
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "dev": "astro dev",
-    "build": "rm -rf dist .astro && astro build",
+    "build": "rm -rf dist .astro && NODE_OPTIONS=--max-old-space-size=4096 astro build",
     "preview": "wrangler dev",
     "start": "astro dev",
     "fmt": "oxfmt",
