@@ -1,5 +1,4 @@
-import { D1Database } from "@cloudflare/workers-types";
-import { BenchmarkInput, Finding } from "./types";
+import type { BenchmarkInput, Finding } from "./types";
 import { runGoogleAnchorCheck } from "./benchmarks/vs-google-anchor";
 import { runSameRoleSameCompanyCheck } from "./benchmarks/vs-same-role-same-company";
 import { runPeerCompaniesCheck } from "./benchmarks/vs-peer-companies";

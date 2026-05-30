@@ -23,16 +23,16 @@ export async function checkFreelanceScannerHealth(env: Env): Promise<{
       rapidApiStatus = "error";
       errorMsg = "RAPIDAPI_KEY is not configured";
     } else {
-      // Lightweight test — HEAD request to the Upwork search endpoint
-      const testUrl = new URL(`https://${env.RAPIDAPI_HOST_UPWORK}/upwork`);
-      testUrl.searchParams.set("q", "test");
-      testUrl.searchParams.set("limit", "1");
-      const res = await fetch(testUrl.toString(), {
-        method: "HEAD",
+      // Lightweight test — POST request to the Upwork search endpoint
+      const testUrl = `https://${env.RAPIDAPI_HOST_UPWORK}/upwork/search-jobs`;
+      const res = await fetch(testUrl, {
+        method: "POST",
         headers: {
           "X-RapidAPI-Key": apiKey,
           "X-RapidAPI-Host": env.RAPIDAPI_HOST_UPWORK,
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({ query: "test", limit: 1 }),
         signal: AbortSignal.timeout(5000),
       });
       if (!res.ok && res.status !== 429) {

@@ -20,6 +20,14 @@ import { AnalysisConfigModal } from "./AnalysisConfigModal";
 import { ScoreRadialChart } from "./ScoreRadialChart";
 import { StrategicInsights } from "./StrategicInsights";
 
+/**
+ * Normalize AI-generated text that contains inline numbered lists
+ * into proper markdown with line breaks before each numbered item.
+ */
+function normalizeMarkdownList(text: string): string {
+  return text.replace(/([.!?:;])(\s+)(\d+\.\s)/g, "$1\n\n$3");
+}
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -129,7 +137,7 @@ function RadialScoreCard({
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-2">
               <div className="prose prose-sm dark:prose-invert max-w-none text-left">
-                <ReactMarkdown>{rationale}</ReactMarkdown>
+                <ReactMarkdown>{normalizeMarkdownList(rationale)}</ReactMarkdown>
               </div>
             </CollapsibleContent>
           </Collapsible>

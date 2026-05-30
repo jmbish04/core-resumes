@@ -46,7 +46,27 @@ freelanceRoutes.get("/opportunities", async (c) => {
     offset,
   });
 
-  return c.json({ data: opportunities, count: opportunities.length });
+  // Join triage data for each opportunity so the frontend has access to
+  // decision, confidence, rationale, winProbability, and recommendedBid
+  const oppsWithTriage = await Promise.all(
+    opportunities.map(async (opp) => {
+      const triage = await service.getTriageForOpportunity(opp.id);
+      return {
+        ...opp,
+        triage: triage
+          ? {
+              decision: triage.decision,
+              confidence: triage.confidence,
+              rationale: triage.rationale,
+              winProbability: triage.winProbability,
+              recommendedBid: triage.recommendedBid,
+            }
+          : null,
+      };
+    }),
+  );
+
+  return c.json({ data: oppsWithTriage, count: oppsWithTriage.length });
 });
 
 /**

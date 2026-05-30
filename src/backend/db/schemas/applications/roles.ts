@@ -40,7 +40,8 @@ export const ROLES_COLUMN_DESCRIPTIONS: Record<string, string> = {
     "Where this role originated. One of: manual (user-created), greenhouse_scan (scanned from Greenhouse), email (ingested from inbound email), freelance_upwork (promoted from Upwork opportunity), freelance_freelancer (promoted from Freelancer.com opportunity).",
   source_snapshot_id:
     "If source is greenhouse_scan, references the job_snapshot row that seeded this role. Null for manual or email sources.",
-  metro: "Normalized metropolitan area string for salary benchmarking (e.g., 'San Francisco, CA'). Nullable, populated at ingest or backfilled.",
+  geo_id: "FK to geo_locations.id — the canonical geo record for this role's location. Set at intake or backfilled.",
+  metro: "DEPRECATED — use geo_id FK instead. Normalized metropolitan area string kept for migration. Will be dropped.",
   created_at: "Unix timestamp (seconds) of when the role was created.",
   updated_at: "Unix timestamp (seconds) of the last modification.",
 };
@@ -92,6 +93,7 @@ export const roles = sqliteTable(
       .notNull()
       .default("manual"),
     sourceSnapshotId: integer("source_snapshot_id"),
+    geoId: integer("geo_id"),
     metro: text("metro"),
     createdAt: integer("created_at", { mode: "timestamp" })
       .notNull()
@@ -103,6 +105,7 @@ export const roles = sqliteTable(
   (table) => ({
     statusIdx: index("roles_status_idx").on(table.status),
     sourceIdx: index("roles_source_idx").on(table.source),
+    geoIdx: index("roles_geo_id_idx").on(table.geoId),
     metroIdx: index("roles_metro_idx").on(table.metro),
   }),
 );

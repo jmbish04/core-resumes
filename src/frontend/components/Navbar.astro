@@ -35,23 +35,27 @@ const path = Astro.url.pathname;
       }
     </nav>
 
-    <details class="relative md:hidden">
+    <details class="relative md:hidden" id="mobile-nav">
       <summary class="flex size-9 list-none items-center justify-center rounded-md border border-border bg-background text-sm [&::-webkit-details-marker]:hidden">
         <span class="sr-only">Open navigation</span>
         <span class="block h-0.5 w-4 bg-foreground before:relative before:-top-1.5 before:block before:h-0.5 before:bg-foreground after:relative after:top-1 after:block after:h-0.5 after:bg-foreground"></span>
       </summary>
-      <div class="absolute right-0 mt-2 grid min-w-48 gap-1 rounded-lg border border-border bg-popover p-2 shadow-lg">
+      <div class="absolute right-0 mt-2 grid min-w-52 gap-0.5 rounded-lg border border-border bg-popover p-2 shadow-lg">
         {
-          siteConfig.navItems.map((item) => (
+          siteConfig.sidebarItems.map((item) => (
             <a
               href={item.href}
-              target={item.external ? "_blank" : undefined}
-              rel={item.external ? "noreferrer" : undefined}
+              target={item.href === "/docs" ? "_blank" : undefined}
+              rel={item.href === "/docs" ? "noopener noreferrer" : undefined}
               class:list={[
-                "rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground",
+                "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors",
                 path === item.href && "bg-muted text-foreground",
               ]}
             >
+              <span class:list={[
+                "size-1.5 shrink-0 rounded-full",
+                path === item.href ? "bg-primary" : "bg-muted-foreground/40",
+              ]} />
               {item.label}
             </a>
           ))

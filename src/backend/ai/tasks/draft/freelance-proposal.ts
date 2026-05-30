@@ -12,8 +12,8 @@
  * literals for all prompts (never `.join("\\n")`).
  */
 
-import type { FreelanceOpportunity } from "@/backend/db/schemas/jobs/freelance-opportunities";
-import type { FreelanceTriage } from "@/backend/db/schemas/jobs/freelance-triage";
+import type { FreelanceOpportunity } from "@/backend/db/schemas/pipeline/freelance/freelance-opportunities";
+import type { FreelanceTriage } from "@/backend/db/schemas/pipeline/freelance/freelance-triage";
 
 import { getModelRegistry } from "../../models";
 import { AiProvider } from "../../providers";

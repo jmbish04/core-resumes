@@ -70,7 +70,7 @@ jobsRouter.openapi(
   async (c) => {
     const { token } = c.req.valid("json");
     const { getAgentByName } = await import("agents");
-    const agent = await getAgentByName(c.env.JOB_SCANNER_AGENT, "global");
+    const agent = (await getAgentByName(c.env.JOB_SCANNER_AGENT as any, "global")) as any;
 
     let sessionIds: string[] = [];
     if (token) {

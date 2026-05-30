@@ -21,6 +21,15 @@ interface StrategicInsightsProps {
   counterPositioning: string | null;
 }
 
+/**
+ * Normalize AI-generated text that contains inline numbered lists
+ * (e.g. "...text. 2. Next item 3. Another") into proper markdown
+ * with line breaks before each numbered item.
+ */
+function normalizeMarkdownList(text: string): string {
+  return text.replace(/([.!?:;])(\s+)(\d+\.\s)/g, "$1\n\n$3");
+}
+
 // ---------------------------------------------------------------------------
 // StrategicInsights — renders the AI-generated narrative strategy
 // ---------------------------------------------------------------------------
@@ -73,7 +82,7 @@ export function StrategicInsights({
               </AccordionTrigger>
               <AccordionContent>
                 <div className="prose prose-sm dark:prose-invert max-w-none text-left">
-                  <ReactMarkdown>{strategicRecommendation}</ReactMarkdown>
+                  <ReactMarkdown>{normalizeMarkdownList(strategicRecommendation)}</ReactMarkdown>
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -90,7 +99,7 @@ export function StrategicInsights({
               </AccordionTrigger>
               <AccordionContent>
                 <div className="prose prose-sm dark:prose-invert max-w-none text-left">
-                  <ReactMarkdown>{counterPositioning}</ReactMarkdown>
+                  <ReactMarkdown>{normalizeMarkdownList(counterPositioning)}</ReactMarkdown>
                 </div>
               </AccordionContent>
             </AccordionItem>

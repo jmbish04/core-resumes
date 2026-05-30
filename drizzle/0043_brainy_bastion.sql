@@ -1,0 +1,2 @@
+ALTER TABLE `cost_of_living_index` ADD `geo_id` integer REFERENCES geo_locations(id);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS `cost_of_living_index_geo_id_idx` ON `cost_of_living_index` (`geo_id`);

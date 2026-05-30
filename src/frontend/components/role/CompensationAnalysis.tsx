@@ -8,6 +8,10 @@ import {
   TrendingUpIcon,
   AlertTriangleIcon,
   Building as BuildingIcon,
+  GlobeIcon,
+  WifiIcon,
+  UsersIcon,
+  BarChart3Icon,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -50,6 +54,10 @@ interface RoleInsight {
     negotiationRationale?: string | null;
     deltaVsGoogle?: number | null;
     futurePromotionPath?: number | null;
+    geographicPositioning?: string | null;
+    remoteDiscountAnalysis?: string | null;
+    industryPeerComparison?: string | null;
+    marketTrendContext?: string | null;
   } | null;
   configSnapshot: {
     compensationBaseline?: Record<string, unknown>;
@@ -530,6 +538,55 @@ export function CompensationAnalysis({ roleId }: { roleId: string }) {
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Enriched Analysis Dimensions ── */}
+          {payload?.geographicPositioning && (
+            <div className="mt-4 border rounded-md p-4 bg-muted/10 w-full space-y-2">
+              <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-1.5">
+                <GlobeIcon className="size-4 text-blue-400" />
+                Geographic Positioning
+              </h4>
+              <div className="prose prose-sm dark:prose-invert max-w-none text-left">
+                <ReactMarkdown>{payload.geographicPositioning}</ReactMarkdown>
+              </div>
+            </div>
+          )}
+
+          {payload?.remoteDiscountAnalysis && (
+            <div className="mt-3 border rounded-md p-4 bg-muted/10 w-full space-y-2">
+              <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-1.5">
+                <WifiIcon className="size-4 text-violet-400" />
+                Remote vs Local Discount
+              </h4>
+              <div className="prose prose-sm dark:prose-invert max-w-none text-left">
+                <ReactMarkdown>{payload.remoteDiscountAnalysis}</ReactMarkdown>
+              </div>
+            </div>
+          )}
+
+          {payload?.industryPeerComparison && (
+            <div className="mt-3 border rounded-md p-4 bg-muted/10 w-full space-y-2">
+              <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-1.5">
+                <UsersIcon className="size-4 text-amber-400" />
+                Industry Peer Comparison
+              </h4>
+              <div className="prose prose-sm dark:prose-invert max-w-none text-left">
+                <ReactMarkdown>{payload.industryPeerComparison}</ReactMarkdown>
+              </div>
+            </div>
+          )}
+
+          {payload?.marketTrendContext && (
+            <div className="mt-3 border rounded-md p-4 bg-muted/10 w-full space-y-2">
+              <h4 className="text-sm font-semibold text-muted-foreground flex items-center gap-1.5">
+                <BarChart3Icon className="size-4 text-cyan-400" />
+                Market Trend Context
+              </h4>
+              <div className="prose prose-sm dark:prose-invert max-w-none text-left">
+                <ReactMarkdown>{payload.marketTrendContext}</ReactMarkdown>
               </div>
             </div>
           )}

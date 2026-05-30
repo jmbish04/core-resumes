@@ -1,5 +1,4 @@
 import { Parser } from "node-sql-parser";
-import { D1Database } from "@cloudflare/workers-types";
 
 // One parser instance, reused. Specify SQLite dialect — D1 is SQLite, NOT MySQL
 // (which is node-sql-parser's default and would parse some D1 queries incorrectly).
@@ -14,11 +13,14 @@ const ALLOWED_TABLES = new Set<string>([
   "market_salary_stats",
   "market_company_salaries",
   "company_segments",
-  "cost_of_living_index",
+  "cost_of_living_index", // deprecated — use geo_location_mappings WHERE key = 'cost_of_living_index'
   "role_family_taxonomy",
   "salary_findings",
   "salary_agent_queries",
   "career_model_assumptions",
+  "geo_locations",
+  "geo_location_meta_definitions",
+  "geo_location_mappings",
 ]);
 
 const HARD_ROW_LIMIT = 5000;

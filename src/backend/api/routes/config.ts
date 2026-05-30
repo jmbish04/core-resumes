@@ -96,6 +96,13 @@ const defaultConfig = [
       target_roles: ["software engineer", "frontend", "backend", "fullstack", "devops"]
     },
   },
+  {
+    key: "health_check_config",
+    value: {
+      greenhouse_tokens: ["anthropic", "cloudflare"],
+      ashby_tokens: ["replicate", "lattice"]
+    },
+  },
 ];
 
 

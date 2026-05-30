@@ -1,0 +1,19 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { SalaryDataExplorer } from "../components/salary/SalaryDataExplorer";
+---
+
+<BaseLayout title="Salary Data Explorer">
+  <div class="container py-8 max-w-7xl mx-auto space-y-8" id="salary-data-root">
+    <div class="flex items-center justify-between border-b pb-4">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">Salary Data Explorer</h1>
+        <p class="text-muted-foreground mt-1">
+          Raw seeded data the benchmark battery reads from — full transparency.
+        </p>
+      </div>
+    </div>
+
+    <SalaryDataExplorer client:only="react" />
+  </div>
+</BaseLayout>

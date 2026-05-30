@@ -36,6 +36,7 @@ import { documentsRouter } from "./routes/documents";
 import { emailsRouter } from "./routes/emails";
 import { filesRouter } from "./routes/files";
 import { freelanceRoutes } from "./routes/freelance";
+import { geoRouter } from "./routes/geo";
 import { healthRouter } from "./routes/health";
 import { insightsRouter } from "./routes/insights";
 import { intakeRouter } from "./routes/intake";
@@ -46,6 +47,7 @@ import { notebookRouter } from "./routes/notebook";
 import { notebookSessionRouter } from "./routes/notebook-session";
 import { notebooklmBlobsRouter } from "./routes/notebooklm-blobs";
 import { pipelineRouter } from "./routes/pipeline";
+import { salaryStatsRouter } from "./routes/pipeline/salary-stats";
 import { roleBulletsRouter } from "./routes/role-bullets";
 import { rolePodcastAssetsRouter, rolePodcastsRouter } from "./routes/role-podcasts";
 import { rolesRouter } from "./routes/roles";
@@ -134,7 +136,9 @@ app.route("/api/roles", notebooklmBlobsRouter);
 app.route("/api/scoring-rubrics", scoringRubricsRouter);
 app.route("/api/transcription-jobs", transcriptionJobsRouter);
 app.route("/api/pipeline", pipelineRouter);
+app.route("/api/roles", salaryStatsRouter);
 app.route("/api/freelance", freelanceRoutes);
+app.route("/api/geo", geoRouter);
 app.route("/api/__client-error", clientErrorRouter);
 
 // ---------------------------------------------------------------------------

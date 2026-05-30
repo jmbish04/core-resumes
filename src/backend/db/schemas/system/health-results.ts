@@ -44,6 +44,7 @@ export const healthResults = sqliteTable("health_results", {
       "auth",
       "api",
       "greenhouse",
+      "freelance",
       "custom",
     ],
   }).notNull(),

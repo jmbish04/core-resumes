@@ -23,6 +23,7 @@ import { salaryStatsRouter } from "./salary-stats";
 import { salaryIntelligenceRouter } from "./salary-intelligence";
 import { seedSalaryRefactorRouter } from "./seed-salary-refactor";
 import { promoteRouter } from "./promote";
+import { analyzeRoleRouter, analyzeAggregateRouter, chatRouter, findingsRouter, dataExplorerRouter } from "./salary";
 
 // ---------------------------------------------------------------------------
 // Composed Router
@@ -37,8 +38,13 @@ pipelineRouter.route("/", healthRouter);
 pipelineRouter.route("/", insightsRouter);
 pipelineRouter.route("/", jobsRouter);
 pipelineRouter.route("/", jobSalaryRouter);
-pipelineRouter.route("/", salaryStatsRouter);
 pipelineRouter.route("/", salaryIntelligenceRouter);
 pipelineRouter.route("/", promoteRouter);
 pipelineRouter.route("/", seedSalaryRefactorRouter);
+pipelineRouter.route("/", analyzeRoleRouter);
+pipelineRouter.route("/", analyzeAggregateRouter);
+pipelineRouter.route("/", chatRouter);
+pipelineRouter.route("/", findingsRouter);
+pipelineRouter.route("/", dataExplorerRouter);
+
 

@@ -1,5 +1,4 @@
-import { D1Database } from "@cloudflare/workers-types";
-import { BenchmarkInput, Finding } from "../types";
+import type { BenchmarkInput, Finding } from "../types";
 
 export async function runGoogleAnchorCheck(db: D1Database, input: BenchmarkInput): Promise<Finding> {
   const result = await db.prepare("SELECT value FROM career_model_assumptions WHERE key = 'baseline_anchor_salary'").first<{value: number}>();

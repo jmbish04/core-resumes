@@ -220,7 +220,7 @@ rolesRouter.openapi(
 
     // Worker → Agent DO RPC. The namespace generic from `wrangler types`
     // gives us a typed stub — no cast, no explicit generics needed.
-    const stub = await getAgentByName(c.env.ORCHESTRATOR_AGENT, id);
+    const stub: any = await getAgentByName(c.env.ORCHESTRATOR_AGENT as any, id);
 
     let body: { taskId?: string } = {};
     try {
@@ -274,7 +274,7 @@ rolesRouter.openapi(
     const { id } = c.req.valid("param");
     // Worker → Agent DO RPC. The namespace generic from `wrangler types`
     // gives us a typed stub — no cast, no explicit generics needed.
-    const stub = await getAgentByName(c.env.ORCHESTRATOR_AGENT, id);
+    const stub: any = await getAgentByName(c.env.ORCHESTRATOR_AGENT as any, id);
 
     const status = await stub.getProcessingStatus();
     return c.json(status);

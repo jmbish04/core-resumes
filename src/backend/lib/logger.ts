@@ -47,7 +47,7 @@ export class Logger {
     // 3. Broadcast to WebSocket if SYNC_BROADCAST_AGENT is bound
     if (this.env.SYNC_BROADCAST_AGENT) {
       try {
-        const agent = await getAgentByName(this.env.SYNC_BROADCAST_AGENT, "global");
+        const agent = (await getAgentByName(this.env.SYNC_BROADCAST_AGENT as any, "global")) as any;
         
         // Extract progress payload fields from metadata or use defaults
         const status = (metadata?.status as string) || (level === "error" ? "error" : "processing");

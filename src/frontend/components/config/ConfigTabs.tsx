@@ -12,6 +12,7 @@ import { ResumeBulletsEditor } from "@/components/config/ResumeBulletsEditor";
 import { ScoringRubricsEditor } from "@/components/config/ScoringRubricsEditor";
 import { FreelanceConfigEditor } from "@/components/config/FreelanceConfigEditor";
 import { TemplateIdsEditor } from "@/components/config/TemplateIdsEditor";
+import { HealthConfigEditor } from "@/components/config/HealthConfigEditor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryParam } from "@/hooks/use-query-param";
 
@@ -78,6 +79,7 @@ export function ConfigTabs() {
         <PipelineRulesEditor />
         <PromoteCompaniesEditor />
         <PipelineConfigEditor />
+        <HealthConfigEditor />
       </TabsContent>
 
       <TabsContent value="freelance" className="space-y-5">

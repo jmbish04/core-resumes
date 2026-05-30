@@ -202,7 +202,30 @@ To bypass Google edge bot detection and prevent 1-hour session cookie expiration
 
 ## Prompt Engineering & Token Allocation
 
-- **No `.join("\\n")`:** Never construct prompts using arrays joined by escaped line breaks (`.join("\\n")`). This breaks LLM structural parsing. Always use native ES6 template literals (`` ` ``) to preserve real new lines.
+- **⛔ No Array-Based Prompt Construction:** Never build prompts as `string[]` arrays (whether joined with `.join("\n")`, `.join("\\n")`, or any other separator). This includes `parts.push(...)` patterns. Array-joined prompts serialize escaped `\n` characters in JSON payloads instead of real newlines, which degrades LLM structural parsing. **Always use native ES6 template literals (`` ` ``)** with real line breaks. For dynamic conditional sections, build each section as a separate template literal string and interpolate it into the main template literal.
+
+```ts
+// ❌ WRONG — every variation of this pattern is banned:
+const parts: string[] = ["You are an assistant.", "", "## Rules", "- Rule 1"];
+parts.push("- Rule 2");
+return parts.join("\n");
+
+// ❌ ALSO WRONG — .join("\\n") doesn't fix it:
+return parts.join("\\n");
+
+// ✅ CORRECT — single template literal with real newlines:
+const rulesSection = hasRules ? `
+## Rules
+- Rule 1
+- Rule 2` : "";
+
+return `You are an assistant.
+${rulesSection}
+
+## Instructions
+Do the thing.`;
+```
+
 - **Aggressive XML:** Non-negotiable instructions (such as "DO NOT SUMMARIZE" or "VERBATIM EXTRACTION") must be wrapped in strict XML tags (e.g. `<STRICT_VERBATIM_EXTRACTION>...</STRICT_VERBATIM_EXTRACTION>`) to ensure enforcement.
 - **Max Tokens Allocation:** By default, LLMs summarize text if they feel constrained by implicit output window limits. For large text extraction or heavy generative tasks, explicitly set `max_tokens: 8096` in the AI invocation to guarantee the model does not prematurely truncate or paraphrase.
 
@@ -354,6 +377,17 @@ The `JobScannerAgent`, `JobAnalysisAgent`, and `SyncBroadcastAgent` manage the a
   - `onConnect` / `onClose` are lifecycle hooks only. They log connection events; do not add stateful side-effects.
   - The broadcast message envelope is always `{ type: "sync_progress", payload: SyncProgressPayload }`. If the frontend needs new event types, add them as additional public methods (e.g., `reportError`, `reportComplete`) rather than overloading the payload shape.
   - If you add or rename a binding, run `pnpm run cf-typegen`, then add the new entry to `AgentBindingMap` in `src/backend/ai/agents/registry.ts`.
+
+### SalaryAgent
+
+- **Location:** `src/backend/ai/agents/salary/`
+- **State:** Stateful DO (`Agent<Env, Record<string, never>>` currently, holds in-memory context for chat sessions).
+- **Binding:** `SALARY_AGENT` → `wrangler.jsonc` durable_objects.bindings
+- **Migration tag:** `v7`
+- **Maintenance:**
+  - **No Sandbox:** This agent strictly uses deterministic SQL via AST validation (`node-sql-parser`). Do not introduce Python sandboxing.
+  - **Modes:** Routing happens in `index.ts` to `single-role.ts`, `aggregate.ts`, or `chat.ts`.
+  - **SQL Security:** AST validation requires `ast.type === 'select'`, rejects stacked statements, limits tables to `ALLOWED_TABLES`, wraps queries with `LIMIT`, and logs to `salary_agent_queries`.
 
 ### Adding New Agent Methods
 

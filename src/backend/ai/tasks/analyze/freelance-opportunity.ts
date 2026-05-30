@@ -16,7 +16,7 @@
 
 import { z } from "zod";
 
-import type { FreelanceOpportunity } from "@/backend/db/schemas/jobs/freelance-opportunities";
+import type { FreelanceOpportunity } from "@/backend/db/schemas/pipeline/freelance/freelance-opportunities";
 
 import { getModelRegistry } from "../../models";
 import { AiProvider } from "../../providers";
@@ -268,7 +268,7 @@ function buildUserPrompt(opportunity: FreelanceOpportunity): string {
 ${opportunity.description}
 
 ### Required Skills
-${skillsList.length > 0 ? skillsList.map((s) => `- ${s}`).join("\n") : "(none listed)"}
+${skillsList.length > 0 ? (skillsList as string[]).map((s: string) => `- ${s}`).join("\n") : "(none listed)"}
 
 ### Budget
 - **Type:** ${opportunity.budgetType ?? "Not specified"}

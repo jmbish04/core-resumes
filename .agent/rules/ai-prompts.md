@@ -2,21 +2,37 @@
 
 When creating, updating, or maintaining AI Prompts and System Contexts across this codebase, you MUST strictly adhere to the following rules to ensure the models interpret formatting, instructions, and context windows correctly.
 
-## 1. No `.join("\\n")` or `join("\n")` for Prompt Strings
+## 1. ⛔ No Array-Based Prompt Construction (Strict)
 
-**Do NOT** construct prompts using an array of strings joined by escaped line breaks like `.join("\\n")` or `.join("\n")`. This practice escapes the backslash, injecting literal `\n` character strings instead of an actual new line, which degrades the LLM's ability to read and parse structural markdown.
+**NEVER** construct prompts as `string[]` arrays — whether joined with `.join("\n")`, `.join("\\n")`, or any other separator. This includes `parts.push(...)` accumulation patterns. Array-joined prompts serialize escaped `\n` characters in JSON payloads instead of actual newlines, which critically degrades the LLM's ability to parse structural markdown formatting.
 
-**INSTEAD:** Use Native ES6 Template Literals (`` ` ``) with real line breaks.
+**ALWAYS:** Use native ES6 template literals (`` ` ``) with real line breaks. For dynamic conditional sections, build each section as a separate template literal string and interpolate it into the main template literal.
 
 ```typescript
-// ❌ WRONG
-export const PROMPT = ["You are a helpful assistant.", "1. Do X.", "2. Do Y."].join("\\n");
+// ❌ WRONG — every variation of this pattern is banned:
+const parts: string[] = ["You are a helpful assistant.", "", "## Rules", "- Rule 1"];
+parts.push("- Rule 2");
+return parts.join("\n");
 
-// ✅ CORRECT
-export const PROMPT = `
-You are a helpful assistant.
-1. Do X.
-2. Do Y.
+// ❌ ALSO WRONG — .join("\\n") doesn't fix it:
+return parts.join("\\n");
+
+// ❌ ALSO WRONG — conditional push still creates array pattern:
+if (hasContext) {
+  parts.push("## Context", contextData);
+}
+
+// ✅ CORRECT — template literal with interpolated conditional sections:
+const contextSection = hasContext ? `
+## Context
+${contextData}` : "";
+
+return `You are a helpful assistant.
+${contextSection}
+
+## Rules
+- Rule 1
+- Rule 2
 `.trim();
 ```
 

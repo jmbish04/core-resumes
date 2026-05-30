@@ -30,6 +30,7 @@ const categoryEnum = z.enum([
   "auth",
   "api",
   "greenhouse",
+  "freelance",
   "custom",
 ]);
 

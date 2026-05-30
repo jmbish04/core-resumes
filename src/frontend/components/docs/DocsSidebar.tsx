@@ -35,6 +35,7 @@ const docGroups: DocGroup[] = [
     label: "Integrations",
     icon: Plug,
     links: [
+      { href: "/docs/mcp", label: "MCP Connector" },
       { href: "/docs/integrations/notebooklm", label: "NotebookLM" },
       { href: "/docs/integrations/google-drive", label: "Google Drive" },
       { href: "/docs/integrations/google-docs", label: "Google Docs" },
@@ -46,7 +47,10 @@ const docGroups: DocGroup[] = [
   {
     label: "Data",
     icon: Database,
-    links: [{ href: "/docs/database", label: "Database Schema" }],
+    links: [
+      { href: "/docs/database", label: "Database Schema" },
+      { href: "/docs/salary-percentiles", label: "Salary Percentiles" },
+    ],
   },
   {
     label: "Pipelines",
@@ -67,6 +71,7 @@ const docGroups: DocGroup[] = [
       { href: "/docs/agents/orchestrator", label: "OrchestratorAgent" },
       { href: "/docs/agents/notebooklm", label: "NotebookLMAgent" },
       { href: "/docs/agents/notebooklm-mcp", label: "NotebookLMMcpAgent" },
+      { href: "/docs/agents/core-resumes-mcp", label: "CoreResumesMcpAgent" },
     ],
   },
   {

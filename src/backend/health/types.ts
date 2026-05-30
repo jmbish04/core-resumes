@@ -26,6 +26,7 @@ export type HealthCategory =
   | "auth"
   | "api"
   | "greenhouse"
+  | "freelance"
   | "custom";
 
 /** How the health run was triggered. */
@@ -120,4 +121,15 @@ export interface GreenhouseJob {
   title: string;
   absolute_url: string;
   location: { name: string };
+}
+
+/**
+ * Job posted on Ashby (public posting-api response shape)
+ */
+export interface AshbyJob {
+  id: string;
+  title: string;
+  location: string;
+  publishedAt: string;
+  organizationName?: string;
 }

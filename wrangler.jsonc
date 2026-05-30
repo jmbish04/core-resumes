@@ -54,6 +54,14 @@
       "id": "80e53208e05d488e95a5db8141ebc233",
       "remote": true,
     },
+    // OAuth provider token storage. Aliased to the existing KV namespace;
+    // OAuth keys are namespaced under prefixes (e.g. `client:`, `token:`,
+    // `grant:`) so they don't collide with other KV usage.
+    {
+      "binding": "OAUTH_KV",
+      "id": "40090557ec9e4f63bd839e862b28a825",
+      "remote": true,
+    },
   ],
   "send_email": [
     {
@@ -90,14 +98,18 @@
   // 		}
   // 	]
   // },
-  "containers": [
-    {
-      "class_name": "Sandbox",
-      "image": "./Dockerfile",
-      "instance_type": "lite",
-      "max_instances": 1,
-    },
-  ],
+  // ──────────────────────────────────────────────────────────────────────────
+  // TEMPORARILY DISABLED — Docker container not needed while transcription
+  // pipeline is inactive. Uncomment to re-enable.
+  // ──────────────────────────────────────────────────────────────────────────
+  // "containers": [
+  //   {
+  //     "class_name": "Sandbox",
+  //     "image": "./Dockerfile",
+  //     "instance_type": "lite",
+  //     "max_instances": 1,
+  //   },
+  // ],
   "workflows": [
     {
       "name": "core-resumes-role-assets",
@@ -156,6 +168,10 @@
         "name": "SALARY_AGENT",
         "class_name": "SalaryAgent",
       },
+      {
+        "name": "CORE_RESUMES_MCP_AGENT",
+        "class_name": "CoreResumesMcpAgent",
+      },
     ],
   },
   "migrations": [
@@ -185,6 +201,10 @@
       "tag": "v7",
       "new_sqlite_classes": ["FreelanceScannerAgent", "SalaryAgent"],
     },
+    {
+      "tag": "v8",
+      "new_sqlite_classes": ["CoreResumesMcpAgent"],
+    },
   ],
   "vars": {
     "DEFAULT_MODEL_EMBEDDING": "@cf/baai/bge-large-en-v1.5",
@@ -195,11 +215,11 @@
     "CAREER_NOTEBOOKLM_ID": "ae2a743f-231b-4b05-ab98-683d01dd5c65", //  https: //notebooklm.google.com/notebook/ae2a743f-231b-4b05-ab98-683d01dd5c65
     "NOTEBOOKLM_FASTAPI_URL": "http://127.0.0.1:8770",
     "NOTEBOOKLM_FASTAPI_KEY": "colby-notebooklm-bridge-key-2026",
-    "MODEL_CHAT": "@cf/openai/gpt-oss-120b",
-    "MODEL_EXTRACT": "@cf/openai/gpt-oss-120b",
-    "MODEL_DRAFT": "@cf/openai/gpt-oss-120b",
+    "MODEL_CHAT": "@cf/moonshotai/kimi-k2.5",
+    "MODEL_EXTRACT": "@cf/moonshotai/kimi-k2.5",
+    "MODEL_DRAFT": "@cf/moonshotai/kimi-k2.5",
     "MODEL_ANALYZE": "@cf/moonshotai/kimi-k2.5",
-    "MODEL_TRIAGE": "@cf/openai/gpt-oss-120b",
+    "MODEL_TRIAGE": "@cf/moonshotai/kimi-k2.5",
     "MODEL_EMBED_JOBS": "gemini-embedding-001",
     "MODEL_TRANSCRIBE": "@cf/openai/whisper-large-v3-turbo",
     "BUCKET_NAME_AUDIO": "core-resumes-audio",
@@ -213,7 +233,7 @@
     "DEFAULT_BOARD_TOKENS": "cloudflare,vercel,anthropic,headway",
     "ALLOWED_EMAILS": ["justin@126colby.com", "jmbish04@gmail.com"],
     "WORKER_EMAIL_INBOX": "job-pipeline@hacolby.app",
-    "RAPIDAPI_HOST_UPWORK": "upwork-jobs-api3.p.rapidapi.com",
+    "RAPIDAPI_HOST_UPWORK": "upwork-scraping-api.p.rapidapi.com",
     "RAPIDAPI_HOST_FREELANCER": "freelancer-jobs-search-api.p.rapidapi.com",
     "FREELANCE_SCAN_SKILLS": "React,TypeScript,Node.js,Next.js,Cloudflare Workers",
     "FREELANCE_DEFAULT_HOURLY_MIN": "50",
@@ -314,6 +334,11 @@
       "store_id": "8c42fa70938644e0a8a109744467375f",
       "secret_name": "GEMINI_API_KEY",
     },
+    {
+      "binding": "GOOGLE_SEARCH_API_KEY",
+      "store_id": "8c42fa70938644e0a8a109744467375f",
+      "secret_name": "GOOGLE_SEARCH_API_KEY",
+    },    
   ],
   "vectorize": [
     {

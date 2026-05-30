@@ -54,6 +54,37 @@ const statuses = [
   "withdrawn",
   "archived",
 ];
+
+/** Maps status slug → human-readable label for filter buttons and badges. */
+const STATUS_LABELS: Record<string, string> = {
+  preparing: "Preparing",
+  processing_error: "Error",
+  posting_expired: "Expired",
+  applied: "Applied",
+  interviewing: "Interviewing",
+  offer: "Offer",
+  negotiating: "Negotiating",
+  accepted: "Accepted",
+  rejected: "Rejected",
+  withdrawn: "Withdrawn",
+  archived: "Archived",
+};
+
+/** Badge color classes per status — mirrors RoleHeader STATUS_META. */
+const STATUS_BADGE_CLASSES: Record<string, string> = {
+  preparing: "border-blue-500/40 bg-blue-500/10 text-blue-400",
+  processing_error: "border-orange-500/40 bg-orange-500/10 text-orange-400",
+  posting_expired: "border-zinc-500/40 bg-zinc-500/10 text-zinc-400",
+  applied: "border-cyan-500/40 bg-cyan-500/10 text-cyan-400",
+  interviewing: "border-amber-500/40 bg-amber-500/10 text-amber-400",
+  offer: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
+  negotiating: "border-violet-500/40 bg-violet-500/10 text-violet-400",
+  accepted: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
+  rejected: "border-red-500/40 bg-red-500/10 text-red-400",
+  withdrawn: "border-slate-500/40 bg-slate-500/10 text-slate-400",
+  archived: "border-zinc-500/40 bg-zinc-500/10 text-zinc-500",
+};
+
 type SortKey = "companyName" | "jobTitle" | "status" | "createdAt";
 
 export function RolesTable() {
@@ -134,7 +165,7 @@ export function RolesTable() {
               variant={status === item ? "secondary" : "outline"}
               onClick={() => setStatus(item)}
             >
-              {item}
+              {item === "all" ? "All" : (STATUS_LABELS[item] ?? item)}
             </Button>
           ))}
         </div>
@@ -188,12 +219,12 @@ export function RolesTable() {
                       >
                         {role.jobTitle}
                       </a>
-                      {role.source === "greenhouse_scan" && (
+                      {role.source === "pipeline_scan" && (
                         <Badge
                           variant="outline"
                           className="border-blue-500/30 text-blue-400 bg-blue-500/10 text-[10px] h-5 px-1.5 flex items-center"
                         >
-                          Greenhouse Scan
+                          Pipeline Scan
                         </Badge>
                       )}
                       {(() => {
@@ -250,7 +281,12 @@ export function RolesTable() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{role.status}</Badge>
+                    <Badge
+                      variant="outline"
+                      className={STATUS_BADGE_CLASSES[role.status] ?? "border-border"}
+                    >
+                      {STATUS_LABELS[role.status] ?? role.status}
+                    </Badge>
                   </TableCell>
                   <TableCell>{formatSalary(role)}</TableCell>
                   <TableCell>{new Date(role.createdAt).toLocaleDateString()}</TableCell>

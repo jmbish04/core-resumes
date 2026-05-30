@@ -10,7 +10,14 @@ import { apiPut, toast } from "@/lib/api-client";
 
 import { readConfig } from "./config-types";
 
+interface ApplicantName {
+  first_name: string;
+  last_name: string;
+  full_name: string;
+}
+
 interface ProfileData {
+  applicant_name: ApplicantName;
   location: string;
   locations: string[];
   hubs: string[];
@@ -19,6 +26,7 @@ interface ProfileData {
 
 export function ApplicantProfileEditor() {
   const [profile, setProfile] = useState<ProfileData>({
+    applicant_name: { first_name: "Justin", last_name: "Bishop", full_name: "Justin Bishop" },
     location: "San Francisco Bay Area",
     locations: ["san francisco", "bay area", "sf", "oakland", "san jose", "california", "ca"],
     hubs: ["San Francisco", "New York", "Seattle", "Austin"],
@@ -30,6 +38,11 @@ export function ApplicantProfileEditor() {
 
   useEffect(() => {
     readConfig<ProfileData>("applicant_profile", {
+      applicant_name: {
+        first_name: "Justin",
+        last_name: "Bishop",
+        full_name: "Justin Bishop",
+      },
       location: "San Francisco Bay Area",
       locations: ["san francisco", "bay area", "sf", "oakland", "san jose", "california", "ca"],
       hubs: ["San Francisco", "New York", "Seattle", "Austin"],
@@ -73,6 +86,50 @@ export function ApplicantProfileEditor() {
             <span>Using default profile config. Save custom values to override.</span>
           </div>
         )}
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs">First Name</Label>
+            <Input
+              value={profile.applicant_name.first_name}
+              onChange={(e) => {
+                const first = e.target.value;
+                setProfile({
+                  ...profile,
+                  applicant_name: {
+                    ...profile.applicant_name,
+                    first_name: first,
+                    full_name: `${first} ${profile.applicant_name.last_name}`.trim(),
+                  },
+                });
+              }}
+              placeholder="e.g. Justin"
+              className="h-8 text-sm"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Last Name</Label>
+            <Input
+              value={profile.applicant_name.last_name}
+              onChange={(e) => {
+                const last = e.target.value;
+                setProfile({
+                  ...profile,
+                  applicant_name: {
+                    ...profile.applicant_name,
+                    last_name: last,
+                    full_name: `${profile.applicant_name.first_name} ${last}`.trim(),
+                  },
+                });
+              }}
+              placeholder="e.g. Bishop"
+              className="h-8 text-sm"
+            />
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground -mt-2">
+          Your name — used to personalize agent prompts, cover letters, and chat interactions.
+        </p>
 
         <div className="space-y-1.5">
           <Label className="text-xs">Primary Location Name</Label>

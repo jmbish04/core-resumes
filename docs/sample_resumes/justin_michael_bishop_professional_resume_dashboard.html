@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Justin Michael Bishop - Executive Portfolio & Resume Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f5f7ff',
+                            100: '#ebf0ff',
+                            600: '#3b52d9',
+                            700: '#2a3cb3',
+                            800: '#1f2d8c',
+                            900: '#131b54',
+                        },
+                        neutral: {
+                            950: '#090d16',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Print Override Styles */
+        @media print {
+            body {
+                background: white !important;
+                color: #0f172a !important;
+                font-size: 10pt !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-full-width {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
+            .print-grid {
+                display: grid !important;
+                grid-template-columns: 2fr 1fr !important;
+                gap: 1.5rem !important;
+            }
+            .print-border {
+                border-bottom: 1px solid #e2e8f0 !important;
+                padding-bottom: 1rem !important;
+                margin-bottom: 1rem !important;
+            }
+            .print-experience-layout {
+                page-break-inside: avoid !important;
+            }
+            a {
+                text-decoration: none !important;
+                color: #0f172a !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-[#f3f5f9] text-slate-800 font-sans min-h-screen selection:bg-brand-100 selection:text-brand-900 transition-colors duration-200">
+
+    <!-- Top Navigation Controls (Hidden in Print) -->
+    <header class="no-print bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="h-9 w-9 rounded-xl bg-brand-600 flex items-center justify-center text-white font-extrabold text-sm shadow-md shadow-brand-600/20">
+                    JB
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-slate-900 text-sm tracking-tight">Justin Michael Bishop</h1>
+                    <p class="text-xs text-slate-500 font-medium">Interactive Enterprise Portfolio</p>
+                </div>
+            </div>
+            
+            <!-- Dynamic Persona Switcher -->
+            <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200/80 max-w-full overflow-x-auto">
+                <button onclick="switchPersona('pm')" id="btn-pm" class="persona-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5 bg-white text-brand-700 shadow-sm whitespace-nowrap">
+                    <i data-lucide="layers" class="w-3.5 h-3.5"></i> Product Manager
+                </button>
+                <button onclick="switchPersona('data')" id="btn-data" class="persona-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5 text-slate-600 hover:text-slate-900 whitespace-nowrap">
+                    <i data-lucide="database" class="w-3.5 h-3.5"></i> Head of Data
+                </button>
+                <button onclick="switchPersona('ai')" id="btn-ai" class="persona-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5 text-slate-600 hover:text-slate-900 whitespace-nowrap">
+                    <i data-lucide="cpu" class="w-3.5 h-3.5"></i> AI Innovator
+                </button>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-2">
+                <!-- Toggle Anthropic Alignment -->
+                <button onclick="toggleAlignment()" id="alignment-btn" class="px-3.5 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs transition-all flex items-center gap-1.5 shadow-xs">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-600"></i> Match Anthropic JD
+                </button>
+                
+                <button onclick="window.print()" class="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors flex items-center gap-1.5 shadow-sm">
+                    <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print / PDF
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Alignment Helper Panel (Hidden in Print) -->
+    <div id="alignment-panel" class="no-print max-w-5xl mx-auto px-4 mt-6 hidden transition-all duration-300">
+        <div class="bg-gradient-to-r from-indigo-900 to-slate-900 text-white rounded-2xl p-5 shadow-lg border border-indigo-500/20 relative overflow-hidden">
+            <div class="absolute right-0 top-0 translate-x-12 -translate-y-6 opacity-10 pointer-events-none">
+                <i data-lucide="sparkles" class="w-64 h-64 text-white"></i>
+            </div>
+            <div class="flex items-start gap-4">
+                <div class="p-3 bg-indigo-500/10 border border-indigo-400/20 rounded-xl shrink-0">
+                    <i data-lucide="target" class="w-6 h-6 text-indigo-300"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold tracking-wide text-white">Anthropic Alignment Highlights Activated</h3>
+                    <p class="text-xs text-indigo-200 mt-1 leading-relaxed max-w-3xl">
+                        We've highlighted areas of your experience that match the <span class="font-semibold text-white">Legal Operations Specialist, Tooling & Enablement</span> position at Anthropic. Your extensive track record with Claude integrations, Google low-code infrastructure (BumbleBee, Spitz), and change management aligns precisely with their non-negotiables.
+                    </p>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-200 text-[10px] font-semibold border border-indigo-400/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> AppSheet & Low-code
+                        </span>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-200 text-[10px] font-semibold border border-indigo-400/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Claude & AI Integrations
+                        </span>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-200 text-[10px] font-semibold border border-indigo-400/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Change Management
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast (Hidden in Print) -->
+    <div id="toast" class="no-print fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 transform translate-y-12 opacity-0 transition-all duration-300 flex items-center gap-2.5 z-50">
+        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400"></i>
+        <div>
+            <p class="text-xs font-bold text-white" id="toast-title">Success</p>
+            <p class="text-[10px] text-slate-400" id="toast-desc">Profile updated.</p>
+        </div>
+    </div>
+
+    <!-- Main Resume Container -->
+    <main class="max-w-5xl mx-auto px-4 py-6 md:py-10 print-full-width">
+        <div class="bg-white border border-slate-200 shadow-xl rounded-2xl p-6 md:p-12 print-full-width print-border">
+            
+            <!-- Resume Header Section -->
+            <div class="flex flex-col md:flex-row justify-between items-start gap-6 border-b border-slate-200 pb-8 mb-8">
+                <div class="space-y-2">
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">Justin Michael Bishop</h2>
+                    
+                    <!-- Dynamic Professional Title -->
+                    <p id="persona-title" class="text-lg md:text-xl font-semibold text-brand-600">
+                        Senior Product & Platform Architect — Internal Automation
+                    </p>
+                </div>
+                
+                <!-- Fixed Contact Details Grid (Repaired Location Icon & Layout) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-x-6 gap-y-3.5 text-xs text-slate-600 md:text-right font-medium w-full md:w-auto shrink-0">
+                    <span class="flex items-center md:justify-end gap-2.5">
+                        <i data-lucide="mail" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                        <a href="mailto:justin@126colby.com" class="hover:text-brand-600 transition-colors">justin@126colby.com</a>
+                    </span>
+                    <span class="flex items-center md:justify-end gap-2.5">
+                        <i data-lucide="phone" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                        <span class="text-slate-800 font-semibold">(415) 658-2389</span>
+                    </span>
+                    <span class="flex items-center md:justify-end gap-2.5">
+                        <i data-lucide="linkedin" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                        <a href="https://linkedin.com/in/jmbishop04" target="_blank" class="hover:text-brand-600 transition-colors">linkedin.com/in/jmbishop04</a>
+                    </span>
+                    <!-- Repaired Pin & Inline Block Layout -->
+                    <div class="flex items-start gap-2.5 md:justify-end">
+                        <i data-lucide="map-pin" class="w-4 h-4 text-brand-600 shrink-0 mt-0.5"></i>
+                        <div class="text-left md:text-right">
+                            <span class="block text-slate-800 font-semibold leading-tight">San Francisco, CA</span>
+                            <span class="block text-[11px] text-slate-500 italic mt-0.5 font-normal">Open to Remote / Hybrid</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Professional Summary Card -->
+            <div class="bg-slate-50 rounded-xl p-5 mb-8 border border-slate-200/60 print-border">
+                <h3 class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2.5 flex items-center gap-1.5">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-brand-600"></i> Professional Summary
+                </h3>
+                <p id="persona-summary" class="text-xs md:text-sm text-slate-700 leading-relaxed font-medium">
+                    Product-minded program leader with 12+ years at Google translating technical complexity into streamlined internal platforms. Specializes in transforming administrative "rats nests" into automated ecosystems—consistently bridging legal, compliance, and engineering domains. Renowned for shipping production-ready systems and driving platform-critical solutions without formal engineering support.
+                </p>
+            </div>
+
+            <!-- Key Hard Metric Callouts -->
+            <div class="no-print grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                <div class="bg-brand-50/50 border border-brand-100 rounded-xl p-4 text-center hover:bg-brand-50 transition-colors">
+                    <p class="text-2xl font-black text-brand-700">$16M+</p>
+                    <p class="text-[9px] uppercase tracking-wider text-brand-900 font-bold mt-1">Preservation Overhaul Opportunity</p>
+                </div>
+                <div class="bg-brand-50/50 border border-brand-100 rounded-xl p-4 text-center hover:bg-brand-50 transition-colors">
+                    <p class="text-2xl font-black text-brand-700">300%</p>
+                    <p class="text-[9px] uppercase tracking-wider text-brand-900 font-bold mt-1">Platform Adoption Growth</p>
+                </div>
+                <div class="bg-brand-50/50 border border-brand-100 rounded-xl p-4 text-center hover:bg-brand-50 transition-colors">
+                    <p class="text-2xl font-black text-brand-700">70%</p>
+                    <p class="text-[9px] uppercase tracking-wider text-brand-900 font-bold mt-1">Setup/Onboarding Speedup</p>
+                </div>
+                <div class="bg-brand-50/50 border border-brand-100 rounded-xl p-4 text-center hover:bg-brand-50 transition-colors">
+                    <p class="text-2xl font-black text-brand-700">4x</p>
+                    <p class="text-[9px] uppercase tracking-wider text-brand-900 font-bold mt-1">Google Promos (L2 to L5)</p>
+                </div>
+            </div>
+
+            <!-- Grid Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 print-grid">
+                
+                <!-- Main Core Content (Experience) - Left 2 Columns -->
+                <div class="lg:col-span-2 space-y-8 print-full-width">
+                    
+                    <!-- Professional Experience Section -->
+                    <section>
+                        <h3 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-5 pb-1.5 border-b border-slate-200 flex items-center gap-2">
+                            <i data-lucide="briefcase" class="w-4 h-4 text-brand-600"></i> Professional Experience
+                        </h3>
+                        
+                        <div class="space-y-6">
+                            
+                            <!-- Google L5 Role -->
+                            <div class="print-experience-layout">
+                                <div class="flex justify-between items-start gap-4">
+                                    <div>
+                                        <h4 class="font-extrabold text-slate-900 text-sm md:text-base">Google</h4>
+                                        <p id="google-current-title" class="text-xs font-semibold text-brand-600 mt-0.5">Business Program Manager III (Scaled Operations, Legal & Platform Systems)</p>
+                                    </div>
+                                    <span class="text-[11px] text-slate-500 font-bold bg-slate-100 px-2 py-1 rounded-md shrink-0">2013 – 2025</span>
+                                </div>
+                                <ul id="google-bullets-list" class="mt-3.5 text-xs md:text-sm text-slate-600 space-y-2.5 list-disc pl-5 leading-relaxed font-medium">
+                                    <!-- Dynamic elements injected here based on switch -->
+                                </ul>
+                            </div>
+
+                            <!-- One Source Discovery Role -->
+                            <div class="print-experience-layout pt-4 border-t border-slate-100">
+                                <div class="flex justify-between items-start gap-4">
+                                    <div>
+                                        <h4 class="font-extrabold text-slate-900 text-sm md:text-base">One Source Discovery / AC Forensics</h4>
+                                        <p id="discovery-title" class="text-xs font-semibold text-brand-600 mt-0.5">eDiscovery Program Lead (Intern to Owner)</p>
+                                    </div>
+                                    <span class="text-[11px] text-slate-500 font-bold bg-slate-100 px-2 py-1 rounded-md shrink-0">2010 – 2012</span>
+                                </div>
+                                <ul id="discovery-bullets-list" class="mt-3.5 text-xs md:text-sm text-slate-600 space-y-2.5 list-disc pl-5 leading-relaxed font-medium">
+                                    <!-- Dynamic elements injected here -->
+                                </ul>
+                            </div>
+
+                        </div>
+                    </section>
+
+                    <!-- Independent Engineering Projects -->
+                    <section id="independent-projects-section" class="print-experience-layout">
+                        <h3 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-5 pb-1.5 border-b border-slate-200 flex items-center gap-2">
+                            <i data-lucide="git-branch" class="w-4 h-4 text-brand-600"></i> Independent AI Engineering (GitHub-Verified Portfolios)
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- MCP Memory V3 Card -->
+                            <div class="border border-slate-200/80 rounded-xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors cursor-pointer" onclick="toggleProjectHighlight('project-mcp')">
+                                <h4 class="text-xs font-extrabold text-slate-900 flex items-center justify-between gap-1">
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        mcp-memory-v3
+                                    </span>
+                                    <span class="text-[9px] font-mono text-slate-400 font-semibold bg-white border px-1.5 py-0.5 rounded">TypeScript • Cloudflare</span>
+                                </h4>
+                                <p id="project-mcp" class="text-[11px] text-slate-600 mt-2 font-medium leading-relaxed">
+                                    Built a multi-tenant, stateful Model Context Protocol (MCP) server providing long-term memory to AI agents (Claude, Cursor). Orchestrated utilizing Cloudflare Workers, Cloudflare D1 databases for relational metadata, and Cloudflare Vectorize (BGE-M3 model) for isolated semantic search. Managed transaction state consistency via Durable Objects.
+                                </p>
+                            </div>
+                            <!-- Chatbot UI Card -->
+                            <div class="border border-slate-200/80 rounded-xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors cursor-pointer" onclick="toggleProjectHighlight('project-cb')">
+                                <h4 class="text-xs font-extrabold text-slate-900 flex items-center justify-between gap-1">
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                                        Chatbot UI Contribution
+                                    </span>
+                                    <span class="text-[9px] font-mono text-slate-400 font-semibold bg-white border px-1.5 py-0.5 rounded">Next.js • Cloudflare</span>
+                                </h4>
+                                <p id="project-cb" class="text-[11px] text-slate-600 mt-2 font-medium leading-relaxed">
+                                    Contributed core architecture upgrades upstream to the world's most popular Next.js chat layout (33K+ Stars on GitHub). Designed, tested, and implemented a decentralized, direct Cloudflare Workers edge deployment workflow (PR #1932) bypassing traditional server limitations.
+                                </p>
+                            </div>
+                            <!-- Remote MCP Proxy -->
+                            <div class="border border-slate-200/80 rounded-xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors cursor-pointer" onclick="toggleProjectHighlight('project-proxy')">
+                                <h4 class="text-xs font-extrabold text-slate-900 flex items-center justify-between gap-1">
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                        remote-mcp-server
+                                    </span>
+                                    <span class="text-[9px] font-mono text-slate-400 font-semibold bg-white border px-1.5 py-0.5 rounded">Node.js • SSE</span>
+                                </h4>
+                                <p id="project-proxy" class="text-[11px] text-slate-600 mt-2 font-medium leading-relaxed">
+                                    Architected a Server-Sent Events (SSE) remote execution worker proxy. Enables local AI instances (like Claude Desktop) to reliably interface with APIs hosted at the edge without requiring active OAuth context handshakes.
+                                </p>
+                            </div>
+                            <!-- Core GitHub API Integration -->
+                            <div class="border border-slate-200/80 rounded-xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-colors cursor-pointer" onclick="toggleProjectHighlight('project-api')">
+                                <h4 class="text-xs font-extrabold text-slate-900 flex items-center justify-between gap-1">
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+                                        core-github-api
+                                    </span>
+                                    <span class="text-[9px] font-mono text-slate-400 font-semibold bg-white border px-1.5 py-0.5 rounded">Python • BigQuery</span>
+                                </h4>
+                                <p id="project-api" class="text-[11px] text-slate-600 mt-2 font-medium leading-relaxed">
+                                    Designed real-time event-driven collectors capturing GitHub stars telemetry and repository metadata hooks. Maps event patterns to predictive AI models using structured Gemini schema parameters.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Right Sidebar Column (Technical Skill Grid, Credentials, Promos) - 1 Column -->
+                <div class="space-y-8 print-full-width">
+                    
+                    <!-- Highlighted Trajectory Badge (Shows promotions clearly) -->
+                    <div class="bg-gradient-to-br from-indigo-900 via-brand-800 to-brand-900 text-white rounded-2xl p-5 shadow-lg border border-slate-800 relative overflow-hidden">
+                        <div class="absolute -right-6 -bottom-6 opacity-10">
+                            <i data-lucide="trending-up" class="w-24 h-24 text-white"></i>
+                        </div>
+                        <h4 class="text-[10px] font-extrabold uppercase tracking-widest opacity-80 flex items-center gap-1.5">
+                            <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i> Sustained Growth Trajectory
+                        </h4>
+                        <p class="text-base font-black mt-2 leading-snug">
+                            Promoted 4 Times at Google
+                        </p>
+                        <p class="text-[11px] opacity-90 mt-1 leading-relaxed font-semibold">
+                            Rising from Level 2 Legal Assistant to Level 5 Senior Program Manager within the high-stakes Google Legal Operations track.
+                        </p>
+                    </div>
+
+                    <!-- Dynamic Skill Pill Grid -->
+                    <section>
+                        <h3 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 pb-1 flex border-b border-slate-100 items-center gap-1.5">
+                            <i data-lucide="check-square" class="w-4 h-4 text-brand-600"></i> Technical Toolbox
+                        </h3>
+                        <div id="skills-pill-container" class="flex flex-wrap gap-1.5">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </section>
+
+                    <!-- Education & Certifications -->
+                    <section>
+                        <h3 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 pb-1 flex border-b border-slate-100 items-center gap-1.5">
+                            <i data-lucide="graduation-cap" class="w-4 h-4 text-brand-600"></i> Education & Credentials
+                        </h3>
+                        <div class="space-y-3 font-semibold text-xs text-slate-600">
+                            <div>
+                                <p class="font-extrabold text-slate-900">University of Louisville</p>
+                                <p class="text-[11px]">B.S. in Computer Information Systems</p>
+                                <p class="text-[10px] text-slate-400 italic font-medium">Graduated Cum Laude • Entrepreneurship Focus</p>
+                            </div>
+                            <div class="pt-2 border-t border-slate-100">
+                                <p class="font-extrabold text-slate-900">UC Berkeley Executive Education</p>
+                                <p class="text-[11px] flex items-center gap-1.5 mt-0.5">
+                                    <span class="w-1.5 h-1.5 bg-brand-600 rounded-full"></span> Product Management Certificate
+                                </p>
+                                <p class="text-[11px] flex items-center gap-1.5 mt-0.5">
+                                    <span class="w-1.5 h-1.5 bg-brand-600 rounded-full"></span> Business Analysis Certificate
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Recognition Metrics (Peer bonuses, awards) -->
+                    <section>
+                        <h3 class="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 pb-1 flex border-b border-slate-100 items-center gap-1.5">
+                            <i data-lucide="award" class="w-4 h-4 text-brand-600"></i> Recognition Highlights
+                        </h3>
+                        <ul class="text-xs text-slate-600 space-y-3 font-semibold leading-relaxed">
+                            <li class="flex gap-2.5 items-start">
+                                <i data-lucide="gift" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5"></i>
+                                <span><strong>40+ Google Peer & Spot Bonuses</strong> received for rapid tooling deployment, "unwavering support", and cross-functional leadership.</span>
+                            </li>
+                            <li class="flex gap-2.5 items-start">
+                                <i data-lucide="shield-check" class="w-4 h-4 text-brand-600 shrink-0 mt-0.5"></i>
+                                <span><strong>EnCase Certified Examiner (EnCE)</strong> recognizing advanced forensic imaging, data security, and chain of custody rules.</span>
+                            </li>
+                        </ul>
+                    </section>
+
+                </div>
+            </div>
+
+            <!-- Traditional Resume Bottom Section (Volunteer/Civic involvement) -->
+            <footer class="mt-12 pt-6 border-t border-slate-200">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs text-slate-500 font-semibold">
+                    <p class="flex items-center gap-2">
+                        <i data-lucide="globe" class="w-4 h-4 text-slate-400"></i>
+                        <span>Volunteer: BUILD.org Entrepreneurship Mentor • StartOut Member</span>
+                    </p>
+                    <p class="no-print text-slate-400 italic">Toggle dynamic personas or Anthropic alignment mapping above.</p>
+                </div>
+            </footer>
+
+        </div>
+    </main>
+
+    <!-- Interactive Persona Script Block -->
+    <script>
+        // Deeply tailored professional configurations for Justin Bishop
+        const resumeData = {
+            pm: {
+                title: "Senior Product & Platform Architect — Internal Automation",
+                summary: "Product-minded program leader with 12+ years at Google translating technical complexity into streamlined internal platforms. Specializes in transforming administrative \"rats nests\" into automated ecosystems—consistently bridging legal, compliance, and engineering domains. Renowned for shipping production-ready systems and driving platform-critical solutions without formal engineering support.",
+                googleTitle: "Business Program Manager III (Platform & Intake Product Owner)",
+                googleBullets: [
+                    "<strong>MatterSpace Product Leadership:</strong> Co-authored initial intake workflows and designed 2-year feature roadmaps; facilitated 165+ specification workshops spanning Engineering, Operations, and Legal stakeholders to secure executive consensus.",
+                    "<strong>0-to-1 Grassroots Rebuild:</strong> Led a grassroots effort to redesign a legacy matter management platform; delivered lightweight automation mockups that successfully secured dedicated engineering resources and executive backing for a complete 55-engineer system overhaul.",
+                    "<strong>Multi-Million Dollar Efficiency:</strong> Directed a cross-functional system audit (DOTS) to standardize and localize legal holds, securing $8M to $16M in long-term enterprise cost-savings.",
+                    "<strong>Product Adoption & Scaling:</strong> Tripled active platform tracking metrics and user volumes within 18 months by utilizing structured product lifecycle frameworks, agile methodologies, and transparent stakeholder update cycles.",
+                    "<strong>Workforce Enablement (Spitz Form Launch):</strong> Streamlined corporate operations by building and deploying AppScript custom forms ('Spitz') in the absence of centralized tooling, cutting average litigation-intake timelines from 30+ minutes down to 4 minutes (an 86% improvement)."
+                ],
+                discoveryTitle: "eDiscovery Division Owner & Project Lead",
+                discoveryBullets: [
+                    "Founded and scaled the company's first internal eDiscovery business unit, generating $455K in revenue within the launch year.",
+                    "Pitched custom-designed, hosted discovery platforms directly to AM Law 100 firms and managed complete forensic matter lifecycles.",
+                    "Authored all technical playbooks, standard operational procedures, and hosted training models to scale team capabilities from 1 to 4 engineers."
+                ],
+                skills: [
+                    "Product Strategy", "Product Lifecycle (PLC)", "Agile / Scrum", "UX Optimization", "Rapid Prototyping", "SQL (BigQuery)", "Python", "AppSheet", "Apps Script", "Metrics & KPIs", "Requirements Elicitation", "Stakeholder Management", "Cross-Functional Alignment"
+                ]
+            },
+            data: {
+                title: "Head of Data Strategy & Reporting Infrastructure",
+                summary: "Systems architect and technical lead with 12+ years of Google experience building robust data processing systems, ETL scripts, and enterprise metrics pipelines. Deeply skilled in translating ambiguous legal, finance, and engineering requirements into clear database architectures. Passionate about consolidating fragmented data assets to establish single-source-of-truth frameworks.",
+                googleTitle: "Business Program Manager III (Senior Systems & ETL Architect)",
+                googleBullets: [
+                    "<strong>Data Pipeline Optimization:</strong> Re-architected a legacy 12+ year old DSR database pipeline using Python, Cloud SQL, BigQuery, and Flume, significantly improving ingestion accuracy while eliminating data redundancy.",
+                    "<strong>Advanced Data Integration:</strong> Authored custom API specification documents and engineered automatic data synchronization mappings, enabling near real-time telemetry across internal data warehouses (RelOne and Locker).",
+                    "<strong>Data Quality & Validation (PFS Redesign):</strong> Implemented automated validation scripts, folder creation tools, and custom regex-mapping rules to organize directories, reducing manual paralegal setup time by 98% and saving hundreds of hours annually.",
+                    "<strong>Telemetry Automation:</strong> Transformed highly manual, chaotic quarterly audit processes into systematic programmatic telemetry workflows; integrated automated PDF parsing and document routing logic to secure compliance data.",
+                    "<strong>Enterprise Dashboard Delivery:</strong> Designed and deployed unified executive-level tracking metrics dashboards (Data Studio/PLX); achieved a 300% increase in active metrics usage by leadership partners."
+                ],
+                discoveryTitle: "eDiscovery Systems Architect & Investigator",
+                discoveryBullets: [
+                    "Architected forensic data retrieval systems and database layouts adopted by top-tier legal operations and forensic investigation units.",
+                    "Performed forensic imaging, hardware cleanup, and secure cleanroom drive recovery procedures.",
+                    "Consolidated data-processing architectures to ensure strict chains of custody for legally sensitive data sets."
+                ],
+                skills: [
+                    "Data Strategy", "Data Engineering", "ETL Pipelines", "Python", "SQL (BigQuery / Cloud SQL)", "BigQuery ML", "Apps Script", "AppSheet", "Data Validation", "Database Architecture", "GCP Platforms", "Forensic Data Analysis", "Systems Integration", "Calculated KPIs"
+                ]
+            },
+            ai: {
+                title: "Technical Systems Architect & AI Workflow Engineer",
+                summary: "Technical systems builder with 12+ years of experience leading rapid software prototyping, serverless architecture, and custom API protocol development inside Google Legal Ops and open source. Highly proficient in JavaScript, TypeScript, Python, and SQL, with production experience deploying vector databases, multi-tenant agent frameworks, and custom LLM interfaces.",
+                googleTitle: "Business Program Manager III (Senior Low-Code & Technical Tooling Lead)",
+                googleBullets: [
+                    "<strong>BumbleBee Suite Modernization:</strong> Engineered, updated, and maintained department-critical low-code infrastructure (BumbleBee) utilizing AppScript, HTML5, and API integration, establishing robust performance and stable cross-platform linkages.",
+                    "<strong>Automated Workflows:</strong> Created an Apps Script-to-Buganizer integration template to auto-log software specifications, reducing administrative task processing latencies for core operational teams.",
+                    "<strong>Advanced User Interface:</strong> Built and versioned custom responsive front-end UIs (using AppMaker, CSS, and HTML5) to guide non-technical partners through complex document retrieval sequences.",
+                    "<strong>Technical Mentorship:</strong> Scaled technical skill sets across Google Legal by mentoring junior engineers, program managers, and litigation paralegals on SQL, JavaScript, and agile development best practices.",
+                    "<strong>Change Management:</strong> Partnered with legal solutions enablement teams to translate complex API structures and platform behaviors into intuitive, low-tech user guides, ensuring smooth digital tooling adoption."
+                ],
+                discoveryTitle: "eDiscovery Technology & Automation Lead",
+                discoveryBullets: [
+                    "Spearheaded technical investigations and built operations manuals for eDiscovery and forensic analysis projects.",
+                    "Pioneered the use of secure virtualized cloud hosting environments to conduct remote investigations safely.",
+                    "Completed over 64 hours of certified professional computer forensic investigation training (EnCE)."
+                ],
+                skills: [
+                    "TypeScript / JS", "Python", "RAG Arch.", "Workers AI", "Cloudflare D1 & Vectorize", "Durable Objects", "Serverless API Design", "Model Context Protocol (MCP)", "SQL (BigQuery)", "Google Apps Script", "AppSheet", "Systems Security", "Technical Mentorship"
+                ]
+            }
+        };
+
+        let currentPersona = 'pm';
+        let alignmentMode = false;
+
+        function switchPersona(persona) {
+            currentPersona = persona;
+            
+            // Update active state on buttons
+            document.querySelectorAll('.persona-btn').forEach(btn => {
+                btn.className = "persona-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5 text-slate-600 hover:text-slate-900 whitespace-nowrap";
+            });
+            
+            const activeBtn = document.getElementById(`btn-${persona}`);
+            activeBtn.className = "persona-btn px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5 bg-white text-brand-700 shadow-sm whitespace-nowrap";
+
+            // Load new text data
+            const data = resumeData[persona];
+            document.getElementById('persona-title').innerText = data.title;
+            document.getElementById('persona-summary').innerText = data.summary;
+            document.getElementById('google-current-title').innerText = data.googleTitle;
+
+            // Load new bullets list for Google
+            const googleList = document.getElementById('google-bullets-list');
+            googleList.innerHTML = '';
+            data.googleBullets.forEach(bullet => {
+                const li = document.createElement('li');
+                li.innerHTML = bullet;
+                googleList.appendChild(li);
+            });
+
+            // Load new bullets list for Discovery
+            const discoveryList = document.getElementById('discovery-bullets-list');
+            discoveryList.innerHTML = '';
+            data.discoveryBullets.forEach(bullet => {
+                const li = document.createElement('li');
+                li.innerHTML = bullet;
+                discoveryList.appendChild(li);
+            });
+
+            // Load new skill pills
+            const skillContainer = document.getElementById('skills-pill-container');
+            skillContainer.innerHTML = '';
+            data.skills.forEach(skill => {
+                const span = document.createElement('span');
+                span.className = "px-2.5 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-[11px] font-bold border border-slate-200/60";
+                span.innerText = skill;
+                skillContainer.appendChild(span);
+            });
+
+            // Re-apply highlights if alignmentMode is on
+            if (alignmentMode) {
+                applyAlignmentHighlights();
+            }
+        }
+
+        // Target Anthropic Alignment Mapping Toggles
+        function toggleAlignment() {
+            alignmentMode = !alignmentMode;
+            const panel = document.getElementById('alignment-panel');
+            const btn = document.getElementById('alignment-btn');
+
+            if (alignmentMode) {
+                panel.classList.remove('hidden');
+                btn.className = "px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm";
+                applyAlignmentHighlights();
+                showToast("Anthropic Alignment Activated", "Relevant tooling & AI achievements have been highlighted.");
+            } else {
+                panel.classList.add('hidden');
+                btn.className = "px-3.5 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs transition-all flex items-center gap-1.5 shadow-xs";
+                removeAlignmentHighlights();
+                showToast("Normal Mode", "Standard layout restored.");
+            }
+        }
+
+        function applyAlignmentHighlights() {
+            // Highlight matching low-code / AppSheet keywords
+            const bullets = document.querySelectorAll('#google-bullets-list li, #discovery-bullets-list li');
+            bullets.forEach(bullet => {
+                // Highlight words relevant to Anthropic JD
+                let html = bullet.innerHTML;
+                
+                // Reset any existing highlights first
+                html = html.replace(/<mark class="bg-indigo-100 text-indigo-950 p-0.5 rounded">/g, "").replace(/<\/mark>/g, "");
+                
+                const termsToHighlight = [
+                    /AppScript/gi, /AppSheet/gi, /low-code/gi, /intake workflows/gi, /automations/gi, /workflows/gi, /change management/gi, /agile methodologies/gi
+                ];
+
+                termsToHighlight.forEach(regex => {
+                    html = html.replace(regex, match => `<mark class="bg-indigo-100 text-indigo-950 p-0.5 rounded">${match}</mark>`);
+                });
+
+                bullet.innerHTML = html;
+            });
+
+            // Highlight skill pills that match Anthropic JD
+            const pills = document.querySelectorAll('#skills-pill-container span');
+            pills.forEach(pill => {
+                const targetSkills = ["Product Strategy", "UX Optimization", "Rapid Prototyping", "Apps Script", "AppSheet", "Stakeholder Management", "Cross-Functional Alignment", "Data Strategy", "Systems Integration", "TypeScript / JS", "Model Context Protocol (MCP)"];
+                if (targetSkills.includes(pill.innerText)) {
+                    pill.className = "px-2.5 py-1.5 bg-indigo-600 text-white rounded-lg text-[11px] font-bold border border-indigo-700 shadow-sm transform scale-105 transition-all";
+                }
+            });
+        }
+
+        function removeAlignmentHighlights() {
+            // Restore Google bullet formats
+            switchPersona(currentPersona);
+        }
+
+        // Mini accordion expansion helper for Projects
+        function toggleProjectHighlight(id) {
+            const el = document.getElementById(id);
+            if (el.classList.contains('line-clamp-3')) {
+                el.classList.remove('line-clamp-3');
+            } else {
+                el.classList.add('line-clamp-3');
+            }
+        }
+
+        function showToast(title, desc) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-title').innerText = title;
+            document.getElementById('toast-desc').innerText = desc;
+
+            toast.classList.remove('translate-y-12', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-12', 'opacity-0');
+            }, 4000);
+        }
+
+        // Initialize default view
+        window.onload = function() {
+            lucide.createIcons();
+            switchPersona('pm');
+        };
+    </script>
+</body>
+</html>

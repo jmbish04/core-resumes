@@ -12,6 +12,8 @@ import {
   DraftDocumentToolUI,
   SearchCareerMemoryToolUI,
   GenerateMockInterviewToolUI,
+  ProcessingStatusToolUI,
+  InvestigateTaskErrorToolUI,
 } from "@/components/assistant-ui/tool-ui";
 import { CloudflareWhisperAdapter } from "@/lib/speech/stt-whisper";
 import { CustomTTSAdapter } from "@/lib/speech/tts-adapter";
@@ -51,6 +53,8 @@ export function RoleChatProvider({ roleId, threadId: _threadId, children }: Role
       <DraftDocumentToolUI />
       <SearchCareerMemoryToolUI />
       <GenerateMockInterviewToolUI />
+      <ProcessingStatusToolUI />
+      <InvestigateTaskErrorToolUI />
       {children}
     </AssistantRuntimeProvider>
   );

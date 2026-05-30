@@ -201,6 +201,20 @@ salaryStatsRouter.openapi(
         { status: "completed", snapshotId: snapshot.id }
       );
 
+      const autoAnalyze = async () => {
+        try {
+          const { getAgentByName } = await import("agents");
+          const agent = await getAgentByName(c.env.SALARY_AGENT as any, "global");
+          await (agent as any).analyzeAggregate({});
+          await logger.info("[Salary Ingestion] Auto-triggered broad trends analysis successfully.");
+        } catch (err) {
+          await logger.error("[Salary Ingestion] Auto broad trends failed (non-fatal)", {
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      };
+      c.executionCtx.waitUntil(autoAnalyze());
+
       return c.json(
         {
           success: true,
@@ -401,7 +415,7 @@ salaryStatsRouter.openapi(
   async (c) => {
     try {
       const agent = (await getAgentByName(c.env.SALARY_AGENT as any, "global")) as any;
-      const report = await agent.analyzeBroadTrends();
+      const report = await agent.analyzeAggregate({});
       return c.json({ success: true, report }, 200);
     } catch (err) {
       return c.json({ error: err instanceof Error ? err.message : String(err) }, 500);
@@ -473,7 +487,7 @@ salaryStatsRouter.openapi(
     const { roleId } = c.req.valid("param");
     try {
       const agent = (await getAgentByName(c.env.SALARY_AGENT as any, "global")) as any;
-      const result = await agent.analyzeRoleCompensation(roleId);
+      const result = await agent.analyzeRole(roleId);
       return c.json(result, 200);
     } catch (err) {
       return c.json({ error: err instanceof Error ? err.message : String(err) }, 500);

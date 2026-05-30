@@ -23,7 +23,7 @@ import {
   WifiOff,
   Zap,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -57,7 +57,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FunnelChart } from "@/components/ui/funnel-chart";
 import { LiveLineChart, LiveLine, LiveXAxis, LiveYAxis } from "@/components/ui/live-line-chart";
-import { Map as MapComponent, MapMarker, MarkerTooltip } from "@/components/ui/map";
+import { Map as MapComponent, MapMarker, MarkerContent, MarkerTooltip } from "@/components/ui/map";
 import { apiGet, apiPost, toast } from "@/lib/api-client";
 import { PipelineStepper, type WorkflowStep } from "@/components/pipeline/PipelineStepper";
 
@@ -91,6 +91,8 @@ interface FreelanceOpportunity {
   clientSpent: string | null;
   clientHires: number | null;
   clientVerified: boolean | null;
+  clientLocation: string | null;
+  clientCountryCode: string | null;
   proposalsCount: string | null;
   isPremium: boolean | null;
   isUrgent: boolean | null;
@@ -104,6 +106,17 @@ interface FreelanceOpportunity {
   } | null;
   proposals?: any[];
 }
+
+
+/** Shape of a single geo location from /api/geo/locations */
+interface GeoCountryData {
+  id: number;
+  name: string;
+  country: string | null;
+  lat: number | null;
+  lng: number | null;
+}
+
 
 interface ScanRun {
   id: string;
@@ -125,6 +138,9 @@ export function FreelanceDashboard() {
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [triaging, setTriaging] = useState(false);
+
+  // Geo data from API — keyed by ISO country code for fast lookup
+  const [countryGeoMap, setCountryGeoMap] = useState<Record<string, GeoCountryData>>({});
 
   // Active Viewport / Selections
   const [viewportActive, setViewportActive] = useState(false);
@@ -273,9 +289,25 @@ export function FreelanceDashboard() {
     }
   };
 
+  // Fetch country geo data from centralized API
+  const fetchGeoCountries = useCallback(async () => {
+    try {
+      const res = await apiGet<{ data: Array<GeoCountryData & { type: string }> }>("/api/geo/locations?type=country");
+      const map: Record<string, GeoCountryData> = {};
+      for (const g of res.data) {
+        if (g.country && g.lat != null && g.lng != null) {
+          map[g.country.toUpperCase()] = g;
+        }
+      }
+      setCountryGeoMap(map);
+    } catch {
+      // Silently fail — clientHubs fallback will kick in
+    }
+  }, []);
+
   const fetchAll = async () => {
     setLoading(true);
-    await Promise.all([fetchStats(), fetchOpportunities(), fetchScanRuns()]);
+    await Promise.all([fetchStats(), fetchOpportunities(), fetchScanRuns(), fetchGeoCountries()]);
     setLoading(false);
   };
 
@@ -450,13 +482,57 @@ export function FreelanceDashboard() {
     { name: "Freelancer.com Hourly", hourly: true, value: 45 },
   ];
 
-  // Freelance Geolocation Hotspots
-  const clientHubs = [
-    { name: "United States", lat: 37.0902, lng: -95.7129, count: 42, rate: "$95/hr" },
-    { name: "United Kingdom", lat: 55.3781, lng: -3.436, count: 18, rate: "£75/hr" },
-    { name: "Australia", lat: -25.2744, lng: 133.7751, count: 10, rate: "$110/hr" },
-    { name: "Germany", lat: 51.1657, lng: 10.4515, count: 7, rate: "€85/hr" },
-  ];
+  // Derive geolocation hotspots from real opportunity data using centralized geo API
+  const clientHubs = (() => {
+    const countryAgg: Record<string, { count: number; totalBudget: number; budgetCount: number }> = {};
+
+    for (const opp of opportunities) {
+      const code = opp.clientCountryCode?.toUpperCase();
+      if (!code || !countryGeoMap[code]) continue;
+
+      if (!countryAgg[code]) {
+        countryAgg[code] = { count: 0, totalBudget: 0, budgetCount: 0 };
+      }
+      countryAgg[code].count++;
+
+      // Aggregate budget for avg rate calculation
+      const budget = opp.budgetMax ?? opp.budgetMin;
+      if (budget && budget > 0) {
+        countryAgg[code].totalBudget += budget;
+        countryAgg[code].budgetCount++;
+      }
+    }
+
+    const hubs = Object.entries(countryAgg)
+      .map(([code, agg]) => {
+        const geo = countryGeoMap[code];
+        const avgBudget = agg.budgetCount > 0
+          ? Math.round(agg.totalBudget / agg.budgetCount)
+          : null;
+        return {
+          name: geo.name,
+          lat: geo.lat!,
+          lng: geo.lng!,
+          count: agg.count,
+          rate: avgBudget ? `$${avgBudget.toLocaleString()}` : "—",
+        };
+      })
+      .sort((a, b) => b.count - a.count);
+
+    // Fallback: if no real data or geo API hasn't loaded, show curated worldwide hubs
+    if (hubs.length === 0) {
+      return [
+        { name: "United States", lat: 37.09, lng: -95.71, count: 0, rate: "—" },
+        { name: "United Kingdom", lat: 55.38, lng: -3.44, count: 0, rate: "—" },
+        { name: "Australia", lat: -25.27, lng: 133.78, count: 0, rate: "—" },
+        { name: "Germany", lat: 51.17, lng: 10.45, count: 0, rate: "—" },
+        { name: "India", lat: 20.59, lng: 78.96, count: 0, rate: "—" },
+        { name: "Canada", lat: 56.13, lng: -106.35, count: 0, rate: "—" },
+      ];
+    }
+
+    return hubs;
+  })();
 
   if (loading) {
     return (
@@ -815,7 +891,9 @@ export function FreelanceDashboard() {
               >
                 {clientHubs.map((hub) => (
                   <MapMarker key={hub.name} longitude={hub.lng} latitude={hub.lat}>
-                    <MapPin className="size-5 text-indigo-400 filter drop-shadow-md hover:scale-125 transition-transform cursor-pointer" />
+                    <MarkerContent>
+                      <MapPin className="size-5 text-indigo-400 filter drop-shadow-md hover:scale-125 transition-transform cursor-pointer" />
+                    </MarkerContent>
                     <MarkerTooltip>
                       <div className="space-y-1 p-0.5">
                         <div className="font-bold text-xs">{hub.name} Clients</div>

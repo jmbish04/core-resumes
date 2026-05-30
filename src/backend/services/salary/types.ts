@@ -2,7 +2,6 @@
  * @file Types for Salary Agent deterministic benchmark battery and leverage scorer.
  */
 
-import { D1Database } from "@cloudflare/workers-types";
 
 // ---------------------------------------------------------------------------
 // Inputs
@@ -14,6 +13,7 @@ export interface BenchmarkInput {
   jobTitle: string | null;
   salaryMin: number | null;
   salaryMax: number | null;
+  geoId: number | null;
   metro: string | null;
   latestSnapshotId: number;
 }
@@ -49,6 +49,7 @@ export interface Finding {
   magnitude: number | null; // e.g., 0.15 for 15% above, -0.05 for 5% below
   supportingData: Record<string, unknown>;
   caveats?: string[];
+  reason?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -98,6 +99,7 @@ export interface Track {
 }
 
 export interface MetroRow {
+  geoId: number;
   metro: string;
   colIndex: number;
   medianSalary: number;

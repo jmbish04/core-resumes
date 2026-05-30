@@ -260,6 +260,55 @@
       "when": 1779626435378,
       "tag": "0036_daffy_cloak",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "6",
+      "when": 1779709443373,
+      "tag": "0037_round_the_hunter",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "6",
+      "when": 1779865238719,
+      "tag": "0038_clumsy_roxanne_simpson",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "6",
+      "when": 1779887819113,
+      "tag": "0039_parched_hulk",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "6",
+      "when": 1779905993718,
+      "tag": "0040_even_daredevil",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "6",
+      "when": 1779996887339,
+      "tag": "0041_many_morlun",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "6",
+      "when": 1780001086937,
+      "tag": "0042_confused_inhumans",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "6",
+      "when": 1780001805009,
+      "tag": "0043_brainy_bastion",
+      "breakpoints": true
     }
   ]
 }

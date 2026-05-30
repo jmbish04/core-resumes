@@ -27,6 +27,7 @@ export default defineConfig({
         "OrchestratorAgent",
         "NotebookLMAgent",
         "NotebookLMMcpAgent",
+        "CoreResumesMcpAgent",
         "TranscriptionAgent",
         "RoleAssetsWorkflow",
         "RoleAnalysisWorkflow",

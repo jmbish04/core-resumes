@@ -11,7 +11,7 @@
 
 import { z } from "zod";
 
-import type { FreelanceOpportunity } from "@/backend/db/schemas/jobs/freelance-opportunities";
+import type { FreelanceOpportunity } from "@/backend/db/schemas/pipeline/freelance/freelance-opportunities";
 
 import { getModelRegistry } from "../../models";
 import { AiProvider } from "../../providers";

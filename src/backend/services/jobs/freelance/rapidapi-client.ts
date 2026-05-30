@@ -8,9 +8,11 @@
  * - Rate limit tracking via response headers
  * - Exponential backoff for 429 responses
  * - 5-second timeout per request
+ * - Universal usage tracking via RapidApiUsageTracker
  */
 
 import { getRapidApiKey } from "@/backend/utils/secrets";
+import { RapidApiUsageTracker } from "@/backend/services/rapidapi-usage-tracker";
 
 import type { NewFreelanceOpportunity } from "@/backend/db/schema";
 
@@ -52,36 +54,15 @@ export interface FreelancerSearchParams {
 }
 
 export interface UpworkJob {
-  job_id: string;
-  url: string;
+  id: string;
+  type: "fixed" | "hourly";
   title: string;
+  created_at: string;
+  time: string;
+  info: string;
   description: string;
-  skills: string[];
-  budget_type: string;
-  budget_total_usd: string | null;
-  experience_level: string;
-  location: string;
-  project_length: string;
-  hours_per_week: string;
-  proposals: string;
-  client_total_hires: number;
-  client_active_hires: number;
-  client_spent: string;
-  client_company_size: string;
-  client_member_since: string;
-  client_score: number;
-  client_feedback_count: number;
-  total_jobs_with_hires: number;
-  is_enterprise: boolean;
-  open_count: number;
-  premium: boolean;
-  category_name: string;
-  category_group_name: string;
-  is_contract_to_hire: boolean;
-  published_at: string;
-  renewed_on: string | null;
-  interviewing: string;
-  invites_sent: string;
+  skills: string; // Comma-separated list of skills
+  url: string;
 }
 
 export interface FreelancerJob {
@@ -150,8 +131,11 @@ const BASE_BACKOFF_MS = 1000;
 
 export class RapidApiClient {
   private rateLimits: RateLimitInfo | null = null;
+  private tracker: RapidApiUsageTracker;
 
-  constructor(private env: Env) {}
+  constructor(private env: Env) {
+    this.tracker = new RapidApiUsageTracker(env);
+  }
 
   /**
    * Search Upwork job listings.
@@ -160,11 +144,43 @@ export class RapidApiClient {
     params: UpworkSearchParams,
     cursor?: string,
   ): Promise<ApiResponse<UpworkJob>> {
-    const url = new URL(`https://${this.env.RAPIDAPI_HOST_UPWORK}/upwork`);
-    for (const [key, val] of Object.entries(params)) {
-      if (val !== undefined && val !== null) url.searchParams.set(key, String(val));
+    const host = this.env.RAPIDAPI_HOST_UPWORK;
+    const url = `https://${host}/upwork/search-jobs`;
+
+    const query = params.q || params.skills || this.env.FREELANCE_SCAN_SKILLS || "React, TypeScript, Node.js";
+
+    let difficulty = "entry, intermediate, expert";
+    if (params.experience_level) {
+      difficulty = params.experience_level;
+    } else if (this.env.FREELANCE_DEFAULT_EXPERIENCE) {
+      difficulty = this.env.FREELANCE_DEFAULT_EXPERIENCE;
     }
-    return this.fetchWithRetry<UpworkJob>(url.toString(), this.env.RAPIDAPI_HOST_UPWORK, cursor);
+
+    const minHourly = params.hourly_min_usd ?? (this.env.FREELANCE_DEFAULT_HOURLY_MIN ? parseInt(this.env.FREELANCE_DEFAULT_HOURLY_MIN, 10) : undefined);
+
+    const body = {
+      query: query,
+      type: params.budget_type || "hourly, fixed",
+      sort: params.sort_order === "asc" ? "relevance" : "recency",
+      difficulty: difficulty,
+      duration: "less_than_1_month, 1_to_3_months, 3_to_6_months, more_than_6_months",
+      hours_per_week: "less_than_30, more_than_30",
+      client_hires: "0, 1-9, 10+",
+      client_location: params.location || "United States",
+      min_hourly_rate: minHourly,
+      max_hourly_rate: params.hourly_max_usd,
+      min_fixed_budget: params.fixed_min_usd,
+      max_fixed_budget: params.fixed_max_usd,
+    };
+
+    return this.fetchWithRetry<UpworkJob>(
+      url,
+      host,
+      cursor,
+      0,
+      "POST",
+      body,
+    );
   }
 
   /**
@@ -199,36 +215,67 @@ export class RapidApiClient {
    */
   static normalizeUpwork(raw: UpworkJob): Omit<NewFreelanceOpportunity, "id"> {
     const now = new Date();
+    
+    let budgetMin: number | null = null;
+    let budgetMax: number | null = null;
+
+    if (raw.info) {
+      const cleanInfo = raw.info.replace(/[$,]/g, "");
+      if (raw.type === "fixed") {
+        const match = cleanInfo.match(/(\d+(?:\.\d+)?)/);
+        if (match) {
+          budgetMax = parseFloat(match[1]);
+          budgetMin = budgetMax;
+        }
+      } else if (raw.type === "hourly") {
+        const matchRange = cleanInfo.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)/);
+        if (matchRange) {
+          budgetMin = parseFloat(matchRange[1]);
+          budgetMax = parseFloat(matchRange[2]);
+        } else {
+          const matchSingle = cleanInfo.match(/(\d+(?:\.\d+)?)/);
+          if (matchSingle) {
+            budgetMin = parseFloat(matchSingle[1]);
+            budgetMax = budgetMin;
+          }
+        }
+      }
+    }
+
+    const skillsJson = raw.skills
+      ? raw.skills.split(",").map((s) => s.trim()).filter(Boolean)
+      : [];
+
     return {
       platform: "upwork",
-      platformJobId: raw.job_id,
+      platformJobId: raw.id,
       url: raw.url,
       title: raw.title,
       description: raw.description,
-      skillsJson: raw.skills,
-      budgetType: raw.budget_type as "fixed" | "hourly" | undefined,
-      budgetMin: null,
-      budgetMax: raw.budget_total_usd ? parseFloat(raw.budget_total_usd) : null,
+      skillsJson,
+      budgetType: raw.type,
+      budgetMin,
+      budgetMax,
       budgetCurrency: "USD",
-      experienceLevel: raw.experience_level,
-      projectLength: raw.project_length,
-      hoursPerWeek: raw.hours_per_week,
-      clientLocation: raw.location,
+      experienceLevel: null,
+      projectLength: null,
+      hoursPerWeek: null,
+      clientLocation: null,
       clientCountryCode: null,
-      clientSpent: raw.client_spent,
-      clientScore: raw.client_score,
-      clientHires: raw.client_total_hires,
-      clientFeedbackCount: raw.client_feedback_count,
-      clientMemberSince: raw.client_member_since,
+      clientSpent: null,
+      clientScore: null,
+      clientHires: null,
+      clientFeedbackCount: null,
+      clientMemberSince: null,
       clientVerified: true, // Upwork doesn't expose this field directly
-      proposalsCount: raw.proposals,
-      isPremium: raw.premium,
+      proposalsCount: null,
+      isPremium: false,
       isUrgent: false,
       isNda: false,
-      categoryName: raw.category_name,
+      categoryName: null,
       bidAvg: null,
       bidDeadline: null,
-      publishedAt: new Date(raw.published_at),
+      publishedAt: raw.created_at ? new Date(raw.created_at) : now,
       firstSeenAt: now,
       lastSeenAt: now,
       isActive: true,
@@ -295,8 +342,24 @@ export class RapidApiClient {
     host: string,
     cursor?: string,
     attempt = 0,
+    method: "GET" | "POST" = "GET",
+    body?: any,
   ): Promise<ApiResponse<T>> {
+    // Pre-flight: check monthly budget before making the call
+    if (attempt === 0) {
+      const budget = await this.tracker.checkBudget();
+      if (!budget.allowed) {
+        throw new Error(
+          `RapidAPI monthly budget exhausted: ${budget.used}/${budget.limit} calls used in ${budget.currentMonth}`,
+        );
+      }
+    }
+
     const apiKey = await getRapidApiKey(this.env);
+    const start = Date.now();
+    let status = 0;
+    let responseBytes = 0;
+    let errorMsg: string | undefined;
 
     const headers: Record<string, string> = {
       "X-RapidAPI-Key": apiKey,
@@ -305,37 +368,83 @@ export class RapidApiClient {
     if (cursor) {
       headers["x-cursor"] = cursor;
     }
-
-    const response = await fetch(url, {
-      headers,
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
-
-    // Track rate limits
-    const limitHeader = response.headers.get("x-rate-limit-limit");
-    const remainingHeader = response.headers.get("x-rate-limit-remaining");
-    const resetHeader = response.headers.get("x-rate-limit-reset");
-    if (limitHeader) {
-      this.rateLimits = {
-        limit: parseInt(limitHeader, 10),
-        remaining: parseInt(remainingHeader ?? "0", 10),
-        reset: parseInt(resetHeader ?? "0", 10),
-      };
+    if (method === "POST") {
+      headers["Content-Type"] = "application/json";
     }
 
-    // Handle rate limiting with exponential backoff
-    if (response.status === 429 && attempt < MAX_RETRIES) {
-      const backoff = BASE_BACKOFF_MS * Math.pow(2, attempt);
-      await new Promise((resolve) => setTimeout(resolve, backoff));
-      return this.fetchWithRetry<T>(url, host, cursor, attempt + 1);
-    }
+    try {
+      const response = await fetch(url, {
+        method,
+        headers,
+        body: method === "POST" && body ? JSON.stringify(body) : undefined,
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
 
-    if (!response.ok) {
-      const errorBody = await response.text().catch(() => "Unknown error");
-      throw new Error(`RapidAPI ${host} returned ${response.status}: ${errorBody}`);
-    }
+      status = response.status;
 
-    return (await response.json()) as ApiResponse<T>;
+      // Track rate limits
+      const limitHeader = response.headers.get("x-rate-limit-limit");
+      const remainingHeader = response.headers.get("x-rate-limit-remaining");
+      const resetHeader = response.headers.get("x-rate-limit-reset");
+      if (limitHeader) {
+        this.rateLimits = {
+          limit: parseInt(limitHeader, 10),
+          remaining: parseInt(remainingHeader ?? "0", 10),
+          reset: parseInt(resetHeader ?? "0", 10),
+        };
+      }
+
+      // Handle rate limiting with exponential backoff
+      if (response.status === 429 && attempt < MAX_RETRIES) {
+        const backoff = BASE_BACKOFF_MS * Math.pow(2, attempt);
+        await new Promise((resolve) => setTimeout(resolve, backoff));
+        return this.fetchWithRetry<T>(url, host, cursor, attempt + 1, method, body);
+      }
+
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => "Unknown error");
+        responseBytes = new TextEncoder().encode(errorBody).byteLength;
+        errorMsg = `RapidAPI ${host} returned ${response.status}: ${errorBody}`;
+        throw new Error(errorMsg);
+      }
+
+      const responseText = await response.text();
+      responseBytes = new TextEncoder().encode(responseText).byteLength;
+      
+      const parsed = JSON.parse(responseText);
+
+      // Normalization of response envelope for the new Upwork API
+      if (host === this.env.RAPIDAPI_HOST_UPWORK && parsed && "response" in parsed) {
+        const jobs = parsed.response || [];
+        return {
+          data: jobs as unknown as T[],
+          next_cursor: null,
+          meta: {
+            total_rows_served: jobs.length,
+            request_cost: 1,
+            job_cost: jobs.length,
+          },
+        };
+      }
+
+      return parsed as ApiResponse<T>;
+    } catch (e) {
+      errorMsg = errorMsg ?? (e instanceof Error ? e.message : String(e));
+      throw e;
+    } finally {
+      // Post-flight: log usage (non-blocking)
+      const durationMs = Date.now() - start;
+      const parsedUrl = new URL(url);
+      await this.tracker.logCall({
+        apiHost: host,
+        apiEndpoint: parsedUrl.pathname,
+        requestParams: method === "POST" && body ? body : Object.fromEntries(parsedUrl.searchParams.entries()),
+        responseStatus: status || 0,
+        responseBytes,
+        durationMs,
+        error: errorMsg,
+      });
+    }
   }
 }
 

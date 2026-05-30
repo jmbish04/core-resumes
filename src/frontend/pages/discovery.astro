@@ -1,0 +1,19 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { Sidebar } from "@/components/Sidebar";
+import { DiscoveryDashboard } from "@/components/pipeline/DiscoveryDashboard";
+---
+
+<BaseLayout title="Wide Net Discovery | Colby" description="Review automatically scored job postings and promote promising roles and companies.">
+  <div class="flex flex-1 relative w-full">
+    {/* Always render the main Sidebar */}
+    <Sidebar client:load />
+    
+    {/* Full-page responsive main section */}
+    <section class="min-w-0 flex-1 w-full bg-[#0a0a0c] text-white min-h-screen">
+      <div class="mx-auto w-full gap-6 px-4 py-6 lg:px-8">
+        <DiscoveryDashboard client:only="react" />
+      </div>
+    </section>
+  </div>
+</BaseLayout>
