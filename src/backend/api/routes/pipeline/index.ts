@@ -46,5 +46,6 @@ pipelineRouter.route("/", analyzeAggregateRouter);
 pipelineRouter.route("/", chatRouter);
 pipelineRouter.route("/", findingsRouter);
 pipelineRouter.route("/", dataExplorerRouter);
+pipelineRouter.route("/", salaryStatsRouter);
 
 

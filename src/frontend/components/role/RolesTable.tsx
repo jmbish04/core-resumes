@@ -1,4 +1,4 @@
-import { ArrowUpDown, Loader2, MoreHorizontal, Trash2 } from "lucide-react";
+import { ArrowUpDown, Loader2, MoreHorizontal, Trash2, HelpCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -11,8 +11,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { JobsQueueTable } from "./JobsQueueTable";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -156,7 +166,7 @@ export function RolesTable() {
           placeholder="Filter by company or title"
           className="max-w-sm"
         />
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
           {statuses.map((item) => (
             <Button
               key={item}
@@ -168,10 +178,49 @@ export function RolesTable() {
               {item === "all" ? "All" : (STATUS_LABELS[item] ?? item)}
             </Button>
           ))}
+          <Dialog>
+            <DialogTrigger
+              render={
+                <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white" />
+              }
+            >
+              <HelpCircle className="size-5" />
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Human-in-the-Loop (HITL) Workflow</DialogTitle>
+                <DialogDescription className="space-y-4 pt-4 text-sm text-zinc-300">
+                  <p>
+                    <strong>Process / Promote:</strong> When you promote a job from the queue, it becomes an active application that you track in the <em>Processed Roles</em> tab.
+                  </p>
+                  <p>
+                    <strong>Watch:</strong> If a job looks interesting but you're not ready to apply, you can watch it. It will disappear from the main queue and only reappear if the scraper detects a change in the job posting.
+                  </p>
+                  <p>
+                    <strong>Reject:</strong> If a job is not a fit, reject it. You can optionally provide a reason. Rejected jobs are hidden from future queue runs, preventing clutter.
+                  </p>
+                </DialogDescription>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
-      <div className="rounded-lg border border-border">
+      <Tabs defaultValue="processed" className="w-full">
+        <TabsList className="bg-[#111115] border border-zinc-800/80 mb-4 p-1 w-full sm:w-auto grid grid-cols-3 sm:inline-flex rounded-xl">
+          <TabsTrigger value="processed" className="rounded-lg text-xs font-semibold px-4 py-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
+            Processed Roles
+          </TabsTrigger>
+          <TabsTrigger value="promoted" className="rounded-lg text-xs font-semibold px-4 py-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
+            Companies Scrape Queue
+          </TabsTrigger>
+          <TabsTrigger value="github" className="rounded-lg text-xs font-semibold px-4 py-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white">
+            GitHub Dataset Queue
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="processed">
+          <div className="rounded-lg border border-border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -343,6 +392,14 @@ export function RolesTable() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+        </TabsContent>
+        <TabsContent value="promoted">
+          <JobsQueueTable source="promoted_company" />
+        </TabsContent>
+        <TabsContent value="github">
+          <JobsQueueTable source="github_dataset" />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

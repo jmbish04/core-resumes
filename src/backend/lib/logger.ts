@@ -1,90 +1,73 @@
+/**
+ * @file Backward-compatible `Logger` facade over the non-blocking structured
+ * logger (`src/backend/lib/observability/logger.ts`).
+ *
+ * The public API (`new Logger(env)` + `await logger.info/warn/error/debug`) is
+ * preserved so the ~40 existing call sites are untouched, but the internals no
+ * longer write the D1 `logs` firehose or fan out a Durable Object RPC on every
+ * line. Instead each call is mirrored to `console` (captured by Workers
+ * Observability) and fire-and-forget to Analytics Engine.
+ *
+ * Live WebSocket progress is now **opt-in** via `logger.progress(...)` rather
+ * than implicit on every log line — no existing caller relied on the implicit
+ * per-line broadcast.
+ */
+
 import { getAgentByName } from "agents";
-import { getDb } from "@/backend/db";
-import { logs } from "@/backend/db/schema";
+
+import { ObsLogger } from "./observability/logger";
+
+export interface ProgressPayload {
+  status?: string;
+  current?: number;
+  total?: number;
+  message?: string;
+}
 
 export class Logger {
-  constructor(private env: Env) {}
+  private obs: ObsLogger;
 
-  private async log(
-    level: "info" | "warn" | "error" | "debug",
-    message: string,
-    metadata?: Record<string, unknown>,
-  ) {
-    // 1. Mirror to console
-    const consoleMsg = metadata ? `${message} ${JSON.stringify(metadata)}` : message;
-    switch (level) {
-      case "info":
-        console.log(`[INFO] ${consoleMsg}`);
-        break;
-      case "warn":
-        console.warn(`[WARN] ${consoleMsg}`);
-        break;
-      case "error":
-        console.error(`[ERROR] ${consoleMsg}`);
-        break;
-      case "debug":
-        console.debug(`[DEBUG] ${consoleMsg}`);
-        break;
-    }
+  constructor(private env: Env) {
+    this.obs = ObsLogger.fromEnv(env);
+  }
 
-    // 2. Insert to D1
+  public async info(message: string, metadata?: Record<string, unknown>): Promise<void> {
+    this.obs.info(message, metadata);
+  }
+
+  public async warn(message: string, metadata?: Record<string, unknown>): Promise<void> {
+    this.obs.warn(message, metadata);
+  }
+
+  public async error(message: string, metadata?: Record<string, unknown>): Promise<void> {
+    this.obs.error(message, metadata);
+  }
+
+  public async debug(message: string, metadata?: Record<string, unknown>): Promise<void> {
+    this.obs.debug(message, metadata);
+  }
+
+  /**
+   * Explicitly broadcast a live progress event to the sync-broadcast Durable
+   * Object. Use this for UI progress bars — it is NOT emitted on every log
+   * line (that was the per-line DO RPC firehose this refactor removed).
+   */
+  public async progress(payload: ProgressPayload): Promise<void> {
+    if (!this.env.SYNC_BROADCAST_AGENT) return;
     try {
-      const db = getDb(this.env);
-      await db.insert(logs).values({
-        id: crypto.randomUUID(),
-        level,
-        message,
-        metadata: metadata || null,
-        createdAt: new Date(),
+      const agent = (await getAgentByName(this.env.SYNC_BROADCAST_AGENT as any, "global")) as any;
+      await agent.reportProgress({
+        status: payload.status ?? "processing",
+        current: payload.current,
+        total: payload.total,
+        message: payload.message,
       });
-    } catch (dbError) {
-      // Fallback if DB insertion fails to prevent crashing the worker
+    } catch (wsError) {
       console.error(
-        `[LOGGER_DB_ERROR] Failed to insert log to D1: ${dbError instanceof Error ? dbError.message : String(dbError)}`,
+        `[LOGGER_WS_ERROR] Failed to broadcast progress over WebSocket: ${
+          wsError instanceof Error ? wsError.message : String(wsError)
+        }`,
       );
     }
-
-    // 3. Broadcast to WebSocket if SYNC_BROADCAST_AGENT is bound
-    if (this.env.SYNC_BROADCAST_AGENT) {
-      try {
-        const agent = (await getAgentByName(this.env.SYNC_BROADCAST_AGENT as any, "global")) as any;
-        
-        // Extract progress payload fields from metadata or use defaults
-        const status = (metadata?.status as string) || (level === "error" ? "error" : "processing");
-        const current = typeof metadata?.current === "number" ? metadata.current : undefined;
-        const total = typeof metadata?.total === "number" ? metadata.total : undefined;
-        const progressMessage = (metadata?.message as string) || message;
-
-        await agent.reportProgress({
-          status,
-          current,
-          total,
-          message: progressMessage,
-        });
-      } catch (wsError) {
-        // Fallback console log to avoid crashing the logging flow
-        console.error(
-          `[LOGGER_WS_ERROR] Failed to broadcast log over WebSocket: ${
-            wsError instanceof Error ? wsError.message : String(wsError)
-          }`,
-        );
-      }
-    }
-  }
-
-  public async info(message: string, metadata?: Record<string, unknown>) {
-    await this.log("info", message, metadata);
-  }
-
-  public async warn(message: string, metadata?: Record<string, unknown>) {
-    await this.log("warn", message, metadata);
-  }
-
-  public async error(message: string, metadata?: Record<string, unknown>) {
-    await this.log("error", message, metadata);
-  }
-
-  public async debug(message: string, metadata?: Record<string, unknown>) {
-    await this.log("debug", message, metadata);
   }
 }

@@ -309,6 +309,20 @@
       "when": 1780001805009,
       "tag": "0043_brainy_bastion",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "6",
+      "when": 1780112402105,
+      "tag": "0044_powerful_senator_kelly",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "6",
+      "when": 1780190802212,
+      "tag": "0045_zippy_eddie_brock",
+      "breakpoints": true
     }
   ]
 }

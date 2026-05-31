@@ -34,6 +34,15 @@
   "browser": {
     "binding": "BROWSER",
   },
+  // Analytics Engine — live-tailable observability sink for the structured
+  // logger (src/backend/lib/observability/logger.ts). Replaces the D1 `logs`
+  // firehose; written fire-and-forget via env.OBS.writeDataPoint().
+  "analytics_engine_datasets": [
+    {
+      "binding": "OBS",
+      "dataset": "core_resumes_obs",
+    },
+  ],
   "d1_databases": [
     {
       "binding": "DB",

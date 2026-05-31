@@ -112,8 +112,8 @@ export function CompaniesPage() {
     return companies.filter(
       (c) =>
         c.name.toLowerCase().includes(q) ||
-        c.url?.toLowerCase().includes(q) ||
-        c.greenhouseToken?.toLowerCase().includes(q),
+        (c.url?.toLowerCase() || "").includes(q) ||
+        (c.greenhouseToken?.toLowerCase() || "").includes(q),
     );
   }, [companies, searchQuery]);
 

@@ -622,6 +622,8 @@ def fetch_and_sync_salary_stats(worker_url, worker_key):
         # Format of key: "company|job title|seniority"
         # We only keep rows where the job title matches any of our target roles
         for key, stats in primary.items():
+            if not isinstance(stats, dict):
+                continue
             parts = key.split("|")
             if len(parts) < 3:
                 continue

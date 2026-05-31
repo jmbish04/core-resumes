@@ -444,7 +444,7 @@ When using tools, explain what you're doing and share the results in a clear, ac
 
               // 2. Read recent activity log entries for errors
               const { roleLogs } = await import("@/db/schema");
-              const { desc } = await import("drizzle-orm");
+              const { desc, eq } = await import("drizzle-orm");
               const recentLogs = await db
                 .select()
                 .from(roleLogs)
