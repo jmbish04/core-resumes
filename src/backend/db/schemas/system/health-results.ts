@@ -14,7 +14,7 @@ export const HEALTH_RESULTS_COLUMN_DESCRIPTIONS: Record<string, string> = {
   id: "Unique result identifier (UUID v4).",
   run_id: "Foreign key to health_runs.id. Cascade-deletes when the parent run is removed.",
   category:
-    "Logical grouping: database, ai, providers, agents, google, binding, auth, api, greenhouse, custom.",
+    "Logical grouping: database, ai, providers, agents, google, binding, auth, api, job_board_api, freelance, custom.",
   name: "Human-readable check name (e.g. 'd1_roundtrip', 'workers_ai_embedding').",
   status: "Check outcome: ok, warn, fail, skipped, timeout.",
   message: "Human-readable summary of the check result.",
@@ -44,6 +44,7 @@ export const healthResults = sqliteTable("health_results", {
       "auth",
       "api",
       "greenhouse",
+      "job_board_api",
       "freelance",
       "custom",
     ],

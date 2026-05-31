@@ -37,6 +37,7 @@
     "deploy": "pnpm run verify-sandbox && pnpm run build && cp .assetsignore dist/.assetsignore && pnpm run migrate:remote && wrangler deploy",
     "deploy:preview": "pnpm run verify-sandbox && pnpm run build && cp .assetsignore dist/.assetsignore && pnpm run migrate:remote --env preview && wrangler deploy --env preview",
     "deploy:tail": "pnpm run deploy && pnpm run tail",
+    "deploy:appsscript": "node scripts/deploy-appsscript.mjs",
     "verify-sandbox": "node scripts/verify-sandbox-version.mjs",
     "session:sync": "scripts/.venv/bin/python3 scripts/sync-cookies.py",
     "cf-typegen": "wrangler types --include-runtime false",

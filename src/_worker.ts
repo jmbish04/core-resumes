@@ -194,7 +194,7 @@ export function createExports(manifest: any) {
    *
    * - `0 *\/4 * * *` -- 4-hour health check + RapidAPI salary refresh (spaced).
    * - `0 *\/6 * * *` -- 6-hour Greenhouse pipeline scan.
-   * - `0 *\/12 * * *` -- 12-hour freelance pipeline scan.
+   * - `0 *\/12 * * *` -- 12-hour RSS feed aggregator + freelance pipeline scan.
    */
   const scheduled = async (controller: any, env: any, ctx: any) => {
     const cronExpression = controller.cron ?? "";
@@ -212,8 +212,21 @@ export function createExports(manifest: any) {
       return;
     }
 
-    // 12-hour freelance pipeline scan
+    // 12-hour RSS feed aggregator + freelance pipeline scan
     if (cronExpression === "0 */12 * * *") {
+      // RSS feed aggregator
+      try {
+        const { runRssAggregator } = await import("./backend/services/rss/aggregator");
+        const result = await runRssAggregator(env);
+        console.log(
+          `[cron:rss] Processed ${result.feedsProcessed} feeds — ` +
+          `${result.jobsInserted} inserted, ${result.jobsSkipped} skipped`,
+        );
+      } catch (e) {
+        console.error("[cron:rss] Failed to run RSS aggregator:", e);
+      }
+
+      // Freelance pipeline scan
       try {
         const { getAgentByName } = await import("agents");
         const agent = await getAgentByName(env.FREELANCE_SCANNER_AGENT, "global");

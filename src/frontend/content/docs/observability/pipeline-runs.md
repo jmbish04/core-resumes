@@ -1,3 +1,8 @@
+---
+title: "Pipeline Runs Table"
+date_last_updated: "2026-05-31"
+---
+
 # Pipeline Runs Table
 
 Last updated: May 29, 2026

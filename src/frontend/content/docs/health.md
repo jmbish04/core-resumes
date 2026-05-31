@@ -1,3 +1,8 @@
+---
+title: "Health Diagnostics"
+date_last_updated: "2026-05-31"
+---
+
 # Health Diagnostics
 
 The Career Orchestrator runs a comprehensive suite of health checks to validate all infrastructure bindings, AI services, external integrations, and pipeline integrity. Health screenings are persisted to D1 for historical tracking.
@@ -72,6 +77,37 @@ All checks run in parallel with per-check timeout limits. Results are persisted 
 | `notebooklm_query`    | 30s/45s | **Dual-mode check.** Scheduled (cron): passive credential validation (cookie presence, structure, age). Manual/Agent: live test query through the full `consultNotebook()` pipeline. See [Trigger Modes](#trigger-modes).                                                       | `src/backend/health/checks/notebooklm-query.ts`    |
 | `openroute_commute`   | 90s     | Geocodes a test address via HeiGIT, fetches driving directions (falls back to Google Maps Routes API on timeout), and runs the AI location insight analysis. Validates the full OpenRoute → Google Maps → LLM pipeline.                                                         | `src/backend/health/checks/openroute.ts`           |
 
+### Job Board API Scanner Pipeline
+
+| Check Name                    | Timeout | Description                                                                                                                                                                                                                             | Source File                                                      |
+| ----------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `greenhouse_env_vars`         | 30s     | Validates Greenhouse-specific environment variables and board token availability.                                                                                                                                                        | `src/backend/health/checks/job-board-apis/greenhouse-env-vars.ts` |
+| `r2_jobs_bucket`              | 30s     | Reads/writes a test key to the `R2_JOBS_BUCKET` binding to validate R2 connectivity for dedup catalogs.                                                                                                                                 | `src/backend/health/checks/infrastructure/r2-jobs-bucket.ts`      |
+| `vectorize_jobs`              | 30s     | Queries the `VECTORIZE_JOBS` index to validate vector search is operational.                                                                                                                                                            | `src/backend/health/checks/infrastructure/vectorize-jobs.ts`      |
+| `jobs_schema_integrity`       | 30s     | Validates `jobs_postings` table schema against expected columns and indexes.                                                                                                                                                            | `src/backend/health/checks/data-quality/jobs-schema-integrity.ts` |
+| `jobs_data_quality`           | 30s     | Runs data quality checks on `jobs_postings`: null rates, enum validity, referential integrity.                                                                                                                                          | `src/backend/health/checks/data-quality/jobs-data-quality.ts`     |
+| `gemini_provider`             | 15s     | Tests the Gemini AI provider with a simple completion request.                                                                                                                                                                          | `src/backend/health/checks/ai/gemini-provider.ts`                 |
+| `pipeline_sessions`           | 30s     | Queries `session_runs` to verify pipeline session tracking is operational.                                                                                                                                                              | `src/backend/health/checks/data-quality/pipeline-sessions.ts`     |
+| `job_board_api_connectivity`  | 45s     | **Aggregate check.** Probes all registered ATS APIs (Greenhouse, AshbyHQ, Gem) and RSS feeds in parallel. Returns per-provider breakdown. See below.                                                                                    | `src/backend/health/checks/job-board-apis/index.ts`               |
+
+#### `job_board_api_connectivity` Sub-Checks
+
+The aggregate `job_board_api_connectivity` check runs 4 sub-checks in parallel via `Promise.allSettled`:
+
+| Provider       | Check                     | Description                                                                                                 | Source File                                                   |
+| -------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| **Greenhouse** | `checkBoardTokenConfig()` | Fetches the Greenhouse public API for each configured board token. Validates JSON structure and job count.   | `src/backend/health/checks/job-board-apis/board-token-config.ts` |
+| **AshbyHQ**    | `checkAshbyApi()`         | Fetches the AshbyHQ posting API for each configured token. Validates JSON structure and response status.     | `src/backend/health/checks/job-board-apis/ashby-api.ts`        |
+| **Gem**        | `checkGemApi()`           | Fetches the Gem public API for each configured token. Validates JSON structure and job availability.         | `src/backend/health/checks/job-board-apis/gem-api.ts`          |
+| **RSS Feeds**  | `checkRssFeeds()`         | Probes each configured RSS/Atom feed URL. Validates HTTP 200, XML structure, and `<item>`/`<entry>` presence. | `src/backend/health/checks/job-board-apis/rss-feeds.ts`        |
+
+### Freelance Scanner Pipeline
+
+| Check Name                     | Timeout | Description                                                                                                | Source File                                                           |
+| ------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `freelance_schema_integrity`   | 30s     | Validates `freelance_opportunities` table schema against expected columns.                                 | `src/backend/health/checks/freelance-apis/freelance-schema-integrity.ts` |
+| `freelance_data_quality`       | 30s     | Runs quality checks on freelance data: null rates, enum validity, stale scan detection.                    | `src/backend/health/checks/freelance-apis/freelance-data-quality.ts`  |
+
 ## Architecture
 
 ### Coordinator
@@ -98,11 +134,12 @@ Some checks have custom timeout limits:
 | Check                            | Default | Override |
 | -------------------------------- | ------- | -------- |
 | `agent_notebooklm`               | 30s     | 45s      |
-| `salary_sandbox`                 | 30s     | 45s      |
+| `salary_sql`                     | 30s     | 45s      |
 | `google_drive_lifecycle`         | 30s     | 45s      |
 | `extraction_fidelity`            | 30s     | 120s     |
 | `openroute_commute`              | 30s     | 90s      |
-| `board_token_config`             | 30s     | 45s      |
+| `job_board_api_connectivity`     | 30s     | 45s      |
+| `gemini_provider`                | 30s     | 15s      |
 | `notebooklm_query` (manual only) | 30s     | 45s      |
 
 ### Persistence
@@ -134,7 +171,13 @@ The Health Dashboard (`/health`) displays:
 
 - `src/backend/health/index.ts` — `HealthCoordinator` class and check registry
 - `src/backend/health/types.ts` — Type definitions for all health-related interfaces
-- `src/backend/health/checks/` — Standalone check modules
+- `src/backend/health/checks/` — Standalone check modules organized by category:
+  - `ai/` — Workers AI embedding, AI Gateway, TTS, STT, Gemini provider
+  - `data-quality/` — Jobs schema/data quality, pipeline sessions, salary SQL
+  - `freelance-apis/` — Freelance schema integrity and data quality
+  - `infrastructure/` — Platform bindings, D1 table scan, R2 buckets, Vectorize
+  - `integrations/` — NotebookLM credentials/query, OpenRoute
+  - `job-board-apis/` — Board token configs, Ashby/Gem API, RSS feeds, extraction fidelity
 - `src/backend/db/health.ts` — D1 and KV check modules
 - `src/backend/ai/workersai/health.ts` — Workers AI and AI Gateway checks
 - `src/backend/ai/tools/google/health.ts` — Google Drive lifecycle check
@@ -142,3 +185,4 @@ The Health Dashboard (`/health`) displays:
 - `src/backend/utils/health.ts` — Secrets Store and env var checks
 - `src/backend/db/schemas/health-runs.ts` — `health_runs` table schema
 - `src/backend/db/schemas/health-results.ts` — `health_results` table schema
+

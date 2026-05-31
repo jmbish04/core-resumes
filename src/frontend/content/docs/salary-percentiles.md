@@ -1,3 +1,8 @@
+---
+title: "Understanding Salary Percentiles"
+date_last_updated: "2026-05-31"
+---
+
 # Understanding Salary Percentiles
 
 Every salary chart in the Salary Intelligence and Salary Data surfaces is built on

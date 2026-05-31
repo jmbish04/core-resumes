@@ -43,7 +43,11 @@ function randomSample<T>(arr: T[], n: number): T[] {
 function findBulletInLiElements(
   bullet: string,
   liElements: ScrapeResultItem[],
-): { found: boolean; liText?: string; matchType: "exact" | "contains" | "missing" } {
+): {
+  found: boolean;
+  liText?: string;
+  matchType: "exact" | "contains" | "missing";
+} {
   const bulletNormalized = bullet.trim().toLowerCase();
 
   for (const li of liElements) {
@@ -89,17 +93,27 @@ function collectHybridBullets(
   for (const field of BULLET_FIELDS) {
     const v = posting[field];
     if (Array.isArray(v) && v.length > 0) {
-      out.push({ field, bullets: v.filter((s): s is string => typeof s === "string") });
+      out.push({
+        field,
+        bullets: v.filter((s): s is string => typeof s === "string"),
+      });
     }
   }
   return out;
 }
 
-function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  label: string,
+): Promise<T> {
   return Promise.race([
     promise,
     new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms),
+      setTimeout(
+        () => reject(new Error(`${label} timed out after ${ms}ms`)),
+        ms,
+      ),
     ),
   ]);
 }
@@ -108,7 +122,9 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 // Main check
 // ---------------------------------------------------------------------------
 
-export async function checkExtractionFidelity(env: Env): Promise<HealthStepResult> {
+export async function checkExtractionFidelity(
+  env: Env,
+): Promise<HealthStepResult> {
   const start = Date.now();
   const issues: string[] = [];
   const details: Record<string, unknown> = {};
@@ -121,7 +137,9 @@ export async function checkExtractionFidelity(env: Env): Promise<HealthStepResul
       "Overall extraction fidelity check",
     );
   } catch (e) {
-    issues.push(`Safety timeout: ${e instanceof Error ? e.message : String(e)}`);
+    issues.push(
+      `Safety timeout: ${e instanceof Error ? e.message : String(e)}`,
+    );
     details.phaseTiming = phaseTiming;
 
     return {
@@ -188,8 +206,13 @@ async function executeExtractionFidelity(
     markdown = mdResult.value;
     details.markdown = { status: "ok", bytes: markdown.length };
   } else {
-    issues.push(`Browser Rendering /markdown failed: ${String(mdResult.reason).slice(0, 200)}`);
-    details.markdown = { status: "fail", error: String(mdResult.reason).slice(0, 300) };
+    issues.push(
+      `Browser Rendering /markdown failed: ${String(mdResult.reason).slice(0, 200)}`,
+    );
+    details.markdown = {
+      status: "fail",
+      error: String(mdResult.reason).slice(0, 300),
+    };
   }
 
   if (scrapeResult.status === "fulfilled") {
@@ -198,13 +221,22 @@ async function executeExtractionFidelity(
     allLiElements = liGroup?.results ?? [];
     details.domScrape = {
       status: "ok",
-      headingCount: scrapedElements.find((g) => g.selector.includes("h1"))?.results.length ?? 0,
+      headingCount:
+        scrapedElements.find((g) => g.selector.includes("h1"))?.results
+          .length ?? 0,
       liCount: allLiElements.length,
-      paragraphCount: scrapedElements.find((g) => g.selector.trim() === "p")?.results.length ?? 0,
+      paragraphCount:
+        scrapedElements.find((g) => g.selector.trim() === "p")?.results
+          .length ?? 0,
     };
   } else {
-    issues.push(`Browser Rendering /scrape failed: ${String(scrapeResult.reason).slice(0, 200)}`);
-    details.domScrape = { status: "fail", error: String(scrapeResult.reason).slice(0, 300) };
+    issues.push(
+      `Browser Rendering /scrape failed: ${String(scrapeResult.reason).slice(0, 200)}`,
+    );
+    details.domScrape = {
+      status: "fail",
+      error: String(scrapeResult.reason).slice(0, 300),
+    };
   }
 
   // Cannot proceed without both markdown and DOM scrape
@@ -221,9 +253,13 @@ async function executeExtractionFidelity(
 
   // ── Step 3: hybrid extraction (Pass H + A + B) ─────────────────────────
   const hybridStart = Date.now();
-  let posting: Awaited<ReturnType<typeof extractRolePostingHybrid>> | null = null;
+  let posting: Awaited<ReturnType<typeof extractRolePostingHybrid>> | null =
+    null;
   try {
-    posting = await extractRolePostingHybrid(env, { markdown, scrapedElements });
+    posting = await extractRolePostingHybrid(env, {
+      markdown,
+      scrapedElements,
+    });
     phaseTiming.step3_hybridExtraction = Date.now() - hybridStart;
     details.hybridExtraction = {
       status: "ok",
@@ -240,7 +276,9 @@ async function executeExtractionFidelity(
     };
   } catch (err) {
     phaseTiming.step3_hybridExtraction = Date.now() - hybridStart;
-    issues.push(`Hybrid extraction failed: ${err instanceof Error ? err.message : String(err)}`);
+    issues.push(
+      `Hybrid extraction failed: ${err instanceof Error ? err.message : String(err)}`,
+    );
     details.hybridExtraction = {
       status: "fail",
       durationMs: phaseTiming.step3_hybridExtraction,
@@ -250,7 +288,9 @@ async function executeExtractionFidelity(
 
   // ── Step 4: verify bullets are verbatim in the DOM ─────────────────────
   if (posting && allLiElements.length > 0) {
-    const bulletGroups = collectHybridBullets(posting as unknown as Record<string, unknown>);
+    const bulletGroups = collectHybridBullets(
+      posting as unknown as Record<string, unknown>,
+    );
     const samples: Array<{
       field: string;
       bullet: string;
@@ -274,7 +314,10 @@ async function executeExtractionFidelity(
     }
 
     const passed = samples.filter((s) => s.found).length;
-    const totalBullets = bulletGroups.reduce((acc, g) => acc + g.bullets.length, 0);
+    const totalBullets = bulletGroups.reduce(
+      (acc, g) => acc + g.bullets.length,
+      0,
+    );
 
     details.fidelityCheck = {
       totalBullets,
@@ -291,10 +334,15 @@ async function executeExtractionFidelity(
     }
 
     if (totalBullets === 0) {
-      issues.push("Hybrid extraction returned zero bullets — check Pass H heading classification");
+      issues.push(
+        "Hybrid extraction returned zero bullets — check Pass H heading classification",
+      );
     }
   } else if (allLiElements.length === 0) {
-    details.fidelityCheck = { status: "skipped", reason: "no_li_elements_in_dom" };
+    details.fidelityCheck = {
+      status: "skipped",
+      reason: "no_li_elements_in_dom",
+    };
   }
 
   phaseTiming.total = Date.now() - start;

@@ -36,6 +36,7 @@ interface JobPosting {
   jobTitle: string;
   company: string;
   location: string | null;
+  jobUrl: string | null;
   dateFirstSeen: string;
   triagePassed: boolean;
   triageReason: string | null;
@@ -530,7 +531,7 @@ export function DiscoveryDashboard() {
                               className="border-zinc-800 hover:bg-zinc-800 text-zinc-300 gap-1.5"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                window.open(job.triageReason?.match(/URL:\s*(https?:\/\/\S+)/)?.[1] || "#", "_blank");
+                                window.open(job.jobUrl || job.triageReason?.match(/URL:\s*(https?:\/\/\S+)/)?.[1] || "#", "_blank");
                               }}
                             >
                               <Share2 className="size-3.5" /> View Posting

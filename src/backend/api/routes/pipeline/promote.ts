@@ -20,7 +20,7 @@ import {
   companyJobBoardDefs,
   companyJobBoardMapping,
 } from "@/backend/db/schema";
-import { scrapeGreenhouseJob } from "@/backend/ai/tools/greenhouse";
+import { getProviderByName, scrapeJobFromBoard } from "@/backend/pipeline/job-board-providers";
 import { AiProvider } from "@/backend/ai/providers";
 import { kimi_k2_5 } from "@/backend/ai/models/kimi-k2.5";
 
@@ -251,40 +251,28 @@ promoteRouter.openapi(
     try {
       let scrapedText: string;
 
-      // Detect ATS system: Greenhouse uses numeric IDs, Ashby uses UUIDs, Lever uses slugs
-      const isGreenhouseId = /^\d+$/.test(job.jobSiteId);
-      const isAshbyId = /^[a-f0-9-]{20,}$/i.test(job.jobSiteId) || job.jobSiteId.startsWith("as-");
+      // Detect ATS system from source api_company if available
+      let sourceSystem: string | undefined;
+      if (job.sourceApiCompanyId) {
+        const sourceCompany = await db
+          .select({ system: apiCompanies.system })
+          .from(apiCompanies)
+          .where(eq(apiCompanies.id, job.sourceApiCompanyId))
+          .get();
+        sourceSystem = sourceCompany?.system;
+      }
 
-      if (isGreenhouseId) {
-        // Greenhouse: boardToken/jobs/numericId
-        console.log(`[manual:analyze] Scraping greenhouse job: ${job.company}/${job.jobSiteId}`);
-        const scraped = await scrapeGreenhouseJob(job.company, job.jobSiteId);
-        scrapedText = scraped.text;
-      } else if (isAshbyId) {
-        // Ashby: fetch from the public posting API
-        console.log(`[manual:analyze] Scraping ashby job: ${job.company}/${job.jobSiteId}`);
-        const ashbyRes = await fetch(
-          `https://api.ashbyhq.com/posting-api/job-board/${job.company}?includeCompensation=true`,
-          { signal: AbortSignal.timeout(10_000) },
-        );
-        if (!ashbyRes.ok) {
-          throw new Error(`Ashby API returned ${ashbyRes.status} for board ${job.company}`);
-        }
-        const ashbyData = (await ashbyRes.json()) as { jobs?: Array<{ id: string; title: string; descriptionHtml?: string; descriptionPlain?: string; location?: string; compensationTierSummary?: string }> };
-        const matchedJob = ashbyData.jobs?.find((j) => j.id === job.jobSiteId || j.title === job.jobTitle);
-        if (!matchedJob) {
-          throw new Error(`Job ${job.jobSiteId} not found on Ashby board ${job.company}`);
-        }
-        scrapedText = [
-          `Company: ${job.company}`,
-          `Job Title: ${matchedJob.title}`,
-          `Location: ${matchedJob.location || "Not specified"}`,
-          matchedJob.compensationTierSummary ? `Compensation: ${matchedJob.compensationTierSummary}` : "",
-          "",
-          matchedJob.descriptionPlain || matchedJob.descriptionHtml || "No description available.",
-        ].filter(Boolean).join("\n");
+      // Try unified job board scraper (handles provider detection internally)
+      const scrapeResult = await scrapeJobFromBoard({
+        boardToken: job.company,
+        jobSiteId: job.jobSiteId,
+        sourceSystem,
+      });
+
+      if (scrapeResult) {
+        scrapedText = scrapeResult.text;
       } else {
-        // Lever or unknown — try Lever postings API
+        // No registered provider matched — try Lever postings API as fallback
         console.log(`[manual:analyze] Scraping lever job: ${job.company}/${job.jobSiteId}`);
         const leverRes = await fetch(
           `https://api.lever.co/v0/postings/${job.company}/${job.jobSiteId}`,
@@ -664,24 +652,31 @@ promoteRouter.openapi(
 
     // 4. Create Job Board Mapping if token is present
     if (apiCompany.jobBoardToken) {
-      // Find or create "Greenhouse" board def
-      let [boardDef] = await db.select().from(companyJobBoardDefs).where(eq(companyJobBoardDefs.name, "Greenhouse")).limit(1);
-      
-      if (!boardDef) {
-        const defId = crypto.randomUUID();
-        [boardDef] = await db.insert(companyJobBoardDefs).values({
-          id: defId,
-          name: "Greenhouse",
-          isApi: true,
-        }).returning();
-      }
+      // Determine board def name from the ATS system
+      // Determine board def from provider registry — only assign if confirmed
+      const provider = getProviderByName(apiCompany.system);
 
-      await db.insert(companyJobBoardMapping).values({
-        id: crypto.randomUUID(),
-        companyId: newCompanyId,
-        boardId: boardDef.id,
-        boardIdentifier: apiCompany.jobBoardToken,
-      });
+      if (provider) {
+        let [boardDef] = await db.select().from(companyJobBoardDefs).where(eq(companyJobBoardDefs.name, provider.displayName)).limit(1);
+        
+        if (!boardDef) {
+          const defId = crypto.randomUUID();
+          [boardDef] = await db.insert(companyJobBoardDefs).values({
+            id: defId,
+            name: provider.displayName,
+            description: `${provider.displayName} Job Board API`,
+            isApi: provider.isApi,
+            isRss: provider.isRss,
+          }).returning();
+        }
+
+        await db.insert(companyJobBoardMapping).values({
+          id: crypto.randomUUID(),
+          companyId: newCompanyId,
+          boardId: boardDef.id,
+          boardIdentifier: apiCompany.jobBoardToken,
+        });
+      }
     }
 
     return c.json({

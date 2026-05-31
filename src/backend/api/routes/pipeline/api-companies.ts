@@ -10,6 +10,7 @@ import { getDb } from "@/backend/db";
 import { apiCompanies, apiCompanySyncStats, jobsPostings, syncRunEvents } from "@/backend/db/schema";
 import { getGithubToken } from "@/backend/utils/secrets";
 import { Logger } from "@/backend/lib/logger";
+import { normalizeJobSiteId } from "@/backend/services/jobs/normalize-id";
 
 import { syncApiCompaniesBody, syncProgressBody, syncRunEventSchema, syncStatsWithMetaSchema } from "./types";
 
@@ -214,12 +215,13 @@ apiCompaniesRouter.openapi(
           db
             .insert(jobsPostings)
             .values({
-              jobSiteId: job.jobSiteId,
+              jobSiteId: normalizeJobSiteId(job.jobSiteId),
               jobTitle: job.jobTitle,
               company: job.company,
               location: job.location,
               triagePassed: job.triagePassed,
               triageReason: job.triageReason,
+              pipelineSource: "github_dataset",
             })
             .onConflictDoNothing()
             .returning({ id: jobsPostings.id })
@@ -1007,7 +1009,7 @@ apiCompaniesRouter.openapi(
           db
             .insert(jobsPostings)
             .values({
-              jobSiteId: job.id.toString(),
+              jobSiteId: normalizeJobSiteId(job.id.toString()),
               jobTitle: job.title,
               company: body.token,
               location: job.location,
@@ -1016,6 +1018,7 @@ apiCompaniesRouter.openapi(
               isRecommended: true,
               recommendationScore: 100,
               recommendationReason: body.recommendationReason,
+              pipelineSource: "github_dataset",
             })
             .onConflictDoNothing()
             .returning({ id: jobsPostings.id })

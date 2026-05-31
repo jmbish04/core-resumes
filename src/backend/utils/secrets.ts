@@ -425,6 +425,19 @@ export async function getGoogleMapsApiKey(env: Env): Promise<string> {
   throw new Error("Missing env.GOOGLE_MAPS_API in Worker Secret Bindings");
 }
 
+/**
+ * Helper to fetch the Google Search API Key.
+ * Maps to GOOGLE_SEARCH_API_KEY in this worker secret binding.
+ */
+export async function getGoogleSearchApiKey(env: Env): Promise<string> {
+  if (env.GOOGLE_SEARCH_API_KEY) {
+    return typeof env.GOOGLE_SEARCH_API_KEY === "string"
+      ? env.GOOGLE_SEARCH_API_KEY
+      : await (env.GOOGLE_SEARCH_API_KEY as any).get();
+  }
+  throw new Error("Missing env.GOOGLE_SEARCH_API_KEY in Worker Secret Bindings");
+}
+
 export async function getCloudflareAiGatewayUrl(env: Env): Promise<string> {
   const accountId = await getCloudflareAccountId(env);
   const gatewayId = env.AI_GATEWAY_ID;

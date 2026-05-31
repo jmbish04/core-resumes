@@ -1,3 +1,8 @@
+---
+title: "Observability & Pipeline Runs"
+date_last_updated: "2026-05-31"
+---
+
 # Observability & Pipeline Runs
 
 Last updated: May 29, 2026

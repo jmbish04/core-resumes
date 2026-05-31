@@ -15,7 +15,15 @@ externalAgentsRouter.openapi(
     path: "/external-agents/prompt",
     summary: "Get scraping prompt for external agents",
     description:
-      "Generates a Markdown prompt containing target roles, locations, tracked companies, and past applied roles.",
+      "Generates a Markdown prompt containing target roles, locations, tracked companies, and past applied roles. Pass ?submitVia=sheet to get submission instructions for the Google Sheet (DROPBOX) workflow instead of the direct API.",
+    request: {
+      query: z.object({
+        submitVia: z.enum(["api", "sheet"]).optional().openapi({
+          description:
+            "How the agent submits jobs. 'api' (default) instructs a direct POST; 'sheet' instructs appending rows to the DROPBOX tab.",
+        }),
+      }),
+    },
     responses: {
       200: {
         description: "Markdown prompt for external agents",
@@ -29,6 +37,7 @@ externalAgentsRouter.openapi(
   }),
   async (c) => {
     const db = getDb(c.env);
+    const submitVia = c.req.query("submitVia") === "sheet" ? "sheet" : "api";
 
     // 1. Fetch Applicant Profile
     const [profileRow] = await db
@@ -89,12 +98,31 @@ externalAgentsRouter.openapi(
     md += `\n`;
 
     md += `## Submission Instructions\n`;
-    md += `When you find matching jobs, submit them via POST to \`/api/pipeline/external-agents/jobs\` with a JSON array of objects containing:\n`;
-    md += `- \`jobTitle\` (string)\n`;
-    md += `- \`company\` (string)\n`;
-    md += `- \`location\` (string, optional)\n`;
-    md += `- \`jobUrl\` (string, optional)\n`;
-    md += `- \`jobSiteId\` (string, optional - if omitted, a hash of the URL or company+title will be generated)\n`;
+    if (submitVia === "sheet") {
+      md += `When you find a matching job, append ONE row per job to the \`DROPBOX\` tab of the Google Sheet using the Sheets API (\`spreadsheets.values.append\`). Do NOT call any API directly and do NOT process or apply to roles — appending a row places the job in my review queue (HITL) so I decide whether to process it.\n\n`;
+      md += `Write the columns left-to-right in this order:\n`;
+      md += `- **Job URL** — the posting URL (used to de-duplicate; always include when available)\n`;
+      md += `- **Company Name** (REQUIRED)\n`;
+      md += `- **Job Title** (REQUIRED)\n`;
+      md += `- **Salary Min**, **Salary Max** — plain numbers, no symbols or commas (optional)\n`;
+      md += `- **Salary Currency** — ISO 4217 code, e.g. USD (optional)\n`;
+      md += `- **Location** (optional)\n`;
+      md += `- **Workplace Type** — one of: remote, hybrid, onsite (optional)\n`;
+      md += `- **Source** — where you found the job (optional)\n`;
+      md += `- **Role Instructions**, **Notes** (optional)\n\n`;
+      md += `Rules:\n`;
+      md += `- A row is ignored unless it has both Company Name and Job Title.\n`;
+      md += `- Leave the trailing **Sync Status**, **Synced At**, and **Sync Error** columns blank — the script fills them. 'queued' means the job reached the review queue.\n`;
+      md += `- Never edit existing rows, and never write to the SYNC_LOG or AGENTS.md tabs.\n`;
+      md += `- Skip any job whose Job URL already appears in the sheet or in the Exclusions list above.\n`;
+    } else {
+      md += `When you find matching jobs, submit them via POST to \`/api/pipeline/external-agents/jobs\` with a JSON array of objects containing:\n`;
+      md += `- \`jobTitle\` (string)\n`;
+      md += `- \`company\` (string)\n`;
+      md += `- \`location\` (string, optional)\n`;
+      md += `- \`jobUrl\` (string, optional)\n`;
+      md += `- \`jobSiteId\` (string, optional - if omitted, a hash of the URL or company+title will be generated)\n`;
+    }
 
     return c.text(md);
   },
@@ -163,9 +191,11 @@ externalAgentsRouter.openapi(
           jobTitle: job.jobTitle,
           company: job.company,
           location: job.location ?? null,
+          jobUrl: job.jobUrl ?? null,
           pipelineSource: "external_agent",
           // Triage Passed = false (or relies on DB default) to show in HITL queue
           triagePassed: false,
+          triageReason: "Submitted by external agent — awaiting HITL review",
           isRecommended: false,
         });
         insertedCount++;

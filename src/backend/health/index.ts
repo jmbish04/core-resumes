@@ -28,6 +28,7 @@ export type {
   CheckStatus,
   GreenhouseJob,
   AshbyJob,
+  GemJob,
 } from "@/backend/health/types";
 
 import { checkNotebookLMMcpAgentRPC } from "@/backend/ai/agents/notebooklm-mcp/health";
@@ -47,27 +48,26 @@ import {
   healthResults,
   type NewHealthResultRow,
 } from "@/backend/db/schema";
-import { checkBindings } from "@/backend/health/checks/bindings";
-import { checkBoardTokenConfig } from "@/backend/health/checks/board-token-config";
-import { checkD1TableScan } from "@/backend/health/checks/d1-table-scan";
-import { checkExtractionFidelity } from "@/backend/health/checks/extraction-fidelity";
-import { checkGeminiProvider } from "@/backend/health/checks/gemini-provider";
-import { checkGreenhouseEnvVars } from "@/backend/health/checks/greenhouse-env-vars";
-import { checkJobsDataQuality } from "@/backend/health/checks/jobs-data-quality";
-import { checkJobsSchemaIntegrity } from "@/backend/health/checks/jobs-schema-integrity";
-import { checkNotebookLMCredentials } from "@/backend/health/checks/notebooklm-credentials";
-import { checkNotebookLMQuery } from "@/backend/health/checks/notebooklm-query";
-import { checkOpenRoute } from "@/backend/health/checks/openroute";
-import { checkPipelineSessions } from "@/backend/health/checks/pipeline-sessions";
-import { checkR2JobsBucket } from "@/backend/health/checks/r2-jobs-bucket";
-import { checkSTT } from "@/backend/health/checks/stt";
-import { checkTTS } from "@/backend/health/checks/tts";
-import { checkVectorizeJobs } from "@/backend/health/checks/vectorize-jobs";
+import { checkBindings } from "@/health/checks/infrastructure/bindings";
+import { checkD1TableScan } from "@/health/checks/infrastructure/d1-table-scan";
+import { checkExtractionFidelity } from "@/health/checks/job-board-apis/extraction-fidelity";
+import { checkGeminiProvider } from "@/health/checks/ai/gemini-provider";
+import { checkGreenhouseEnvVars } from "@/health/checks/job-board-apis/greenhouse-env-vars";
+import { checkJobsDataQuality } from "@/health/checks/data-quality/jobs-data-quality";
+import { checkJobsSchemaIntegrity } from "@/health/checks/data-quality/jobs-schema-integrity";
+import { checkNotebookLMCredentials } from "@/health/checks/integrations/notebooklm-credentials";
+import { checkNotebookLMQuery } from "@/health/checks/integrations/notebooklm-query";
+import { checkOpenRoute } from "@/health/checks/integrations/openroute";
+import { checkPipelineSessions } from "@/health/checks/data-quality/pipeline-sessions";
+import { checkR2JobsBucket } from "@/health/checks/infrastructure/r2-jobs-bucket";
+import { checkSTT } from "@/health/checks/ai/stt";
+import { checkTTS } from "@/health/checks/ai/tts";
+import { checkVectorizeJobs } from "@/health/checks/infrastructure/vectorize-jobs";
 import { checkSecrets, checkEnvVars } from "@/backend/utils/health";
-import { checkSalarySql } from "@/backend/health/checks/salary-sql";
-import { checkAshbyApi } from "@/backend/health/checks/ashby-api";
-import { checkFreelanceSchemaIntegrity } from "@/backend/health/checks/freelance-schema-integrity";
-import { checkFreelanceDataQuality } from "@/backend/health/checks/freelance-data-quality";
+import { checkSalarySql } from "@/health/checks/data-quality/salary-sql";
+import { checkJobBoardApiConnectivity } from "@/health/checks/job-board-apis";
+import { checkFreelanceSchemaIntegrity } from "@/health/checks/freelance-apis/freelance-schema-integrity";
+import { checkFreelanceDataQuality } from "@/health/checks/freelance-apis/freelance-data-quality";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -86,8 +86,7 @@ function getTimeoutOverrides(trigger: HealthTrigger): Record<string, number> {
     google_drive_lifecycle: 45_000,
     extraction_fidelity: 120_000,
     openroute_commute: 90_000,
-    board_token_config: 45_000,
-    ashby_api: 15_000,
+    job_board_api_connectivity: 45_000,
     gemini_provider: 15_000,
   };
   // Live query mode needs more time for SDK connect + query
@@ -200,48 +199,47 @@ function buildCheckRegistry(
       fn: () => checkOpenRoute(env),
     },
 
-    // Greenhouse Scanner Pipeline
+    // Job Board API Scanner Pipeline
     {
       name: "greenhouse_env_vars",
-      category: "greenhouse",
+      category: "job_board_api",
       fn: () => checkGreenhouseEnvVars(env),
     },
     {
       name: "r2_jobs_bucket",
-      category: "greenhouse",
+      category: "job_board_api",
       fn: () => checkR2JobsBucket(env),
     },
     {
       name: "vectorize_jobs",
-      category: "greenhouse",
+      category: "job_board_api",
       fn: () => checkVectorizeJobs(env),
     },
     {
       name: "jobs_schema_integrity",
-      category: "greenhouse",
+      category: "job_board_api",
       fn: () => checkJobsSchemaIntegrity(env),
     },
     {
-      name: "board_token_config",
-      category: "greenhouse",
-      fn: () => checkBoardTokenConfig(env),
-    },
-    {
       name: "jobs_data_quality",
-      category: "greenhouse",
+      category: "job_board_api",
       fn: () => checkJobsDataQuality(env),
     },
     {
       name: "gemini_provider",
-      category: "greenhouse",
+      category: "job_board_api",
       fn: () => checkGeminiProvider(env),
     },
     {
       name: "pipeline_sessions",
-      category: "greenhouse",
+      category: "job_board_api",
       fn: () => checkPipelineSessions(env),
     },
-    { name: "ashby_api", category: "greenhouse", fn: () => checkAshbyApi(env) },
+    {
+      name: "job_board_api_connectivity",
+      category: "job_board_api",
+      fn: () => checkJobBoardApiConnectivity(env),
+    },
 
     // Freelance Scanner Pipeline
     {

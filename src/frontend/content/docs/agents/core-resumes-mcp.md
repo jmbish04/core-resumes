@@ -1,3 +1,8 @@
+---
+title: "CoreResumesMcpAgent"
+date_last_updated: "2026-05-31"
+---
+
 # CoreResumesMcpAgent
 
 **CoreResumesMcpAgent** exposes the **full Core Resumes / Career Orchestrator HTTP API** as a remote MCP (Model Context Protocol) server. Once connected, any MCP-compatible AI client — Claude Code, Claude Desktop, Cursor — can drive the entire app through chat: submit job postings by URL, review scraped extractions, manage roles end-to-end, run and troubleshoot pipelines, hunt freelance gigs, generate AI proposals, query salary intelligence, search career memory, manage config, and check health.

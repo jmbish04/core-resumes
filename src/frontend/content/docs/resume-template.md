@@ -1,3 +1,8 @@
+---
+title: "Resume Template"
+date_last_updated: "2026-05-31"
+---
+
 # Resume Template
 
 This page displays an embedded preview of your **Google Docs resume template**. The template is used by OrchestratorAgent when generating tailored resumes for job applications via the `create_doc_from_template()` method.

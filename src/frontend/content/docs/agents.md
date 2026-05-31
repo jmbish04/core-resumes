@@ -1,3 +1,8 @@
+---
+title: "AI Agents"
+date_last_updated: "2026-05-31"
+---
+
 # AI Agents
 
 The Career Orchestrator uses three AI agents built on the **Cloudflare Agents SDK** as **Durable Objects**. Together, they form the intelligence layer that automates the job application process.

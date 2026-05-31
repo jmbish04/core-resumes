@@ -8,7 +8,7 @@
 
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
-import { checkNotebookLMQuery } from "../../health/checks/notebooklm-query";
+import { checkNotebookLMQuery } from "../../health/checks/integrations/notebooklm-query";
 import { constantTimeEqual } from "../../lib/crypto";
 import { getWorkerApiKey } from "../../utils/secrets";
 
@@ -22,7 +22,10 @@ const KV_TIMESTAMP_KEY = "ACTIVE_NOTEBOOKLM_SESSION_UPDATED_AT";
 const putSessionBody = z.object({
   cookies: z
     .string()
-    .min(20, "Cookie string is too short — paste the full value from Chrome DevTools"),
+    .min(
+      20,
+      "Cookie string is too short — paste the full value from Chrome DevTools",
+    ),
 });
 
 const sessionStatusResponse = z.object({
@@ -46,13 +49,19 @@ const putSessionRoute = createRoute({
   path: "/session",
   tags: ["NotebookLM"],
   summary: "Update the active NotebookLM session cookies in KV",
-  request: { body: { content: { "application/json": { schema: putSessionBody } } } },
+  request: {
+    body: { content: { "application/json": { schema: putSessionBody } } },
+  },
   responses: {
     200: {
       description: "Session updated successfully",
       content: {
         "application/json": {
-          schema: z.object({ ok: z.boolean(), cookieLength: z.number(), updatedAt: z.string() }),
+          schema: z.object({
+            ok: z.boolean(),
+            cookieLength: z.number(),
+            updatedAt: z.string(),
+          }),
         },
       },
     },
@@ -89,7 +98,11 @@ const syncSessionRoute = createRoute({
       description: "Session synced",
       content: {
         "application/json": {
-          schema: z.object({ ok: z.boolean(), cookieLength: z.number(), updatedAt: z.string() }),
+          schema: z.object({
+            ok: z.boolean(),
+            cookieLength: z.number(),
+            updatedAt: z.string(),
+          }),
         },
       },
     },
@@ -137,7 +150,10 @@ notebookSessionRouter.openapi(putSessionRoute, async (c) => {
   await c.env.KV.put(KV_KEY, cookies);
   await c.env.KV.put(KV_TIMESTAMP_KEY, now);
 
-  return c.json({ ok: true, cookieLength: cookies.length, updatedAt: now }, 200);
+  return c.json(
+    { ok: true, cookieLength: cookies.length, updatedAt: now },
+    200,
+  );
 });
 
 notebookSessionRouter.openapi(getSessionRoute, async (c) => {
@@ -173,7 +189,10 @@ notebookSessionRouter.openapi(syncSessionRoute, async (c) => {
 
   const expected = await getWorkerApiKey(c.env);
   if (!expected) {
-    return c.json({ error: "Server misconfigured: WORKER_API_KEY not set" }, 500);
+    return c.json(
+      { error: "Server misconfigured: WORKER_API_KEY not set" },
+      500,
+    );
   }
 
   if (!constantTimeEqual(apiKey, expected)) {
@@ -187,7 +206,10 @@ notebookSessionRouter.openapi(syncSessionRoute, async (c) => {
   await c.env.KV.put(KV_KEY, cookies);
   await c.env.KV.put(KV_TIMESTAMP_KEY, now);
 
-  return c.json({ ok: true, cookieLength: cookies.length, updatedAt: now }, 200);
+  return c.json(
+    { ok: true, cookieLength: cookies.length, updatedAt: now },
+    200,
+  );
 });
 
 /**
@@ -203,7 +225,10 @@ notebookSessionRouter.openapi(checkSessionRoute, async (c) => {
 
   const expected = await getWorkerApiKey(c.env);
   if (!expected) {
-    return c.json({ error: "Server misconfigured: WORKER_API_KEY not set" }, 500);
+    return c.json(
+      { error: "Server misconfigured: WORKER_API_KEY not set" },
+      500,
+    );
   }
 
   if (!constantTimeEqual(apiKey, expected)) {
@@ -214,10 +239,18 @@ notebookSessionRouter.openapi(checkSessionRoute, async (c) => {
   const result = await checkNotebookLMQuery(c.env, "manual");
 
   if (result.status === "ok") {
-    return c.json({ ok: true, status: result.status, latencyMs: result.latencyMs }, 200);
+    return c.json(
+      { ok: true, status: result.status, latencyMs: result.latencyMs },
+      200,
+    );
   } else {
     return c.json(
-      { ok: false, status: result.status, error: result.error, latencyMs: result.latencyMs },
+      {
+        ok: false,
+        status: result.status,
+        error: result.error,
+        latencyMs: result.latencyMs,
+      },
       200,
     );
   }

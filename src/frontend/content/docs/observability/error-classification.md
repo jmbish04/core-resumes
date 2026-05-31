@@ -1,3 +1,8 @@
+---
+title: "Error Classification"
+date_last_updated: "2026-05-31"
+---
+
 # Error Classification
 
 Last updated: May 29, 2026

@@ -1,3 +1,8 @@
+---
+title: "External Agents API"
+date_last_updated: "2026-05-31"
+---
+
 # External Agents API
 
 The External Agents API allows automated job scraping agents to integrate directly with your Human-In-The-Loop (HITL) pipeline.

@@ -70,20 +70,25 @@ export async function handleScanBoard(
       };
     });
 
-    const upsertStmts = decisionsForJobs.map(({ job, passed, reasoning }) =>
+  const upsertStmts = decisionsForJobs.map(({ job, passed, reasoning }) =>
       db
         .insert(jobsPostings)
         .values({
           jobSiteId: job.id.toString(),
           jobTitle: job.title,
           company: token,
+          location: (job as any).location?.name ?? null,
+          jobUrl: (job as any).absolute_url ?? null,
           triagePassed: passed,
           triageReason: reasoning,
+          pipelineSource: "promoted_company",
         })
         .onConflictDoUpdate({
           target: jobsPostings.jobSiteId,
           set: {
             jobTitle: job.title,
+            location: (job as any).location?.name ?? undefined,
+            jobUrl: (job as any).absolute_url ?? undefined,
             triagePassed: passed,
             triageReason: reasoning,
           },

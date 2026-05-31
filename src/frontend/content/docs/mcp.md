@@ -1,3 +1,8 @@
+---
+title: "MCP Connector"
+date_last_updated: "2026-05-31"
+---
+
 # MCP Connector
 
 `CoreResumesMcpAgent` exposes the full Career Orchestrator HTTP API as a Model Context Protocol (MCP) server. Connect Claude (Code, Desktop, Chat, iOS), ChatGPT, Cursor, VS Code — anything that speaks MCP — and drive the entire app from chat. ~60 tools cover role intake, role lifecycle, Google Docs revisions, pipeline ops, companies, freelance gig discovery & bidding, salary intelligence, NotebookLM, career memory, config, and health.

@@ -28,6 +28,7 @@ interface QueuedJob {
   jobTitle: string;
   company: string;
   location: string | null;
+  jobUrl: string | null;
   dateFirstSeen: string;
   isWatching: boolean;
   isDetectedChange: boolean;
@@ -123,7 +124,21 @@ export function JobsQueueTable({ source }: { source: string }) {
           {jobs.map((job) => (
             <TableRow key={job.id}>
               <TableCell className="font-medium">{job.company}</TableCell>
-              <TableCell>{job.jobTitle}</TableCell>
+              <TableCell>
+                {job.jobUrl ? (
+                  <a
+                    href={job.jobUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 hover:text-purple-400 hover:underline"
+                  >
+                    {job.jobTitle}
+                    <ExternalLink className="size-3 shrink-0 text-zinc-500" />
+                  </a>
+                ) : (
+                  job.jobTitle
+                )}
+              </TableCell>
               <TableCell>{job.location || "Remote"}</TableCell>
               <TableCell>
                 {job.isDetectedChange ? (

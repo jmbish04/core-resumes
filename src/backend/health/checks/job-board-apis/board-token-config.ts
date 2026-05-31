@@ -76,7 +76,7 @@ export async function checkBoardTokenConfig(env: Env): Promise<HealthStepResult>
     let tokensToTest: string[] = [];
 
     // Check for explicit health check config
-    const { globalConfig } = await import("@/backend/db/schema");
+    const { globalConfig, companies, companyJobBoardMapping } = await import("@/backend/db/schema");
     const configRows = await db
       .select({ value: globalConfig.value })
       .from(globalConfig)
@@ -91,9 +91,26 @@ export async function checkBoardTokenConfig(env: Env): Promise<HealthStepResult>
       }
     }
 
-    // Fallback to active tokens from board_tokens table if no config is found
+    // Fallback: only use tokens confirmed as Greenhouse boards via company_job_board_mapping
     if (tokensToTest.length === 0) {
-      tokensToTest = activeTokens.slice(0, 5).map(t => t.token);
+      const greenhouseMappings = await db
+        .select({ token: companies.greenhouseToken })
+        .from(companyJobBoardMapping)
+        .innerJoin(companies, eq(companyJobBoardMapping.companyId, companies.id))
+        .where(eq(companyJobBoardMapping.boardId, "greenhouse"))
+        .limit(5);
+
+      tokensToTest = greenhouseMappings
+        .map(r => r.token)
+        .filter((t): t is string => !!t && t.trim().length > 0);
+
+      if (tokensToTest.length === 0) {
+        // Final fallback: use first 5 active board_tokens (legacy path)
+        tokensToTest = activeTokens.slice(0, 5).map(t => t.token);
+        details.usingLegacyFallback = true;
+      } else {
+        details.usingMappingFallback = true;
+      }
     } else {
       // Limit to 5 to avoid excessive latency even if config has many
       tokensToTest = tokensToTest.slice(0, 5);

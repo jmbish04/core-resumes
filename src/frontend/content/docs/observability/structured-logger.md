@@ -1,3 +1,8 @@
+---
+title: "Structured Logger"
+date_last_updated: "2026-05-31"
+---
+
 # Structured Logger
 
 Last updated: May 29, 2026
