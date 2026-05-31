@@ -199,6 +199,19 @@ export function createExports(manifest: any) {
   const scheduled = async (controller: any, env: any, ctx: any) => {
     const cronExpression = controller.cron ?? "";
 
+    // 6-hour Greenhouse pipeline scan
+    if (cronExpression === "0 */6 * * *") {
+      try {
+        const { getAgentByName } = await import("agents");
+        const agent = await getAgentByName(env.JOB_SCANNER_AGENT as any, "global");
+        await (agent as any).scanAll();
+        console.log("[cron:greenhouse] Greenhouse scan triggered");
+      } catch (e) {
+        console.error("[cron:greenhouse] Failed to trigger Greenhouse scan:", e);
+      }
+      return;
+    }
+
     // 12-hour freelance pipeline scan
     if (cronExpression === "0 */12 * * *") {
       try {
