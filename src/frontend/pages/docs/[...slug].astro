@@ -9,6 +9,8 @@ import { NotebookInfoCard } from "@/components/docs/NotebookInfo";
 import { VPCTunnelStatus } from "@/components/docs/VPCTunnelStatus";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { ChevronRight } from "lucide-react";
+import { DocsAuthModal } from "@/components/docs/DocsAuthModal";
+import { getWorkerApiKey } from "@/backend/utils/secrets";
 
 const modules = import.meta.glob("../../content/docs/**/*.md", {
   eager: true,
@@ -50,9 +52,21 @@ const breadcrumbs = pathParts.map((part, index) => {
   const label = part.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase());
   return { label, href, isLast };
 });
+
+
+// Docs Authentication Check
+const env = (Astro.locals as any).runtime?.env;
+const expectedKey = env ? await getWorkerApiKey(env) : null;
+const providedKey = Astro.cookies.get("worker_api_key")?.value;
+const isAuthenticated = expectedKey && providedKey === expectedKey;
 ---
 
 <BaseLayout title={`Docs | Career Orchestrator`} description="Technical documentation for the Career Orchestrator application.">
+  {!isAuthenticated ? (
+    <div class="flex flex-1 items-center justify-center">
+      <DocsAuthModal client:load />
+    </div>
+  ) : (
   <div class="flex flex-1 relative font-sans">
     <DocsSidebar client:load />
     
@@ -129,6 +143,7 @@ const breadcrumbs = pathParts.map((part, index) => {
       )}
     </main>
   </div>
+  )}
 </BaseLayout>
 
 <script>

@@ -45,7 +45,7 @@ export const JOBS_POSTINGS_COLUMN_DESCRIPTIONS: Record<string, string> = {
   reject_reason: "Reason provided by the human reviewer for rejecting this job.",
   is_watching: "Whether the human reviewer is watching this job for changes. 1 = watching.",
   is_detected_change: "Whether the system detected a change on a watched job. 1 = changed.",
-  pipeline_source: "Source pipeline for this job: 'github_dataset', 'promoted_company', or 'freelance'.",
+  pipeline_source: "Source pipeline for this job: 'github_dataset', 'promoted_company', 'freelance', or 'external_agent'.",
   company_id: "Foreign key to companies.id for jobs sourced from promoted companies.",
 };
 
@@ -76,7 +76,7 @@ export const jobsPostings = sqliteTable(
     rejectReason: text("reject_reason"),
     isWatching: integer("is_watching", { mode: "boolean" }).default(false),
     isDetectedChange: integer("is_detected_change", { mode: "boolean" }).default(false),
-    pipelineSource: text("pipeline_source", { enum: ["github_dataset", "promoted_company", "freelance"] }),
+    pipelineSource: text("pipeline_source", { enum: ["github_dataset", "promoted_company", "freelance", "external_agent"] }),
     companyId: text("company_id").references(() => companies.id, { onDelete: "set null" }),
   },
   (table) => ({
