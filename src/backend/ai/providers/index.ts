@@ -101,6 +101,7 @@ export class AiProvider {
     schemaName?: string;
     temperature?: number;
     max_tokens?: number;
+    max_completion_tokens?: number;
     cacheTtl?: number;
     provider?: ProviderName;
     model?: AnyModelDescriptor;
@@ -121,6 +122,7 @@ export class AiProvider {
       messageCount: opts.messages.length,
       temperature: opts.temperature ?? 0,
       max_tokens: opts.max_tokens ?? null,
+      max_completion_tokens: opts.max_completion_tokens ?? null,
     });
 
     const start = Date.now();
@@ -132,6 +134,8 @@ export class AiProvider {
           messages: opts.messages,
           temperature: opts.temperature ?? 0,
           max_tokens: opts.max_tokens,
+          max_completion_tokens: opts.max_completion_tokens,
+          chat_template_kwargs: { enable_thinking: false },
           response_format: {
             type: "json_schema" as const,
             json_schema: {
@@ -196,6 +200,7 @@ export class AiProvider {
     schemaName?: string;
     temperature?: number;
     max_tokens?: number;
+    max_completion_tokens?: number;
     cacheTtl?: number;
     provider?: ProviderName;
     model?: AnyModelDescriptor;
@@ -213,6 +218,7 @@ export class AiProvider {
       messageCount: opts.messages.length,
       temperature: opts.temperature ?? 0,
       max_tokens: opts.max_tokens ?? null,
+      max_completion_tokens: opts.max_completion_tokens ?? null,
     });
 
     const start = Date.now();
@@ -224,6 +230,7 @@ export class AiProvider {
           messages: opts.messages,
           temperature: opts.temperature ?? 0,
           max_tokens: opts.max_tokens,
+          max_completion_tokens: opts.max_completion_tokens,
           chat_template_kwargs: { enable_thinking: false },
           response_format: {
             type: "json_schema" as const,
@@ -286,6 +293,7 @@ export class AiProvider {
     messages: GptOssMessage[];
     temperature?: number;
     max_tokens?: number;
+    max_completion_tokens?: number;
     cacheTtl?: number;
     provider?: ProviderName;
     model?: AnyModelDescriptor;
@@ -298,6 +306,7 @@ export class AiProvider {
       messageCount: opts.messages.length,
       temperature: opts.temperature ?? 0.3,
       max_tokens: opts.max_tokens ?? null,
+      max_completion_tokens: opts.max_completion_tokens ?? null,
     });
 
     try {
@@ -307,6 +316,7 @@ export class AiProvider {
           messages: opts.messages,
           temperature: opts.temperature ?? 0.3,
           max_tokens: opts.max_tokens,
+          max_completion_tokens: opts.max_completion_tokens,
         },
         { cacheTtl: opts.cacheTtl },
       );

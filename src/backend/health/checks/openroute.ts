@@ -172,6 +172,7 @@ We are looking for a People Legal Specialist to join our legal team in San Franc
   let locationData;
   try {
     const { AiProvider } = await import("@/backend/ai/providers/index");
+    const { kimi_k2_5 } = await import("@/backend/ai/models/kimi-k2.5");
     locationData = await new AiProvider(env).generateStructuredOutput({
       messages: [
         {
@@ -195,7 +196,8 @@ DO NOT wrap your response in markdown fences.`,
       extractionSchema: LocationExtractionInputSchema,
       schemaName: "LocationData",
       temperature: 0,
-      max_tokens: 1000,
+      max_completion_tokens: 4096,
+      model: kimi_k2_5,
     });
     details.extractedLocation = locationData;
   } catch (e) {

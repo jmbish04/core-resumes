@@ -42,13 +42,16 @@ import { getDb } from "@/backend/db";
 // Co-located check imports
 // ---------------------------------------------------------------------------
 import { checkD1, checkKV } from "@/backend/db/health";
-import { healthRuns, healthResults, type NewHealthResultRow } from "@/backend/db/schema";
+import {
+  healthRuns,
+  healthResults,
+  type NewHealthResultRow,
+} from "@/backend/db/schema";
 import { checkBindings } from "@/backend/health/checks/bindings";
 import { checkBoardTokenConfig } from "@/backend/health/checks/board-token-config";
 import { checkD1TableScan } from "@/backend/health/checks/d1-table-scan";
 import { checkExtractionFidelity } from "@/backend/health/checks/extraction-fidelity";
 import { checkGeminiProvider } from "@/backend/health/checks/gemini-provider";
-import { checkGreenhouseApi } from "@/backend/health/checks/greenhouse-api";
 import { checkGreenhouseEnvVars } from "@/backend/health/checks/greenhouse-env-vars";
 import { checkJobsDataQuality } from "@/backend/health/checks/jobs-data-quality";
 import { checkJobsSchemaIntegrity } from "@/backend/health/checks/jobs-schema-integrity";
@@ -84,7 +87,6 @@ function getTimeoutOverrides(trigger: HealthTrigger): Record<string, number> {
     extraction_fidelity: 120_000,
     openroute_commute: 90_000,
     board_token_config: 45_000,
-    greenhouse_api: 15_000,
     ashby_api: 15_000,
     gemini_provider: 15_000,
   };
@@ -111,13 +113,21 @@ function buildCheckRegistry(
     // Database
     { name: "d1_roundtrip", category: "database", fn: () => checkD1(env) },
     { name: "kv_read", category: "database", fn: () => checkKV(env) },
-    { name: "d1_table_scan", category: "database", fn: () => checkD1TableScan(env) },
+    {
+      name: "d1_table_scan",
+      category: "database",
+      fn: () => checkD1TableScan(env),
+    },
 
     // AI
-    { name: "workers_ai_embedding", category: "ai", fn: () => checkWorkersAI(env) },
+    {
+      name: "workers_ai_embedding",
+      category: "ai",
+      fn: () => checkWorkersAI(env),
+    },
     { name: "ai_gateway", category: "ai", fn: () => checkAIGateway(env) },
     { name: "tts_deepgram", category: "ai", fn: () => checkTTS(env) },
-    // { name: "stt_whisper", category: "ai", fn: () => checkSTT(env) },
+    { name: "stt_whisper", category: "ai", fn: () => checkSTT(env) },
 
     // Google
     {
@@ -127,10 +137,18 @@ function buildCheckRegistry(
     },
 
     // Bindings
-    { name: "platform_bindings", category: "binding", fn: () => checkBindings(env) },
+    {
+      name: "platform_bindings",
+      category: "binding",
+      fn: () => checkBindings(env),
+    },
 
     // Providers / Credentials
-    { name: "secrets_store", category: "providers", fn: () => checkSecrets(env) },
+    {
+      name: "secrets_store",
+      category: "providers",
+      fn: () => checkSecrets(env),
+    },
     { name: "env_vars", category: "providers", fn: () => checkEnvVars(env) },
     {
       name: "notebooklm_credentials",
@@ -166,28 +184,63 @@ function buildCheckRegistry(
     },
 
     // API / Pipeline
-    { name: "extraction_fidelity", category: "api", fn: () => checkExtractionFidelity(env) },
+    {
+      name: "extraction_fidelity",
+      category: "api",
+      fn: () => checkExtractionFidelity(env),
+    },
     {
       name: "notebooklm_query",
       category: "api",
       fn: () => checkNotebookLMQuery(env, trigger),
     },
-    { name: "openroute_commute", category: "api", fn: () => checkOpenRoute(env) },
+    {
+      name: "openroute_commute",
+      category: "api",
+      fn: () => checkOpenRoute(env),
+    },
 
     // Greenhouse Scanner Pipeline
-    { name: "greenhouse_env_vars", category: "greenhouse", fn: () => checkGreenhouseEnvVars(env) },
-    { name: "greenhouse_api", category: "greenhouse", fn: () => checkGreenhouseApi(env) },
-    { name: "r2_jobs_bucket", category: "greenhouse", fn: () => checkR2JobsBucket(env) },
-    { name: "vectorize_jobs", category: "greenhouse", fn: () => checkVectorizeJobs(env) },
+    {
+      name: "greenhouse_env_vars",
+      category: "greenhouse",
+      fn: () => checkGreenhouseEnvVars(env),
+    },
+    {
+      name: "r2_jobs_bucket",
+      category: "greenhouse",
+      fn: () => checkR2JobsBucket(env),
+    },
+    {
+      name: "vectorize_jobs",
+      category: "greenhouse",
+      fn: () => checkVectorizeJobs(env),
+    },
     {
       name: "jobs_schema_integrity",
       category: "greenhouse",
       fn: () => checkJobsSchemaIntegrity(env),
     },
-    { name: "board_token_config", category: "greenhouse", fn: () => checkBoardTokenConfig(env) },
-    { name: "jobs_data_quality", category: "greenhouse", fn: () => checkJobsDataQuality(env) },
-    { name: "gemini_provider", category: "greenhouse", fn: () => checkGeminiProvider(env) },
-    { name: "pipeline_sessions", category: "greenhouse", fn: () => checkPipelineSessions(env) },
+    {
+      name: "board_token_config",
+      category: "greenhouse",
+      fn: () => checkBoardTokenConfig(env),
+    },
+    {
+      name: "jobs_data_quality",
+      category: "greenhouse",
+      fn: () => checkJobsDataQuality(env),
+    },
+    {
+      name: "gemini_provider",
+      category: "greenhouse",
+      fn: () => checkGeminiProvider(env),
+    },
+    {
+      name: "pipeline_sessions",
+      category: "greenhouse",
+      fn: () => checkPipelineSessions(env),
+    },
     { name: "ashby_api", category: "greenhouse", fn: () => checkAshbyApi(env) },
 
     // Freelance Scanner Pipeline
@@ -220,7 +273,11 @@ async function runWithTimeout(
       descriptor.fn(),
       new Promise<HealthStepResult>((_, reject) => {
         controller.signal.addEventListener("abort", () =>
-          reject(new Error(`Check "${descriptor.name}" timed out after ${timeoutMs}ms`)),
+          reject(
+            new Error(
+              `Check "${descriptor.name}" timed out after ${timeoutMs}ms`,
+            ),
+          ),
         );
       }),
     ]);
@@ -244,7 +301,9 @@ async function runWithTimeout(
 // ---------------------------------------------------------------------------
 
 function computeOverallStatus(results: HealthStepResult[]): HealthStatus {
-  const failCount = results.filter((r) => r.status === "fail" || r.status === "timeout").length;
+  const failCount = results.filter(
+    (r) => r.status === "fail" || r.status === "timeout",
+  ).length;
   const warnCount = results.filter((r) => r.status === "warn").length;
 
   if (failCount >= 4) return "unhealthy";
@@ -263,7 +322,9 @@ export class HealthCoordinator {
   /**
    * Execute all health checks in parallel, persist to D1, and return results.
    */
-  async runAllChecks(trigger: HealthTrigger): Promise<{ run: HealthRun; results: HealthResult[] }> {
+  async runAllChecks(
+    trigger: HealthTrigger,
+  ): Promise<{ run: HealthRun; results: HealthResult[] }> {
     const runId = crypto.randomUUID();
     const overallStart = Date.now();
     const db = getDb(this.env);
@@ -283,7 +344,9 @@ export class HealthCoordinator {
         const details = latestResults[0].details as Record<string, unknown>;
         const docIds = details.createdDocIds ?? details.createdDocUrls;
         if (Array.isArray(docIds)) {
-          previousDocIds = docIds.filter((id): id is string => typeof id === "string");
+          previousDocIds = docIds.filter(
+            (id): id is string => typeof id === "string",
+          );
         }
       }
     } catch {
@@ -294,21 +357,25 @@ export class HealthCoordinator {
     const checks = buildCheckRegistry(this.env, previousDocIds, trigger);
     const timeoutOverrides = getTimeoutOverrides(trigger);
     const settled = await Promise.all(
-      checks.map((c) => runWithTimeout(c, timeoutOverrides[c.name] ?? PER_CHECK_TIMEOUT_MS)),
+      checks.map((c) =>
+        runWithTimeout(c, timeoutOverrides[c.name] ?? PER_CHECK_TIMEOUT_MS),
+      ),
     );
 
     // Build result rows
-    const resultRows: NewHealthResultRow[] = settled.map(({ descriptor, result }) => ({
-      id: crypto.randomUUID(),
-      runId,
-      category: descriptor.category,
-      name: descriptor.name,
-      status: result.status,
-      message: result.error ?? null,
-      details: result.details ?? null,
-      durationMs: result.latencyMs ?? 0,
-      aiSuggestion: result.aiSuggestion ?? null,
-    }));
+    const resultRows: NewHealthResultRow[] = settled.map(
+      ({ descriptor, result }) => ({
+        id: crypto.randomUUID(),
+        runId,
+        category: descriptor.category,
+        name: descriptor.name,
+        status: result.status,
+        message: result.error ?? null,
+        details: result.details ?? null,
+        durationMs: result.latencyMs ?? 0,
+        aiSuggestion: result.aiSuggestion ?? null,
+      }),
+    );
 
     const overallStatus = computeOverallStatus(settled.map((s) => s.result));
     const durationMs = Date.now() - overallStart;
@@ -364,10 +431,17 @@ export class HealthCoordinator {
   /**
    * Retrieve the latest health run with its results.
    */
-  async getLatestRun(): Promise<{ run: HealthRun; results: HealthResult[] } | null> {
+  async getLatestRun(): Promise<{
+    run: HealthRun;
+    results: HealthResult[];
+  } | null> {
     const db = getDb(this.env);
 
-    const runs = await db.select().from(healthRuns).orderBy(desc(healthRuns.createdAt)).limit(1);
+    const runs = await db
+      .select()
+      .from(healthRuns)
+      .orderBy(desc(healthRuns.createdAt))
+      .limit(1);
 
     if (runs.length === 0) return null;
 
@@ -400,7 +474,9 @@ export class HealthCoordinator {
       durationMs: row.durationMs,
       aiSuggestion: row.aiSuggestion ?? undefined,
       timestamp:
-        row.timestamp instanceof Date ? row.timestamp.toISOString() : String(row.timestamp),
+        row.timestamp instanceof Date
+          ? row.timestamp.toISOString()
+          : String(row.timestamp),
     }));
 
     return { run, results };

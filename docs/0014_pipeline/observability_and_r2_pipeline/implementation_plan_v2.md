@@ -172,3 +172,30 @@ syntax moves):
 - Never log secrets/cookies/PII — redact.
 - Logging never blocks or throws in the business path (revised per B1).
 - Ship incrementally; verify each PR against production telemetry before the next.
+
+### G1. Browser-render + multi-method scraping is a HARD guardrail (do not regress)
+
+This effort moves **raw scrape *storage*** to R2 (PR5). It must **not** remove or weaken any
+**scrape *capture* method**. The worker deliberately attempts several methods so it always
+captures the **core of the role/proposal — all bullets, full description (HTML + markdown)**.
+Losing a fallback silently degrades every downstream pipeline (extract → analysis → salary →
+proposal drafting). Retain all of the following:
+
+- **`BrowserRendering`** (`src/backend/ai/tools/browser-rendering.ts`) — Cloudflare Browser
+  Rendering HTTP API (auth via `env.CLOUDFLARE_ACCOUNT_ID` + `env.CF_BROWSER_RENDER_TOKEN`).
+  Methods: `/markdown`, `/scrape`, `/content`, `/snapshot`, `/pdf`. Keep the `BROWSER` binding in
+  `wrangler.jsonc`.
+- **`scrapeWithFallback()`** (`src/backend/api/routes/intake.ts:59-268`) — orchestrates the 4
+  concurrent BR calls, then falls back to the **Greenhouse API** (lines 108-142), then to hybrid
+  AI extraction. Keep the full fallback chain intact.
+- **Hybrid extraction** (`src/backend/ai/tasks/extract/role-hybrid.ts`, `extract/facts.ts`,
+  `classify/headings.ts`, `classify/narrative.ts`) — Pass H (headings) + Pass A (narrative) +
+  Pass B (facts) run via `Promise.all` and merged deterministically. Keep all passes.
+- Storage today: PDFs → `R2_FILES_BUCKET` (`job-postings/{uuid}.pdf`); facts/bullets/narrative →
+  D1 `roles` + `role_bullets`. PR5 may add an R2 raw-payloads table, but **must not** remove the
+  D1 structured fields the business tools read.
+
+**Acceptance for any pipeline-touching PR:** a role submitted via `/intake` still yields the full
+bullet set + HTML + markdown + narrative, exercising the BR-first path and the Greenhouse-API
+fallback. If a PR cannot demonstrate this, it does not ship. See memory
+`project-job-scraping-multimethod`.

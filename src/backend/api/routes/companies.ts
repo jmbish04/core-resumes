@@ -1,10 +1,10 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 import { BrowserRendering } from "@/backend/ai/tools/browser-rendering";
 import { extractBrandColors } from "@/backend/ai/tools/google/templates/brand-colors";
 import { getDb } from "@/backend/db";
-import { companies, roles, selectCompanySchema } from "@/backend/db/schema";
+import { companies, roles, selectCompanySchema, companyJobBoardDefs, companyJobBoardMapping, selectCompanyJobBoardMappingSchema } from "@/backend/db/schema";
 import { getCloudflareAccountId, getCloudflareImagesToken } from "@/backend/utils/secrets";
 
 // ---------------------------------------------------------------------------
@@ -57,7 +57,7 @@ companiesRouter.openapi(
     },
   }),
   async (c) => {
-    const rows = await getDb(c.env).select().from(companies);
+    const rows = await getDb(c.env).select().from(companies).orderBy(companies.name);
     return c.json(rows);
   },
 );
@@ -452,5 +452,114 @@ companiesRouter.openapi(
 
     if (!updated) return c.json({ error: "Company not found" }, 404);
     return c.json(updated);
+  },
+);
+
+// GET /:id/job-boards — List job boards mapped to this company
+companiesRouter.openapi(
+  createRoute({
+    method: "get",
+    path: "/{id}/job-boards",
+    operationId: "companiesGetJobBoards",
+    request: { params: companyIdParam },
+    responses: {
+      200: {
+        description: "List of job boards for company",
+        content: { "application/json": { schema: z.any() } }, // Detailed mapping output
+      },
+    },
+  }),
+  async (c) => {
+    const { id } = c.req.valid("param");
+    const db = getDb(c.env);
+
+    const rows = await db
+      .select({
+        mappingId: companyJobBoardMapping.id,
+        boardIdentifier: companyJobBoardMapping.boardIdentifier,
+        boardDefId: companyJobBoardDefs.id,
+        boardName: companyJobBoardDefs.name,
+        isApi: companyJobBoardDefs.isApi,
+      })
+      .from(companyJobBoardMapping)
+      .innerJoin(companyJobBoardDefs, eq(companyJobBoardMapping.boardId, companyJobBoardDefs.id))
+      .where(eq(companyJobBoardMapping.companyId, id));
+
+    return c.json(rows);
+  },
+);
+
+// POST /:id/job-boards — Map a job board to this company (creates definition if needed)
+const mapJobBoardBody = z.object({
+  boardName: z.string().min(1),
+  boardIdentifier: z.string().min(1),
+  isApi: z.boolean().default(false),
+});
+
+companiesRouter.openapi(
+  createRoute({
+    method: "post",
+    path: "/{id}/job-boards",
+    operationId: "companiesAddJobBoard",
+    request: {
+      params: companyIdParam,
+      body: { content: { "application/json": { schema: mapJobBoardBody } } },
+    },
+    responses: {
+      201: {
+        description: "Mapped job board",
+        content: { "application/json": { schema: selectCompanyJobBoardMappingSchema } },
+      },
+      404: { description: "Company not found" },
+    },
+  }),
+  async (c) => {
+    const { id } = c.req.valid("param");
+    const { boardName, boardIdentifier, isApi } = c.req.valid("json");
+    const db = getDb(c.env);
+
+    // Verify company exists
+    const [company] = await db.select().from(companies).where(eq(companies.id, id)).limit(1);
+    if (!company) return c.json({ error: "Company not found" }, 404);
+
+    // Find or create board def
+    let [boardDef] = await db.select().from(companyJobBoardDefs).where(eq(companyJobBoardDefs.name, boardName)).limit(1);
+
+    if (!boardDef) {
+      const defId = crypto.randomUUID();
+      [boardDef] = await db.insert(companyJobBoardDefs).values({
+        id: defId,
+        name: boardName,
+        isApi,
+      }).returning();
+    }
+
+    // Check if mapping already exists
+    let [mapping] = await db.select().from(companyJobBoardMapping)
+      .where(and(
+        eq(companyJobBoardMapping.companyId, id),
+        eq(companyJobBoardMapping.boardId, boardDef.id)
+      ))
+      .limit(1);
+
+    if (!mapping) {
+      const mappingId = crypto.randomUUID();
+      [mapping] = await db.insert(companyJobBoardMapping).values({
+        id: mappingId,
+        companyId: id,
+        boardId: boardDef.id,
+        boardIdentifier,
+      }).returning();
+    } else {
+      // Update identifier if it changed
+      if (mapping.boardIdentifier !== boardIdentifier) {
+        [mapping] = await db.update(companyJobBoardMapping)
+          .set({ boardIdentifier })
+          .where(eq(companyJobBoardMapping.id, mapping.id))
+          .returning();
+      }
+    }
+
+    return c.json(mapping, 201);
   },
 );

@@ -17,6 +17,8 @@ import {
   jobTagMappings,
   roles,
   roleBullets,
+  companyJobBoardDefs,
+  companyJobBoardMapping,
 } from "@/backend/db/schema";
 import { scrapeGreenhouseJob } from "@/backend/ai/tools/greenhouse";
 import { AiProvider } from "@/backend/ai/providers";
@@ -641,17 +643,46 @@ promoteRouter.openapi(
     const newCompanyId = crypto.randomUUID();
     const now = new Date();
 
+    const nameFallback = apiCompany.jobBoardToken
+      ? apiCompany.jobBoardToken
+          .split(/[-_]/)
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ")
+      : "Unknown Company";
+
     const [inserted] = await db
       .insert(companies)
       .values({
         id: newCompanyId,
-        name: apiCompany.name || "Unknown Company",
+        name: apiCompany.name || nameFallback,
         description: apiCompany.recommendationReason || "Discovered via Greenhouse board scanner.",
         greenhouseToken: apiCompany.jobBoardToken,
         createdAt: now,
         updatedAt: now,
       })
       .returning();
+
+    // 4. Create Job Board Mapping if token is present
+    if (apiCompany.jobBoardToken) {
+      // Find or create "Greenhouse" board def
+      let [boardDef] = await db.select().from(companyJobBoardDefs).where(eq(companyJobBoardDefs.name, "Greenhouse")).limit(1);
+      
+      if (!boardDef) {
+        const defId = crypto.randomUUID();
+        [boardDef] = await db.insert(companyJobBoardDefs).values({
+          id: defId,
+          name: "Greenhouse",
+          isApi: true,
+        }).returning();
+      }
+
+      await db.insert(companyJobBoardMapping).values({
+        id: crypto.randomUUID(),
+        companyId: newCompanyId,
+        boardId: boardDef.id,
+        boardIdentifier: apiCompany.jobBoardToken,
+      });
+    }
 
     return c.json({
       status: "promoted",
@@ -775,11 +806,18 @@ promoteRouter.openapi(
       const newCompanyId = crypto.randomUUID();
       const now = new Date();
 
+      const roleFallbackName = jobPosting.company
+        ? jobPosting.company
+            .split(/[-_]/)
+            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ")
+        : "Unknown Company";
+
       const [newComp] = await db
         .insert(companies)
         .values({
           id: newCompanyId,
-          name: apiComp?.name || jobPosting.company,
+          name: apiComp?.name || roleFallbackName,
           description: apiComp?.recommendationReason || "Discovered via Greenhouse board scanner.",
           greenhouseToken: jobPosting.company,
           createdAt: now,

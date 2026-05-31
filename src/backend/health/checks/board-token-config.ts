@@ -12,6 +12,7 @@
 
 import type { HealthStepResult } from "@/backend/health/types";
 
+import { eq } from "drizzle-orm";
 import { getDb } from "@/backend/db";
 import { boardTokens } from "@/backend/db/schema";
 
@@ -64,7 +65,7 @@ export async function checkBoardTokenConfig(env: Env): Promise<HealthStepResult>
       );
     }
 
-    // Sub-check 3: Validate active tokens against Greenhouse API (HEAD only)
+    // Sub-check 3: Validate tokens against Greenhouse API (HEAD only)
     const baseUrl = env.GREENHOUSE_API_BASE ?? "https://boards-api.greenhouse.io/v1/boards";
     const tokenResults: Array<{
       token: string;
@@ -72,34 +73,57 @@ export async function checkBoardTokenConfig(env: Env): Promise<HealthStepResult>
       ok: boolean;
     }> = [];
 
-    // Limit to 5 tokens to avoid excessive health-check latency
-    const tokensToTest = activeTokens.slice(0, 5);
+    let tokensToTest: string[] = [];
+
+    // Check for explicit health check config
+    const { globalConfig } = await import("@/backend/db/schema");
+    const configRows = await db
+      .select({ value: globalConfig.value })
+      .from(globalConfig)
+      .where(eq(globalConfig.key, "health_check_config"))
+      .limit(1);
+
+    if (configRows.length > 0 && configRows[0].value) {
+      const config = configRows[0].value as { greenhouse_tokens?: string[] };
+      if (Array.isArray(config.greenhouse_tokens) && config.greenhouse_tokens.length > 0) {
+        tokensToTest = config.greenhouse_tokens.map(t => t.trim()).filter(Boolean);
+        details.usingHealthConfig = true;
+      }
+    }
+
+    // Fallback to active tokens from board_tokens table if no config is found
+    if (tokensToTest.length === 0) {
+      tokensToTest = activeTokens.slice(0, 5).map(t => t.token);
+    } else {
+      // Limit to 5 to avoid excessive latency even if config has many
+      tokensToTest = tokensToTest.slice(0, 5);
+    }
 
     await Promise.all(
       tokensToTest.map(async (t) => {
         try {
-          const res = await fetch(`${baseUrl}/${t.token}/jobs`, {
+          const res = await fetch(`${baseUrl}/${t}/jobs`, {
             method: "HEAD",
             signal: AbortSignal.timeout(5_000),
           });
           tokenResults.push({
-            token: t.token,
+            token: t,
             status: res.status,
             ok: res.ok,
           });
           if (!res.ok) {
             warnings.push(
-              `Board '${t.token}' returned HTTP ${res.status} — may be invalid or deprecated`,
+              `Board '${t}' returned HTTP ${res.status} — may be invalid or deprecated`,
             );
           }
         } catch (e) {
           tokenResults.push({
-            token: t.token,
+            token: t,
             status: 0,
             ok: false,
           });
           warnings.push(
-            `Board '${t.token}' unreachable: ${e instanceof Error ? e.message : String(e)}`,
+            `Board '${t}' unreachable: ${e instanceof Error ? e.message : String(e)}`,
           );
         }
       }),

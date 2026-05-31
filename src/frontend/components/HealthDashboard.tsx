@@ -109,6 +109,14 @@ function formatAge(isoString: string): string {
   return `Showing results from ${relative} (${pst})`;
 }
 
+function formatDuration(ms: number): string {
+  if (ms < 1000) return `${ms}ms`;
+  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+  const mins = Math.floor(ms / 60000);
+  const secs = ((ms % 60000) / 1000).toFixed(1);
+  return `${mins}m ${secs}s`;
+}
+
 function buildAgentPrompt(run: HealthRun, results: HealthResult[], ageInfo?: string): string {
   return `# 🩺 Health Diagnostic Report — core-resumes Worker
 
@@ -494,7 +502,7 @@ export function HealthDashboard() {
                 <CardTitle>Global Health Status</CardTitle>
                 <CardDescription>
                   {run.durationMs > 0 &&
-                    `Completed in ${run.durationMs}ms via ${run.trigger} trigger`}
+                    `Completed in ${formatDuration(run.durationMs)} via ${run.trigger} trigger`}
                 </CardDescription>
               </div>
               <div className="flex items-center gap-3">

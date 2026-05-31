@@ -3,6 +3,7 @@
  */
 
 import {
+  Activity,
   Book,
   ChevronDown,
   ChevronRight,
@@ -61,6 +62,20 @@ const docGroups: DocGroup[] = [
       { href: "/docs/role-intake", label: "Role Intake" },
       { href: "/docs/role-viewport", label: "Role Viewport" },
       { href: "/docs/role-insights", label: "Role Insights" },
+    ],
+  },
+  {
+    label: "Observability",
+    icon: Activity,
+    links: [
+      { href: "/docs/observability/overview", label: "Overview" },
+      { href: "/docs/observability/structured-logger", label: "Structured Logger" },
+      { href: "/docs/observability/run-pipeline", label: "runPipeline Wrapper" },
+      { href: "/docs/observability/pipeline-runs", label: "Pipeline Runs Table" },
+      { href: "/docs/observability/error-classification", label: "Error Classification" },
+      { href: "/docs/observability/analytics-engine", label: "Analytics Engine Sink" },
+      { href: "/docs/observability/rollout", label: "Rollout & Verification" },
+      { href: "/docs/observability/roadmap", label: "Roadmap" },
     ],
   },
   {

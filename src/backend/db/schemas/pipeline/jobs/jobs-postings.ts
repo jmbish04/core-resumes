@@ -9,6 +9,8 @@
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
+import { companies } from "../../applications/companies";
+
 // ---------------------------------------------------------------------------
 // Table & column documentation (consumed by /api/docs/schema)
 // ---------------------------------------------------------------------------
@@ -39,6 +41,12 @@ export const JOBS_POSTINGS_COLUMN_DESCRIPTIONS: Record<string, string> = {
     "Human-readable explanation of why this job was recommended (e.g. 'Title matches: Software Engineer, Location: Remote').",
   source_api_company_id:
     "Foreign key to api_companies.id linking this job back to its discovery source company.",
+  is_rejected: "Whether the human reviewer rejected this job. 1 = rejected.",
+  reject_reason: "Reason provided by the human reviewer for rejecting this job.",
+  is_watching: "Whether the human reviewer is watching this job for changes. 1 = watching.",
+  is_detected_change: "Whether the system detected a change on a watched job. 1 = changed.",
+  pipeline_source: "Source pipeline for this job: 'github_dataset', 'promoted_company', or 'freelance'.",
+  company_id: "Foreign key to companies.id for jobs sourced from promoted companies.",
 };
 
 // ---------------------------------------------------------------------------
@@ -64,12 +72,20 @@ export const jobsPostings = sqliteTable(
     recommendationScore: integer("recommendation_score"),
     recommendationReason: text("recommendation_reason"),
     sourceApiCompanyId: integer("source_api_company_id"),
+    isRejected: integer("is_rejected", { mode: "boolean" }).default(false),
+    rejectReason: text("reject_reason"),
+    isWatching: integer("is_watching", { mode: "boolean" }).default(false),
+    isDetectedChange: integer("is_detected_change", { mode: "boolean" }).default(false),
+    pipelineSource: text("pipeline_source", { enum: ["github_dataset", "promoted_company", "freelance"] }),
+    companyId: text("company_id").references(() => companies.id, { onDelete: "set null" }),
   },
   (table) => ({
     companyIdx: index("jobs_postings_company_idx").on(table.company),
     triageIdx: index("jobs_postings_triage_passed_idx").on(table.triagePassed),
     favoriteIdx: index("jobs_postings_is_favorite_idx").on(table.isFavorite),
     recommendedIdx: index("jobs_postings_is_recommended_idx").on(table.isRecommended),
+    sourceIdx: index("jobs_postings_pipeline_source_idx").on(table.pipelineSource),
+    companyFkIdx: index("jobs_postings_company_id_idx").on(table.companyId),
   }),
 );
 
