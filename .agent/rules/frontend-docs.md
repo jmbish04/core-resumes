@@ -32,3 +32,10 @@ On **every agentic turn**, you MUST ensure that all code you modified, fixed, or
 - As the user scrolls to sections, the section parameter MUST update in the URL.
 - The user must be able to enter the doc page URL with the section parameter in the URL, and the page must render/scroll to that exact spot on load.
 - Use `h2` and `h3` tags properly to ensure they are assigned IDs by the markdown renderer.
+
+## 6. Mermaid Diagrams Mandatory
+
+- **No ASCII Art / Plain Text Diagrams:** You are strictly FORBIDDEN from writing ASCII art or raw text diagrams (e.g., using Unicode boxes like `┌`, `│`, `└`) inside documentation markdown files.
+- **Use Mermaid:** All architectural diagrams, state flows, sequencing flows, and pipeline lifecycles MUST be represented as high-fidelity Mermaid charts (` ```mermaid ` blocks).
+- **Correct Syntax:** Always use correct, valid Mermaid syntax (e.g., wrap node labels in double quotes when using special characters or numbers).
+

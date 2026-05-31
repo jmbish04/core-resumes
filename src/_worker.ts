@@ -27,7 +27,10 @@ import { Sandbox } from "@cloudflare/sandbox";
 import { routeAgentRequest } from "agents";
 import { App } from "astro/app";
 
+import { createOAuthProvider } from "./backend/oauth";
+
 import { RoleChatAgent } from "./backend/ai/agents/chat";
+import { CoreResumesMcpAgent } from "./backend/ai/agents/core-resumes-mcp";
 import { JobAnalysisAgent } from "./backend/ai/agents/job/analysis";
 import { JobScannerAgent } from "./backend/ai/agents/job/scanner";
 import { NotebookLMAgent } from "./backend/ai/agents/notebooklm";
@@ -35,6 +38,8 @@ import { NotebookLMMcpAgent } from "./backend/ai/agents/notebooklm-mcp";
 import { OrchestratorAgent } from "./backend/ai/agents/orchestrator";
 import { SyncBroadcastAgent } from "./backend/ai/agents/sync-broadcast";
 import { TranscriptionAgent } from "./backend/ai/agents/transcription";
+import { SalaryAgent } from "./backend/ai/agents/salary";
+import { FreelanceScannerAgent } from "./backend/ai/agents/job/freelance-scanner";
 import { app as honoApp } from "./backend/api";
 import { handleInboundEmail } from "./backend/email/handler";
 import { HealthCoordinator } from "./backend/health";
@@ -47,7 +52,27 @@ export {
   JobAnalysisAgent,
   SyncBroadcastAgent,
   RoleChatAgent,
+  SalaryAgent,
+  FreelanceScannerAgent,
+  CoreResumesMcpAgent,
 };
+
+/**
+ * Mount the Core Resumes MCP server with two transports:
+ *
+ *   1. `/mcp` — Streamable HTTP transport (modern, recommended).
+ *   2. `/sse` — legacy SSE transport (required by older Claude CLI / Desktop
+ *      versions that don't yet speak Streamable HTTP, e.g. claude CLI v0.2.x).
+ *
+ * Both handlers dispatch to the same `CORE_RESUMES_MCP_AGENT` Durable Object
+ * binding — the agent itself is transport-agnostic.
+ */
+const coreResumesMcpHandler = CoreResumesMcpAgent.serve("/mcp", {
+  binding: "CORE_RESUMES_MCP_AGENT",
+});
+const coreResumesMcpSseHandler = CoreResumesMcpAgent.serveSSE("/sse", {
+  binding: "CORE_RESUMES_MCP_AGENT",
+});
 
 /**
  * Create the Worker's default and named exports from the Astro build manifest.
@@ -73,7 +98,65 @@ export function createExports(manifest: any) {
   const fetch = async (request: Request, env: any, ctx: any) => {
     const url = new URL(request.url);
 
-    // Layer 1: MCP server for NotebookLM (Bearer token auth)
+    // Layer 1a: Comprehensive Core Resumes MCP server.
+    //
+    // Two transports — both backed by the same CoreResumesMcpAgent DO:
+    //   - `/mcp`  — Streamable HTTP (modern)
+    //   - `/sse`  — legacy SSE (older Claude CLI / Desktop)
+    //
+    // Two auth schemes — both accepted on either transport:
+    //   - `Authorization: Bearer $WORKER_API_KEY`  (pre-shared key fast path)
+    //   - OAuth 2.1 dynamic-client-registration via the OAuthProvider
+    //     (required by Claude Chat web/iOS and any client without a
+    //     pre-shared key)
+    //
+    // `/mcp` and `/sse` are RESERVED for MCP protocol — there is no browser
+    // fallback. The human-facing install/docs page lives at `/docs/mcp`.
+    const isMcpUnderRoot =
+      url.pathname === "/mcp" ||
+      (url.pathname.startsWith("/mcp/") && !url.pathname.startsWith("/mcp/notebooklm"));
+    const isSseRoute =
+      url.pathname === "/sse" || url.pathname.startsWith("/sse/");
+
+    // OAuth meta + flow endpoints — always handled by the OAuthProvider.
+    const isOAuthMeta =
+      url.pathname === "/.well-known/oauth-authorization-server" ||
+      url.pathname === "/.well-known/oauth-protected-resource" ||
+      url.pathname === "/oauth/authorize" ||
+      url.pathname === "/oauth/token" ||
+      url.pathname === "/oauth/register";
+
+    if (isOAuthMeta) {
+      const oauthProvider = createOAuthProvider(url.origin, {
+        mcp: coreResumesMcpHandler,
+        sse: coreResumesMcpSseHandler,
+      });
+      return oauthProvider.fetch(request, env, ctx);
+    }
+
+    if (isMcpUnderRoot || isSseRoute) {
+      // Pre-shared key fast path — accepts WORKER_API_KEY Bearer directly,
+      // skipping the OAuth provider entirely for CLI / scripts that have
+      // the secret.
+      const authHeader = request.headers.get("Authorization") ?? "";
+      const expectedKey = await env.WORKER_API_KEY.get();
+      if (expectedKey && authHeader === `Bearer ${expectedKey}`) {
+        if (isSseRoute) return coreResumesMcpSseHandler.fetch(request, env, ctx);
+        return coreResumesMcpHandler.fetch(request, env, ctx);
+      }
+
+      // OAuth path — provider validates the access token. On 401 it emits
+      // a WWW-Authenticate header pointing MCP clients at the OAuth
+      // metadata so they can run the dynamic-registration / authorization
+      // / token-exchange dance.
+      const oauthProvider = createOAuthProvider(url.origin, {
+        mcp: coreResumesMcpHandler,
+        sse: coreResumesMcpSseHandler,
+      });
+      return oauthProvider.fetch(request, env, ctx);
+    }
+
+    // Layer 1b: MCP server for NotebookLM (Bearer token auth)
     if (url.pathname.startsWith("/mcp/notebooklm")) {
       const authHeader = request.headers.get("Authorization");
       const expectedKey = await env.WORKER_API_KEY.get();
@@ -107,13 +190,31 @@ export function createExports(manifest: any) {
   };
 
   /**
-   * Cron-triggered health screening handler.
+   * Cron-triggered handler.
    *
-   * Runs every 4 hours (configured in `wrangler.jsonc` triggers.crons).
-   * Executes the full modular health screening, persists results to D1,
-   * and logs the aggregate status.
+   * - `0 *\/4 * * *` -- 4-hour health check + RapidAPI salary refresh (spaced).
+   * - `0 *\/6 * * *` -- 6-hour Greenhouse pipeline scan.
+   * - `0 *\/12 * * *` -- 12-hour freelance pipeline scan.
    */
-  const scheduled = async (_controller: any, env: any, _ctx: any) => {
+  const scheduled = async (controller: any, env: any, ctx: any) => {
+    const cronExpression = controller.cron ?? "";
+
+    // 12-hour freelance pipeline scan
+    if (cronExpression === "0 */12 * * *") {
+      try {
+        const { getAgentByName } = await import("agents");
+        const agent = await getAgentByName(env.FREELANCE_SCANNER_AGENT, "global");
+        const sessionIds = await (agent as any).scanAll();
+        console.log(
+          `[cron:freelance] Scan triggered — ${sessionIds.length} session(s) started`,
+        );
+      } catch (e) {
+        console.error("[cron:freelance] Failed to trigger freelance scan:", e);
+      }
+      return;
+    }
+
+    // Default: health check (4-hour cron) + RapidAPI salary refresh
     try {
       const coordinator = new HealthCoordinator(env);
       const { run } = await coordinator.runAllChecks("scheduled");
@@ -123,6 +224,88 @@ export function createExports(manifest: any) {
     } catch (e) {
       console.error("[cron:health] Failed to run health screening:", e);
     }
+
+    // RapidAPI salary refresh — shouldRunOnCron() spaces calls evenly across
+    // the month within the configured budget (default: 50 calls/month).
+    try {
+      const { runSalaryCron } = await import(
+        "./backend/cron/rapidapi-salary-refresh"
+      );
+      const result = await runSalaryCron(env, cronExpression);
+      if (!result.skipped && result.refreshed) {
+        console.log(
+          `[cron:salary] Refreshed "${result.refreshed.jobTitle}" -- ` +
+            `${result.refreshed.jobSalaryCount} job + ${result.refreshed.companySalaryCount} company estimates`,
+        );
+      }
+    } catch (e) {
+      console.error("[cron:salary] Failed to run salary refresh:", e);
+    }
+
+    // GitHub repository watching alert for poteto/hiring-without-whiteboards
+    try {
+      const { runGithubWatchCron } = await import(
+        "./backend/cron/github-watch-alert"
+      );
+      const result = await runGithubWatchCron(env);
+      if (result.checked && result.shaChanged) {
+        console.log(
+          `[cron:github-watch] Synchronized with poteto/hiring-without-whiteboards -- ` +
+            `Discovered ${result.newCompaniesCount} new companies`,
+        );
+      }
+    } catch (e) {
+      console.error("[cron:github-watch] Failed to run GitHub watch alert:", e);
+    }
+
+    // Discovery scorer — keyword + location heuristic matching for
+    // is_recommended on api_companies and jobs_postings.
+    try {
+      const { runDiscoveryScorer } = await import(
+        "./backend/cron/discovery-scorer"
+      );
+      const result = await runDiscoveryScorer(env);
+      if (result.jobsScored > 0 || result.companiesScored > 0) {
+        console.log(
+          `[cron:discovery] Scored ${result.jobsScored} jobs (${result.jobsRecommended} recommended), ` +
+            `${result.companiesScored} companies (${result.companiesRecommended} recommended)`,
+        );
+      }
+    } catch (e) {
+      console.error("[cron:discovery] Failed to run discovery scorer:", e);
+    }
+
+    // Discovery analyzer — batch AI deep analysis for recommended jobs
+    try {
+      const { runDiscoveryAnalyzer } = await import(
+        "./backend/cron/discovery-analyzer"
+      );
+      const result = await runDiscoveryAnalyzer(env);
+      if (result.analyzed > 0 || result.failed > 0) {
+        console.log(
+          `[cron:discovery-analyzer] Deep analyzed ${result.analyzed} jobs, ${result.failed} failed`,
+        );
+      }
+    } catch (e) {
+      console.error("[cron:discovery-analyzer] Failed to run discovery analyzer:", e);
+    }
+
+    // Company profile enrichment — populates missing names on api_companies
+    // by querying Greenhouse/Ashby/Lever board APIs (25 per run).
+    try {
+      const { runCompanyEnrichment } = await import(
+        "./backend/cron/company-enrichment"
+      );
+      const result = await runCompanyEnrichment(env);
+      if (result.enriched > 0 || result.failed > 0) {
+        console.log(
+          `[cron:enrichment] Enriched ${result.enriched}/${result.queried} companies, ` +
+            `${result.failed} failed, ${result.skipped} skipped`,
+        );
+      }
+    } catch (e) {
+      console.error("[cron:enrichment] Failed to run company enrichment:", e);
+    }
   };
 
   return {
@@ -130,6 +313,7 @@ export function createExports(manifest: any) {
     OrchestratorAgent,
     NotebookLMAgent,
     NotebookLMMcpAgent,
+    CoreResumesMcpAgent,
     TranscriptionAgent,
     RoleAssetsWorkflow,
     RoleAnalysisWorkflow,
@@ -137,6 +321,8 @@ export function createExports(manifest: any) {
     JobAnalysisAgent,
     SyncBroadcastAgent,
     RoleChatAgent,
+    SalaryAgent,
+    FreelanceScannerAgent,
     Sandbox,
   };
 }

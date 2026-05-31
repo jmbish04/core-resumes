@@ -106,6 +106,20 @@ Every query is wrapped with agent rules from the `global_config` D1 table. This 
 - `src/backend/health/checks/notebooklm-query.ts` — Dual-mode: passive on cron, live query on manual/agent trigger
 - `scripts/sync-session.mjs` — Session sync utility
 
+## FastAPI Bridge & VPC Tunnel Integration
+
+For robust, long-term cookie extraction and to bypass Google edge bot detection completely, the project offloads all NotebookLM calls to a local background FastAPI bridge server connected via Cloudflare Tunnel and a private **VPC Service binding**.
+
+### Configuration
+* **FastAPI URL & Key**: Controlled via environment variables `NOTEBOOKLM_FASTAPI_URL` (e.g. `http://127.0.0.1:8789`) and `NOTEBOOKLM_FASTAPI_KEY`.
+* **VPC Binding**: A VPC Service binding named `VPC_SERVICE` in `wrangler.jsonc` connects the Worker securely to the private host endpoint.
+* **Auto-Proxy**: `createNotebookClient()` automatically intercepts all SDK calls and proxies them to the FastAPI server using the transparent `NotebookLMFastAPIProxy` whenever `NOTEBOOKLM_FASTAPI_URL` is defined.
+
+### Health checking & Self-Healing
+* **Health Connection Check**: If the FastAPI bridge is configured, the `notebooklm_credentials` health check runs a live connection check to `/health` using the `VPC_SERVICE` binding.
+* **Troubleshooting Prompt**: If the connection fails, the health check wraps the error in an actionable troubleshooting prompt inside the `aiSuggestion` output for coding agents to inspect the launchd plist status, `launchd-stderr.log`, and the Cloudflare Tunnel.
+* **Self-Healing Cookies**: On auth failure, the FastAPI server automatically triggers `sync-cookies.py` to extract fresh decrypted cookies from Chrome Profile 6, copies them to the pinned `/Users/126colby/.notebooklm/storage_state.json` file, and retries the failed operation instantly.
+
 ## ⚠️ Common mistakes
 
 1. **Do NOT** treat `NOTEBOOKLM_COOKIE_SIGNING_KEY` as a NotebookLM credential. It is the Career Orchestrator's own session cookie signing key.
@@ -115,5 +129,7 @@ Every query is wrapped with agent rules from the `global_config` D1 table. This 
 5. **Do NOT** call the SDK directly without handling `SessionExpiredError`.
 6. **ALWAYS** provide a recovery command in error responses for session-related failures.
 7. **Favor KV** (`pnpm run session:sync`) over `wrangler secret put` for cookie updates — KV is instant, secrets require the next cold start.
-8. **NEVER** call `consultNotebook()`, `createNotebookClient()`, or `NotebookLMClient.connect()` from health checks, cron jobs, or any automated/background path. The SDK's `connect()` fetches `notebooklm.google.com` from the Worker edge, which causes Google to shorten session lifetime from ~30 days to ~1 hour. Only user-initiated actions should trigger `connect()`. Health checks must use `checkNotebookLMSession()` for passive validation.
+8. **NEVER** call `consultNotebook()`, `createNotebookClient()`, or `NotebookLMClient.connect()` from health checks, cron jobs, or any automated/background path unless `NOTEBOOKLM_FASTAPI_URL` is active. If the FastAPI bridge is active, it runs locally on the host GUI session and bypasses edge IP bans and 1-hour session shortenings completely!
 9. The `notebooklm_query` health check is **dual-mode**: passive credential check on `scheduled` trigger, live SDK query only on `manual` or `agent` trigger.
+10. **Do NOT** assume the KV-based session is required if `NOTEBOOKLM_FASTAPI_URL` is configured; the FastAPI proxy takes precedence and handles cookies on the host machine.
+11. **Do NOT** forget to use `self.fetchFn` or delegate fetch to the bound `env.VPC_SERVICE` when making HTTP calls from the Worker to private local endpoints.

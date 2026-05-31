@@ -3,7 +3,7 @@
  *
  * Contains global configuration, job failure tracking, health checks
  * (runs, results, test definitions), operational logs, status definitions,
- * and Google Maps API usage tracking.
+ * Google Maps API usage tracking, and RapidAPI usage tracking.
  */
 
 export * from "./global-config";
@@ -14,3 +14,5 @@ export * from "./health-test-definitions";
 export * from "./logs";
 export * from "./statuses";
 export * from "./google-maps-usage";
+export * from "./rapidapi-usage";
+

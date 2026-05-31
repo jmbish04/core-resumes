@@ -5,10 +5,11 @@ import {
   CheckCircle2,
   ChevronDown,
   Clock,
-  DollarSign,
+
   ExternalLink,
   FileText,
   Handshake,
+  Loader2,
   LogOut,
   Mic,
   Send,
@@ -38,7 +39,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Stepper, StepperItem } from "@/components/ui/stepper";
-import { apiDelete, apiPatch, toast } from "@/lib/api-client";
+import { apiDelete, apiGet, apiPatch, apiPost, toast } from "@/lib/api-client";
+
+const GREENHOUSE_PATTERN =
+  /^https?:\/\/(?:job-boards|boards)\.greenhouse\.io\/(?:embed\/job_app\?.*?(?:token=([^&]+).*?id=([^&]+)|id=([^&]+).*?token=([^&]+))|([^/]+)\/jobs\/(\d+))/i;
+
+function parseGreenhouseToken(url: string | null): string | null {
+  if (!url) return null;
+  const match = url.match(GREENHOUSE_PATTERN);
+  if (!match) return null;
+  if (match[5]) return match[5];
+  return match[1] || match[4] || null;
+}
 
 import type { RoleRow } from "../dashboard/types";
 
@@ -192,6 +204,9 @@ export function RoleHeader({ role }: { role: RoleRow }) {
     toLabel: string;
   } | null>(null);
 
+  const [trackedTokens, setTrackedTokens] = useState<Set<string>>(new Set());
+  const [promotingToken, setPromotingToken] = useState<string | null>(null);
+
   useEffect(() => {
     async function fetchAnalysis() {
       try {
@@ -204,6 +219,13 @@ export function RoleHeader({ role }: { role: RoleRow }) {
       }
     }
     fetchAnalysis();
+
+    apiGet<{ tokens: { token: string }[] }>("/api/pipeline/board-tokens")
+      .then((res) => {
+        const tokens = new Set(res.tokens.map((t) => t.token));
+        setTrackedTokens(tokens);
+      })
+      .catch(() => {});
   }, [current.id]);
 
   const handleRoleUpdate = useCallback((updated: RoleRow) => {
@@ -261,150 +283,196 @@ export function RoleHeader({ role }: { role: RoleRow }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5">
-      {/* Row 1: Title + Stat Blocks + Action Buttons */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="truncate text-2xl font-semibold tracking-tight">
-              {current.companyName}
-            </h1>
-            <Badge variant="outline" className={meta.badgeClass}>
-              <StatusIcon className="mr-1 size-3" />
-              {meta.label}
-            </Badge>
-          </div>
-          <p className="mt-1 text-lg text-muted-foreground">{current.jobTitle}</p>
-
-          {/* Job posting links */}
-          {(current.jobUrl || current.jobPostingPdfUrl) && (
-            <div className="mt-2 flex flex-wrap items-center gap-3">
-              {current.jobUrl && (
-                <a
-                  href={current.jobUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm text-blue-400 transition-colors hover:text-blue-300"
-                >
-                  <ExternalLink className="size-3.5" />
-                  View Posting
-                </a>
-              )}
-              {current.jobPostingPdfUrl && (
-                <a
-                  href={current.jobPostingPdfUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm text-emerald-400 transition-colors hover:text-emerald-300"
-                >
-                  <FileText className="size-3.5" />
-                  PDF Snapshot
-                </a>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Stat Blocks */}
-        {analysisData?.analysis && (
-          <div className="flex items-stretch gap-3 border-l border-border/50 pl-4">
-            <StatBlock
-              value={analysisData.analysis.hireScore}
-              label="Hire Likelihood"
-              colorClass={getScoreTextColor(analysisData.analysis.hireScore)}
-            />
-            <StatBlock
-              value={analysisData.analysis.compensationScore}
-              label="Comp. Score"
-              colorClass={getScoreTextColor(analysisData.analysis.compensationScore)}
-            />
-            <StatBlock
-              value={formatCompactSalary(
-                current.salaryMin,
-                current.salaryMax,
-                current.salaryCurrency ?? "USD",
-              )}
-              label="Salary Range"
-              colorClass="text-foreground"
-              icon={<DollarSign className="size-3.5 text-muted-foreground" />}
-            />
-          </div>
+    <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-5">
+      {/* Row 1: Company name + Pipeline badge */}
+      <div className="flex flex-wrap items-center gap-2">
+        <h1 className="truncate text-2xl font-semibold tracking-tight">
+          {current.companyName}
+        </h1>
+        {current.source === "pipeline_scan" && (
+          <Badge
+            variant="outline"
+            className="border-blue-500/30 text-blue-400 bg-blue-500/10 text-xs flex items-center"
+          >
+            Pipeline Scan
+          </Badge>
         )}
+      </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Actions menu */}
-          <RoleActionsDialog role={current} onRoleUpdate={handleRoleUpdate} />
-
-          {/* View Report */}
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5"
-            onClick={() => (window.location.href = `/roles/${current.id}/report`)}
+      {/* Row 2: Role title + View links */}
+      <div className="flex flex-wrap items-center gap-3">
+        <p className="text-lg text-muted-foreground">{current.jobTitle}</p>
+        {current.jobUrl && (
+          <a
+            href={current.jobUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm text-blue-400 transition-colors hover:text-blue-300"
           >
-            <FileText className="size-4" />
-            <span className="hidden sm:inline">Report</span>
-          </Button>
-
-          {/* Status dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button variant="outline" size="sm" className="gap-1.5" disabled={isUpdating}>
-                  <StatusIcon className={`size-4 ${meta.color}`} />
-                  {isUpdating ? "Updating…" : meta.label}
-                  <ChevronDown className="size-3.5 opacity-50" />
-                </Button>
-              }
-            />
-            <DropdownMenuContent align="end" className="w-48">
-              {ACTIVE_STATUSES.map(([key, m]) => {
-                const Icon = m.icon;
-                return (
-                  <DropdownMenuItem
-                    key={key}
-                    className={`gap-2 ${current.status === key ? "bg-accent" : ""}`}
-                    onClick={() => void updateStatus(key)}
-                  >
-                    <Icon className={`size-4 ${m.color}`} />
-                    {m.label}
-                    {current.status === key && (
-                      <span className="ml-auto text-xs text-muted-foreground">Current</span>
-                    )}
-                  </DropdownMenuItem>
-                );
-              })}
-              <DropdownMenuSeparator />
-              {TERMINAL_STATUSES.map(([key, m]) => {
-                const Icon = m.icon;
-                return (
-                  <DropdownMenuItem
-                    key={key}
-                    className={`gap-2 ${current.status === key ? "bg-accent" : ""}`}
-                    onClick={() => void updateStatus(key)}
-                  >
-                    <Icon className={`size-4 ${m.color}`} />
-                    {m.label}
-                    {current.status === key && (
-                      <span className="ml-auto text-xs text-muted-foreground">Current</span>
-                    )}
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onClick={() => setShowDeleteDialog(true)}
+            <ExternalLink className="size-3.5" />
+            View Posting
+          </a>
+        )}
+        {current.jobPostingPdfUrl && (
+          <a
+            href={current.jobPostingPdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm text-emerald-400 transition-colors hover:text-emerald-300"
           >
-            <Trash2 className="size-4" />
-            <span className="hidden sm:inline">Delete</span>
-          </Button>
+            <FileText className="size-3.5" />
+            PDF Snapshot
+          </a>
+        )}
+      </div>
+
+      {/* Row 3: Score KPIs */}
+      {analysisData?.analysis && (
+        <div className="flex flex-wrap items-stretch gap-4 border-t border-border/30 pt-3">
+          <StatBlock
+            value={analysisData.analysis.hireScore}
+            label="Hire Likelihood"
+            colorClass={getScoreTextColor(analysisData.analysis.hireScore)}
+          />
+          <StatBlock
+            value={analysisData.analysis.compensationScore}
+            label="Comp. Score"
+            colorClass={getScoreTextColor(analysisData.analysis.compensationScore)}
+          />
+          <StatBlock
+            value={formatCompactSalary(
+              current.salaryMin,
+              current.salaryMax,
+              current.salaryCurrency ?? "USD",
+            )}
+            label="Salary Range"
+            colorClass="text-foreground"
+          />
         </div>
+      )}
+
+      {/* Row 4: Actions + Status + Delete */}
+      <div className="flex flex-wrap items-center gap-2 border-t border-border/30 pt-3">
+        {(() => {
+          const token = parseGreenhouseToken(current.jobUrl);
+          if (token && !trackedTokens.has(token)) {
+            return (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 border-amber-500/30 text-amber-500 hover:bg-amber-500/10 font-medium transition-colors"
+                disabled={promotingToken === token}
+                onClick={async () => {
+                  setPromotingToken(token);
+                  try {
+                    await apiPost("/api/pipeline/board-tokens", {
+                      token,
+                      companyName: current.companyName,
+                      isActive: true,
+                    });
+                    setTrackedTokens((prev) => {
+                      const next = new Set(prev);
+                      next.add(token);
+                      return next;
+                    });
+                    toast({
+                      title: "Tracking Activated",
+                      description: `Added '${current.companyName}' to active scans in Pipeline B tracker.`,
+                    });
+                  } catch (err) {
+                    toast({
+                      title: "Promotion Failed",
+                      description: err instanceof Error ? err.message : "Unknown error",
+                      variant: "destructive",
+                    });
+                  } finally {
+                    setPromotingToken(null);
+                  }
+                }}
+              >
+                {promotingToken === token ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Award className="size-4" />
+                )}
+                Track Company in Pipeline B
+              </Button>
+            );
+          }
+          return null;
+        })()}
+
+        {/* Actions menu */}
+        <RoleActionsDialog role={current} onRoleUpdate={handleRoleUpdate} />
+
+        {/* View Report */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5"
+          onClick={() => (window.location.href = `/roles/${current.id}/report`)}
+        >
+          <FileText className="size-4" />
+          <span className="hidden sm:inline">Report</span>
+        </Button>
+
+        {/* Status dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button variant="outline" size="sm" className="gap-1.5" disabled={isUpdating}>
+                <StatusIcon className={`size-4 ${meta.color}`} />
+                {isUpdating ? "Updating…" : meta.label}
+                <ChevronDown className="size-3.5 opacity-50" />
+              </Button>
+            }
+          />
+          <DropdownMenuContent align="end" className="w-48">
+            {ACTIVE_STATUSES.map(([key, m]) => {
+              const Icon = m.icon;
+              return (
+                <DropdownMenuItem
+                  key={key}
+                  className={`gap-2 ${current.status === key ? "bg-accent" : ""}`}
+                  onClick={() => void updateStatus(key)}
+                >
+                  <Icon className={`size-4 ${m.color}`} />
+                  {m.label}
+                  {current.status === key && (
+                    <span className="ml-auto text-xs text-muted-foreground">Current</span>
+                  )}
+                </DropdownMenuItem>
+              );
+            })}
+            <DropdownMenuSeparator />
+            {TERMINAL_STATUSES.map(([key, m]) => {
+              const Icon = m.icon;
+              return (
+                <DropdownMenuItem
+                  key={key}
+                  className={`gap-2 ${current.status === key ? "bg-accent" : ""}`}
+                  onClick={() => void updateStatus(key)}
+                >
+                  <Icon className={`size-4 ${m.color}`} />
+                  {m.label}
+                  {current.status === key && (
+                    <span className="ml-auto text-xs text-muted-foreground">Current</span>
+                  )}
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
+          onClick={() => setShowDeleteDialog(true)}
+        >
+          <Trash2 className="size-4" />
+          <span className="hidden sm:inline">Delete</span>
+        </Button>
       </div>
 
       {/* Row 2: Stepper */}

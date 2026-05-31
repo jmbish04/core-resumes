@@ -13,6 +13,7 @@ import { getActiveBullets } from "@/backend/ai/tasks";
 import { enforceTokenLimit } from "@/backend/ai/utils/token-estimator";
 import { getDb } from "@/backend/db";
 import { roles } from "@/backend/db/schema";
+import { SalaryAgent } from "@/backend/ai/agents/salary";
 
 export class RoleChatAgent extends AIChatAgent<Env> {
   static docsMetadata() {
@@ -110,6 +111,9 @@ You have access to the following tools. Use them proactively when they would hel
 - **draftDocument**: Trigger the resume or cover letter generation pipeline. Use this when the user asks you to draft, create, or generate a resume or cover letter.
 - **generateMockInterview**: Generate a fresh set of mock interview Q&A pairs tailored to this role and persist them. Use this when the user asks for interview prep or practice questions.
 - **scrapeJob**: Extract job posting content from a URL. Use this when the user provides a job URL to analyze.
+- **consultSalaryAgent**: Ask the SalaryAgent for specific salary trends, remote discount rates, local premium deltas, negotiation strategies, corporate H1B filings, or aggregate insights. Use this for ALL salary-related queries.
+- **getProcessingStatus**: Check the current pipeline/processing status for this role or globally. Use this when the user asks about task progress, what's running, what failed, or pipeline status.
+- **investigateTaskError**: Deep-dive into why a specific task or pipeline step failed. Reads activity logs and error metadata. Use this when the user asks "why did X fail?" or "what went wrong?".
 
 When using tools, explain what you're doing and share the results in a clear, actionable format.`);
 
@@ -145,7 +149,10 @@ When using tools, explain what you're doing and share the results in a clear, ac
           ) as any,
           execute: async ({ query }) => {
             try {
-              const stub = await getAgentByName(this.env.ORCHESTRATOR_AGENT, roleId ?? "global");
+              const stub: any = await getAgentByName(
+                this.env.ORCHESTRATOR_AGENT as any,
+                roleId ?? "global",
+              );
               const result = await stub.consult_notebook(query);
               type Ref = { title?: string | null; url?: string | null };
               const refs = (result.references ?? []) as Ref[];
@@ -313,7 +320,10 @@ When using tools, explain what you're doing and share the results in a clear, ac
           ) as any,
           execute: async ({ url }) => {
             try {
-              const stub = await getAgentByName(this.env.ORCHESTRATOR_AGENT, roleId ?? "global");
+              const stub: any = await getAgentByName(
+                this.env.ORCHESTRATOR_AGENT as any,
+                roleId ?? "global",
+              );
               const result = await stub.scrape_job(url);
               return {
                 status: "complete",
@@ -325,6 +335,165 @@ When using tools, explain what you're doing and share the results in a clear, ac
               return {
                 status: "error",
                 message: `Scraping failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+              };
+            }
+          },
+        }),
+
+        consultSalaryAgent: tool({
+          description:
+            "Ask the stateful SalaryAgent for salary statistics, remote discounts, geographic premiums, cost-of-living adjustments, corporate H1B records, or aggregate insights.",
+          inputSchema: zodSchema(
+            z.object({
+              query: z.string().describe("The salary, benchmark, or simulation question to ask the SalaryAgent"),
+            }),
+          ) as any,
+          execute: async ({ query }) => {
+            try {
+              const agent = (await getAgentByName(this.env.SALARY_AGENT as any, "global")) as any;
+              const result = await agent.chat([{ role: "user", content: query }], { roleId });
+              return { success: true, answer: result };
+            } catch (err) {
+              return {
+                success: false,
+                error: `SalaryAgent consultation failed: ${err instanceof Error ? err.message : String(err)}`,
+              };
+            }
+          },
+        }),
+
+        getProcessingStatus: tool({
+          description:
+            "Check the current pipeline/processing status for this role. Returns all tasks (pending, running, completed, failed) with their error messages. Use when the user asks about processing progress, what's running, or what failed.",
+          inputSchema: zodSchema(
+            z.object({
+              scope: z
+                .enum(["role", "global"])
+                .optional()
+                .default("role")
+                .describe("Whether to check status for the current role or globally"),
+            }),
+          ) as any,
+          execute: async ({ scope }) => {
+            try {
+              const agentName = scope === "global" || !roleId ? "global" : roleId;
+              const stub: any = await getAgentByName(
+                this.env.ORCHESTRATOR_AGENT as any,
+                agentName,
+              );
+              const status = await stub.getProcessingStatus();
+              return {
+                success: true,
+                roleId: status.roleId,
+                totalTasks: status.tasks.length,
+                pending: status.tasks.filter((t: any) => t.status === "pending").length,
+                running: status.tasks.filter((t: any) => t.status === "running").length,
+                completed: status.tasks.filter((t: any) => t.status === "completed").length,
+                failed: status.tasks.filter((t: any) => t.status === "failed").length,
+                tasks: status.tasks.map((t: any) => ({
+                  id: t.id,
+                  type: t.type,
+                  status: t.status,
+                  error: t.error ?? null,
+                  roleId: t.roleId ?? null,
+                })),
+              };
+            } catch (err) {
+              return {
+                success: false,
+                error: `Failed to fetch processing status: ${err instanceof Error ? err.message : String(err)}`,
+              };
+            }
+          },
+        }),
+
+        investigateTaskError: tool({
+          description:
+            "Deep-dive into why a task or pipeline step failed. Reads the role's activity log and error metadata to provide actionable diagnostics. Use when the user asks 'why did X fail?' or 'what went wrong?'.",
+          inputSchema: zodSchema(
+            z.object({
+              taskType: z
+                .string()
+                .optional()
+                .describe(
+                  "Optional task type filter (e.g., 'role_analysis', 'resume_review', 'insight_location')",
+                ),
+            }),
+          ) as any,
+          execute: async ({ taskType }) => {
+            if (!roleId) {
+              return {
+                success: false,
+                error: "No role context. Navigate to a specific role to investigate errors.",
+              };
+            }
+
+            try {
+              const db = getDb(this.env);
+
+              // 1. Get task queue errors from the orchestrator
+              const stub: any = await getAgentByName(
+                this.env.ORCHESTRATOR_AGENT as any,
+                roleId,
+              );
+              const status = await stub.getProcessingStatus();
+              let failedTasks = status.tasks.filter((t: any) => t.status === "failed");
+              if (taskType) {
+                failedTasks = failedTasks.filter((t: any) => t.type === taskType);
+              }
+
+              // 2. Read recent activity log entries for errors
+              const { roleLogs } = await import("@/db/schema");
+              const { desc } = await import("drizzle-orm");
+              const recentLogs = await db
+                .select()
+                .from(roleLogs)
+                .where(eq(roleLogs.roleId, roleId))
+                .orderBy(desc(roleLogs.createdAt))
+                .limit(20);
+
+              const errorLogs = recentLogs.filter(
+                (log) =>
+                  log.category === "agentic" &&
+                  (log.action.includes("fail") ||
+                    log.action.includes("error") ||
+                    log.message.toLowerCase().includes("fail") ||
+                    log.message.toLowerCase().includes("error")),
+              );
+
+              // 3. Check role metadata for processing errors
+              const [role] = await db
+                .select()
+                .from(roles)
+                .where(eq(roles.id, roleId))
+                .limit(1);
+              const meta = (role?.metadata as Record<string, unknown>) ?? {};
+              const processingErrors = meta.processingErrors ?? null;
+
+              return {
+                success: true,
+                failedTasks: failedTasks.map((t: any) => ({
+                  id: t.id,
+                  type: t.type,
+                  error: t.error,
+                })),
+                recentErrorLogs: errorLogs.map((log) => ({
+                  action: log.action,
+                  message: log.message,
+                  metadata: log.metadata,
+                  createdAt: log.createdAt,
+                })),
+                processingErrors,
+                roleStatus: role?.status ?? "unknown",
+                suggestion:
+                  failedTasks.length > 0
+                    ? "You can retry failed tasks by asking me to 'retry failed tasks' or by using the retry button on the role page."
+                    : "No failed tasks found in the current queue. The error may have been from a previous session.",
+              };
+            } catch (err) {
+              return {
+                success: false,
+                error: `Investigation failed: ${err instanceof Error ? err.message : String(err)}`,
               };
             }
           },

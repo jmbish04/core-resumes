@@ -7,7 +7,7 @@ import type {
 } from "@/backend/ai/agents/orchestrator/types";
 import type { ROLE_BULLET_TYPES } from "@/db/schemas/applications/role-bullets";
 
-import { analyzeRole, generateInterview } from "@/ai/tasks";
+import { generateInterview } from "@/ai/tasks";
 import { classifyEmailStatus } from "@/ai/tasks";
 import { analyzeCompany } from "@/ai/tasks/analyze/company";
 import { enforceTokenLimit } from "@/ai/utils/token-estimator";
@@ -500,7 +500,12 @@ async function processTask(agent: OrchestratorAgent, env: Env, task: Orchestrato
       if (!targetRoleId || targetRoleId === "global") {
         throw new Error("role_analysis task requires a valid roleId");
       }
-      return analyzeRole(env, targetRoleId);
+      // Dispatch to the durable RoleAnalysisWorkflow (30-min step timeout)
+      // instead of running inline in the DO which hits wall-time limits.
+      await env.ROLE_ANALYSIS_WORKFLOW.create({
+        params: { roleId: targetRoleId, orchestratorAgentName: agent.name },
+      });
+      return `Workflow dispatched for role ${targetRoleId}`;
     }
     case "company_analysis": {
       const companyId = readString(task.payload?.companyId);

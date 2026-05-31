@@ -161,6 +161,16 @@ NotebookLM uses the [notebooklm-sdk](https://github.com/agmmnn/notebooklm-sdk) w
 - **Response Evaluation:** Same task evaluates NotebookLM responses for completeness and generates automatic follow-up queries if gaps detected.
 - **Memory Integration:** Every NotebookLM consultation stores the full exchange (query, answer, references, metadata) in career memory.
 
+## NotebookLM FastAPI Bridge & VPC Tunneling
+
+To bypass Google edge bot detection and prevent 1-hour session cookie expirations, all NotebookLM SDK calls can be offloaded to a local background FastAPI bridge server (`scripts/notebooklm_fastapi_server.py`) running on the host GUI session and securely tunneled via a private **VPC Service binding**.
+
+### Architecture & Bindings
+* **VPC Service Binding (`VPC_SERVICE`)**: Binds the Cloudflare Worker to the Cloudflare Tunnel private endpoint, allowing secure HTTP requests to private local endpoints.
+* **Worker Factory Interceptor**: `createNotebookClient` automatically returns a transparent `NotebookLMFastAPIProxy` that proxies all method invocations over the VPC fetch client whenever `env.NOTEBOOKLM_FASTAPI_URL` is set in `wrangler.jsonc`.
+* **Cookie Self-Healing**: The FastAPI bridge pins its cookie state path to the single canonical state `/Users/126colby/.notebooklm/storage_state.json`. On any auth failure, it automatically invokes `sync-cookies.py` to extract fresh decrypted session cookies from Chrome Profile 6, copies them to the canonical state file, and auto-retries the failed query loop zero-touch.
+* **VPC Connection health check**: The `notebooklm_credentials` health module runs an active connection test to `${NOTEBOOKLM_FASTAPI_URL}/health` over `env.VPC_SERVICE`. If the connection fails, it wraps the error in a detailed troubleshooting prompt in the `aiSuggestion` parameter to guide coding agents in debugging plist or tunnel configurations.
+
 ## Resume Pipeline (Google Docs & ATS-Backed)
 
 - **Task:** `src/backend/ai/tasks/draft-with-notebook.ts` — 4-phase pipeline + Real-time ATS Dashboard.
@@ -192,7 +202,30 @@ NotebookLM uses the [notebooklm-sdk](https://github.com/agmmnn/notebooklm-sdk) w
 
 ## Prompt Engineering & Token Allocation
 
-- **No `.join("\\n")`:** Never construct prompts using arrays joined by escaped line breaks (`.join("\\n")`). This breaks LLM structural parsing. Always use native ES6 template literals (`` ` ``) to preserve real new lines.
+- **⛔ No Array-Based Prompt Construction:** Never build prompts as `string[]` arrays (whether joined with `.join("\n")`, `.join("\\n")`, or any other separator). This includes `parts.push(...)` patterns. Array-joined prompts serialize escaped `\n` characters in JSON payloads instead of real newlines, which degrades LLM structural parsing. **Always use native ES6 template literals (`` ` ``)** with real line breaks. For dynamic conditional sections, build each section as a separate template literal string and interpolate it into the main template literal.
+
+```ts
+// ❌ WRONG — every variation of this pattern is banned:
+const parts: string[] = ["You are an assistant.", "", "## Rules", "- Rule 1"];
+parts.push("- Rule 2");
+return parts.join("\n");
+
+// ❌ ALSO WRONG — .join("\\n") doesn't fix it:
+return parts.join("\\n");
+
+// ✅ CORRECT — single template literal with real newlines:
+const rulesSection = hasRules ? `
+## Rules
+- Rule 1
+- Rule 2` : "";
+
+return `You are an assistant.
+${rulesSection}
+
+## Instructions
+Do the thing.`;
+```
+
 - **Aggressive XML:** Non-negotiable instructions (such as "DO NOT SUMMARIZE" or "VERBATIM EXTRACTION") must be wrapped in strict XML tags (e.g. `<STRICT_VERBATIM_EXTRACTION>...</STRICT_VERBATIM_EXTRACTION>`) to ensure enforcement.
 - **Max Tokens Allocation:** By default, LLMs summarize text if they feel constrained by implicit output window limits. For large text extraction or heavy generative tasks, explicitly set `max_tokens: 8096` in the AI invocation to guarantee the model does not prematurely truncate or paraphrase.
 
@@ -203,6 +236,7 @@ NotebookLM uses the [notebooklm-sdk](https://github.com/agmmnn/notebooklm-sdk) w
 - **Organization**: Ensure the doc pages and sidebar navbar are organized logically. If a doc page becomes too large, split it into standalone pages. Create new categories if existing ones do not fit.
 - **Standalone Docs**: All standalone docs must have dedicated page URLs.
 - **Hyperlinkable Sections**: Document sections must be hyperlinkable. As the user scrolls, the URL parameter must update to reflect the active section, and loading a URL with a section parameter must scroll to that exact spot.
+- **Mermaid Diagrams**: All architectural charts, lifecycles, and flow sequences MUST be drawn as Mermaid diagrams. ASCII art or plain text graphical drawings are strictly forbidden. Always use standard syntax and enclose node labels in double quotes.
 
 ## References
 
@@ -343,6 +377,17 @@ The `JobScannerAgent`, `JobAnalysisAgent`, and `SyncBroadcastAgent` manage the a
   - `onConnect` / `onClose` are lifecycle hooks only. They log connection events; do not add stateful side-effects.
   - The broadcast message envelope is always `{ type: "sync_progress", payload: SyncProgressPayload }`. If the frontend needs new event types, add them as additional public methods (e.g., `reportError`, `reportComplete`) rather than overloading the payload shape.
   - If you add or rename a binding, run `pnpm run cf-typegen`, then add the new entry to `AgentBindingMap` in `src/backend/ai/agents/registry.ts`.
+
+### SalaryAgent
+
+- **Location:** `src/backend/ai/agents/salary/`
+- **State:** Stateful DO (`Agent<Env, Record<string, never>>` currently, holds in-memory context for chat sessions).
+- **Binding:** `SALARY_AGENT` → `wrangler.jsonc` durable_objects.bindings
+- **Migration tag:** `v7`
+- **Maintenance:**
+  - **No Sandbox:** This agent strictly uses deterministic SQL via AST validation (`node-sql-parser`). Do not introduce Python sandboxing.
+  - **Modes:** Routing happens in `index.ts` to `single-role.ts`, `aggregate.ts`, or `chat.ts`.
+  - **SQL Security:** AST validation requires `ast.type === 'select'`, rejects stacked statements, limits tables to `ALLOWED_TABLES`, wraps queries with `LIMIT`, and logs to `salary_agent_queries`.
 
 ### Adding New Agent Methods
 

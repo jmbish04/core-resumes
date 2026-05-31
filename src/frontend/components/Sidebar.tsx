@@ -17,10 +17,8 @@
 
 import * as LucideIcons from "lucide-react";
 import {
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ScrollText,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -34,80 +32,16 @@ import { siteConfig } from "@/lib/config";
 // Navigation data
 // ---------------------------------------------------------------------------
 
-/** Top-level application pages dynamically populated from siteConfig.navItems. */
-const mainLinks = siteConfig.navItems
-  .filter(
-    (item) =>
-      !item.href.startsWith("/docs") &&
-      !["/openapi.json", "/scalar", "/swagger"].includes(item.href)
-  )
-  .map((item) => ({
-    href: item.href,
-    label: item.label,
-    icon: (LucideIcons as any)[item.icon || "BookOpen"] || LucideIcons.BookOpen,
-    badgeKey: item.href === "/emails" ? ("emails" as const) : undefined,
-  }));
+/** Top-level application pages dynamically populated from siteConfig.sidebarItems. */
+const mainLinks = siteConfig.sidebarItems.map((item) => ({
+  href: item.href,
+  label: item.label,
+  icon: (LucideIcons as any)[item.icon || "BookOpen"] || LucideIcons.BookOpen,
+  badgeKey: item.href === "/emails" ? ("emails" as const) : undefined,
+}));
 
-/**
- * Grouped sub-navigation items rendered inside the collapsible "Docs" section.
- * Each group has a category label and an array of doc page links.
- */
-const docsSublinks = [
-  {
-    label: "Getting Started",
-    links: [
-      { href: "/docs/overview", label: "Overview" },
-      { href: "/docs/architecture", label: "Architecture" },
-      { href: "/docs/configuration", label: "Configuration" },
-      { href: "/docs/health", label: "Health Diagnostics" },
-    ],
-  },
-  {
-    label: "Integrations",
-    links: [
-      { href: "/docs/integrations/notebooklm", label: "NotebookLM" },
-      { href: "/docs/integrations/google-drive", label: "Google Drive" },
-      { href: "/docs/integrations/google-docs", label: "Google Docs" },
-      { href: "/docs/integrations/greenhouse", label: "Greenhouse" },
-      { href: "/docs/integrations/openroute", label: "OpenRoute" },
-    ],
-  },
-  { label: "Data", links: [{ href: "/docs/database", label: "Database Schema" }] },
-  {
-    label: "Pipelines",
-    links: [
-      { href: "/docs/role-intake", label: "Role Intake" },
-      { href: "/docs/role-insights", label: "Role Insights" },
-      { href: "/docs/greenhouse-pipeline", label: "Greenhouse Pipeline" },
-    ],
-  },
-  {
-    label: "AI Agents",
-    links: [
-      { href: "/docs/agents", label: "Agents Overview" },
-      { href: "/docs/agents/orchestrator", label: "OrchestratorAgent" },
-      { href: "/docs/agents/notebooklm", label: "NotebookLMAgent" },
-      { href: "/docs/agents/notebooklm-mcp", label: "NotebookLMMcpAgent" },
-    ],
-  },
-  { label: "API", links: [{ href: "/docs/api", label: "API Reference" }] },
-  {
-    label: "Templates",
-    links: [
-      { href: "/docs/resume-template", label: "Resume Template" },
-      { href: "/docs/cover-letter-template", label: "Cover Letter Template" },
-    ],
-  },
-];
-
-/** External tool links displayed at the bottom of the sidebar. */
-const bottomLinks = siteConfig.navItems
-  .filter((item) => ["/openapi.json", "/scalar", "/swagger"].includes(item.href))
-  .map((item) => ({
-    href: item.href,
-    label: item.label,
-    icon: (LucideIcons as any)[item.icon || "FileJson"] || LucideIcons.FileJson,
-  }));
+/** External tool links completely removed from sidebar. */
+const bottomLinks: any[] = [];
 
 // ---------------------------------------------------------------------------
 // Component
@@ -119,21 +53,16 @@ const bottomLinks = siteConfig.navItems
  * State:
  *  - `collapsed` — whether the sidebar is in icon-only mode
  *  - `pathname` — current URL path (set once on mount for active-link styling)
- *  - `docsExpanded` — whether the docs tree is expanded (auto-opens on `/docs/*`)
  */
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [pathname, setPathname] = useState("/");
-  const [docsExpanded, setDocsExpanded] = useState(false);
   const [emailUnread, setEmailUnread] = useState(0);
 
-  /** Read the current pathname on mount and auto-expand docs if applicable. */
+  /** Read the current pathname on mount. */
   useEffect(() => {
     const p = window.location.pathname;
     setPathname(p);
-    if (p.startsWith("/docs")) {
-      setDocsExpanded(true);
-    }
     // Fetch email unread count
     apiGet<{ unread: number }>("/api/emails/stats")
       .then((stats) => setEmailUnread(stats.unread))
@@ -172,6 +101,8 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 title={collapsed ? item.label : undefined}
+                target={item.href.startsWith("/docs") ? "_blank" : undefined}
+                rel={item.href.startsWith("/docs") ? "noopener noreferrer" : undefined}
                 className={cn(
                   "flex h-9 items-center gap-2 rounded-md px-2 text-sm text-sidebar-foreground/70 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   active && "bg-sidebar-accent text-sidebar-accent-foreground",
@@ -191,60 +122,6 @@ export function Sidebar() {
               </a>
             );
           })}
-
-          {/* Docs — collapsible header with grouped sublinks */}
-          <div>
-            <button
-              type="button"
-              onClick={() => setDocsExpanded((v) => !v)}
-              title={collapsed ? "Docs" : undefined}
-              className={cn(
-                "flex h-9 w-full items-center gap-2 rounded-md px-2 text-sm text-sidebar-foreground/70 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                pathname.startsWith("/docs") && "bg-sidebar-accent text-sidebar-accent-foreground",
-                collapsed && "justify-center",
-              )}
-            >
-              <ScrollText className="size-4 shrink-0" />
-              {!collapsed && (
-                <>
-                  <span className="flex-1 truncate text-left">Docs</span>
-                  {docsExpanded ? (
-                    <ChevronDown className="size-3" />
-                  ) : (
-                    <ChevronRight className="size-3" />
-                  )}
-                </>
-              )}
-            </button>
-
-            {docsExpanded && !collapsed && (
-              <div className="ml-4 mt-1 grid gap-2 border-l border-border/40 pl-2">
-                {docsSublinks.map((group) => (
-                  <div key={group.label}>
-                    <span className="mb-0.5 block px-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-                      {group.label}
-                    </span>
-                    {group.links.map((link) => {
-                      const active = pathname === link.href;
-                      return (
-                        <a
-                          key={link.href}
-                          href={link.href}
-                          className={cn(
-                            "block rounded-md px-2 py-1 text-xs text-sidebar-foreground/60 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                            active &&
-                              "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
-                          )}
-                        >
-                          {link.label}
-                        </a>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
 
           {/* Bottom links — external tools */}
           {bottomLinks.map((item) => {

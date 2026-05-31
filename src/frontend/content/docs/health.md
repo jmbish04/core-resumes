@@ -68,8 +68,7 @@ All checks run in parallel with per-check timeout limits. Results are persisted 
 
 | Check Name            | Timeout | Description                                                                                                                                                                                                                                                                     | Source File                                        |
 | --------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| `intake_pipeline`     | 30s     | Fetches a known Greenhouse job URL using Browser Rendering, extracts markdown, and validates the extraction contains expected content. Tests the scrape layer of the role intake pipeline.                                                                                      | `src/backend/health/checks/intake-pipeline.ts`     |
-| `extraction_fidelity` | 60s     | Multi-tier extraction test: runs Workers AI structured extraction, `/json` endpoint extraction, and HTML sidecar script extraction on a Greenhouse job. Compares bullet accuracy across all three tiers by matching structured bullets against raw `<li>` elements in the HTML. | `src/backend/health/checks/extraction-fidelity.ts` |
+| `extraction_fidelity` | 120s    | End-to-end intake pipeline test: picks a live SF Bay Area Greenhouse posting, runs Browser Rendering (markdown + DOM scrape), then runs all 3 hybrid extraction passes (heading classification, narrative classification, fact extraction). Verifies output bullets match verbatim DOM `<li>` elements. | `src/backend/health/checks/extraction-fidelity.ts` |
 | `notebooklm_query`    | 30s/45s | **Dual-mode check.** Scheduled (cron): passive credential validation (cookie presence, structure, age). Manual/Agent: live test query through the full `consultNotebook()` pipeline. See [Trigger Modes](#trigger-modes).                                                       | `src/backend/health/checks/notebooklm-query.ts`    |
 | `openroute_commute`   | 90s     | Geocodes a test address via HeiGIT, fetches driving directions (falls back to Google Maps Routes API on timeout), and runs the AI location insight analysis. Validates the full OpenRoute → Google Maps → LLM pipeline.                                                         | `src/backend/health/checks/openroute.ts`           |
 
@@ -99,9 +98,11 @@ Some checks have custom timeout limits:
 | Check                            | Default | Override |
 | -------------------------------- | ------- | -------- |
 | `agent_notebooklm`               | 30s     | 45s      |
+| `salary_sandbox`                 | 30s     | 45s      |
 | `google_drive_lifecycle`         | 30s     | 45s      |
 | `extraction_fidelity`            | 30s     | 120s     |
 | `openroute_commute`              | 30s     | 90s      |
+| `board_token_config`             | 30s     | 45s      |
 | `notebooklm_query` (manual only) | 30s     | 45s      |
 
 ### Persistence
@@ -117,7 +118,7 @@ Every screening creates:
 | ------ | ---------------------- | ---------------------------------------------------------------------------- |
 | `POST` | `/api/health/run`      | Trigger a manual health screening. Returns full results.                     |
 | `GET`  | `/api/health/latest`   | Retrieve the most recent screening results.                                  |
-| `POST` | `/api/pipeline/health` | Run only the [Greenhouse pipeline](/docs/greenhouse-pipeline) health checks. |
+| `POST` | `/api/pipeline/health` | Run only the [Active Board Tracker](/docs/active-board-tracker) health checks. |
 
 ## Frontend
 

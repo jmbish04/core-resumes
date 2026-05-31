@@ -1749,4 +1749,6 @@ export {
   MapClusterLayer,
 };
 
+export default Map;
+
 export type { MapRef, MapViewport, MapArcDatum, MapArcEvent };

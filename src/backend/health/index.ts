@@ -27,6 +27,7 @@ export type {
   HealthTrigger,
   CheckStatus,
   GreenhouseJob,
+  AshbyJob,
 } from "@/backend/health/types";
 
 import { checkNotebookLMMcpAgentRPC } from "@/backend/ai/agents/notebooklm-mcp/health";
@@ -49,7 +50,6 @@ import { checkExtractionFidelity } from "@/backend/health/checks/extraction-fide
 import { checkGeminiProvider } from "@/backend/health/checks/gemini-provider";
 import { checkGreenhouseApi } from "@/backend/health/checks/greenhouse-api";
 import { checkGreenhouseEnvVars } from "@/backend/health/checks/greenhouse-env-vars";
-import { checkIntakePipeline } from "@/backend/health/checks/intake-pipeline";
 import { checkJobsDataQuality } from "@/backend/health/checks/jobs-data-quality";
 import { checkJobsSchemaIntegrity } from "@/backend/health/checks/jobs-schema-integrity";
 import { checkNotebookLMCredentials } from "@/backend/health/checks/notebooklm-credentials";
@@ -61,6 +61,10 @@ import { checkSTT } from "@/backend/health/checks/stt";
 import { checkTTS } from "@/backend/health/checks/tts";
 import { checkVectorizeJobs } from "@/backend/health/checks/vectorize-jobs";
 import { checkSecrets, checkEnvVars } from "@/backend/utils/health";
+import { checkSalarySql } from "@/backend/health/checks/salary-sql";
+import { checkAshbyApi } from "@/backend/health/checks/ashby-api";
+import { checkFreelanceSchemaIntegrity } from "@/backend/health/checks/freelance-schema-integrity";
+import { checkFreelanceDataQuality } from "@/backend/health/checks/freelance-data-quality";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -75,11 +79,13 @@ const PER_CHECK_TIMEOUT_MS = 30_000;
 function getTimeoutOverrides(trigger: HealthTrigger): Record<string, number> {
   const base: Record<string, number> = {
     agent_notebooklm: 45_000,
+    salary_sql: 45_000,
     google_drive_lifecycle: 45_000,
     extraction_fidelity: 120_000,
     openroute_commute: 90_000,
     board_token_config: 45_000,
     greenhouse_api: 15_000,
+    ashby_api: 15_000,
     gemini_provider: 15_000,
   };
   // Live query mode needs more time for SDK connect + query
@@ -111,7 +117,7 @@ function buildCheckRegistry(
     { name: "workers_ai_embedding", category: "ai", fn: () => checkWorkersAI(env) },
     { name: "ai_gateway", category: "ai", fn: () => checkAIGateway(env) },
     { name: "tts_deepgram", category: "ai", fn: () => checkTTS(env) },
-    { name: "stt_whisper", category: "ai", fn: () => checkSTT(env) },
+    // { name: "stt_whisper", category: "ai", fn: () => checkSTT(env) },
 
     // Google
     {
@@ -148,14 +154,18 @@ function buildCheckRegistry(
       category: "agents",
       fn: () => checkNotebookLMMcpAgentRPC(env) as Promise<HealthStepResult>,
     },
+    // {
+    //   name: "agent_transcription",
+    //   category: "agents",
+    //   fn: () => checkTranscriptionAgentRPC(env) as Promise<HealthStepResult>,
+    // },
     {
-      name: "agent_transcription",
+      name: "salary_sql",
       category: "agents",
-      fn: () => checkTranscriptionAgentRPC(env) as Promise<HealthStepResult>,
+      fn: () => checkSalarySql(env),
     },
 
     // API / Pipeline
-    { name: "intake_pipeline", category: "api", fn: () => checkIntakePipeline(env) },
     { name: "extraction_fidelity", category: "api", fn: () => checkExtractionFidelity(env) },
     {
       name: "notebooklm_query",
@@ -178,6 +188,19 @@ function buildCheckRegistry(
     { name: "jobs_data_quality", category: "greenhouse", fn: () => checkJobsDataQuality(env) },
     { name: "gemini_provider", category: "greenhouse", fn: () => checkGeminiProvider(env) },
     { name: "pipeline_sessions", category: "greenhouse", fn: () => checkPipelineSessions(env) },
+    { name: "ashby_api", category: "greenhouse", fn: () => checkAshbyApi(env) },
+
+    // Freelance Scanner Pipeline
+    {
+      name: "freelance_schema_integrity",
+      category: "freelance",
+      fn: () => checkFreelanceSchemaIntegrity(env),
+    },
+    {
+      name: "freelance_data_quality",
+      category: "freelance",
+      fn: () => checkFreelanceDataQuality(env),
+    },
   ];
 }
 

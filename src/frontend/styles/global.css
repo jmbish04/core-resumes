@@ -272,3 +272,31 @@
     page-break-inside: avoid;
   }
 }
+
+/* --- High-Contrast Dark-Mode Chart Styles (Antigravity Global Fix) --- */
+.dark .recharts-cartesian-axis-tick text,
+.dark .recharts-polar-grid-angle text,
+.dark .recharts-polar-angle-axis-tick text {
+  fill: #E5E7EB !important;
+  color: #E5E7EB !important;
+  font-family: "Inter Variable", sans-serif;
+  opacity: 1 !important;
+}
+
+.dark .recharts-legend-item-text {
+  color: #E5E7EB !important;
+}
+
+.dark .recharts-default-tooltip {
+  background-color: oklch(0.205 0 0) !important;
+  border: 1px solid oklch(1 0 0 / 10%) !important;
+}
+
+.dark .recharts-tooltip-label {
+  color: #FFFFFF !important;
+}
+
+.dark .recharts-text {
+  fill: #E5E7EB !important;
+}
+

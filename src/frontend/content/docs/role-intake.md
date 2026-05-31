@@ -125,4 +125,3 @@ By construction, hybrid bullets are sourced from the DOM, so any sample failure 
 - `src/backend/ai/tools/browser-rendering.ts` — Browser Rendering API wrapper.
 - `src/backend/api/routes/intake.ts` — Intake API endpoints.
 - `src/backend/health/checks/extraction-fidelity.ts` — Hybrid extraction fidelity health check.
-- `src/backend/health/checks/intake-pipeline.ts` — End-to-end intake pipeline health check.

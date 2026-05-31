@@ -1,0 +1,20 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { Sidebar } from "@/components/Sidebar";
+import { SalaryIntelligenceDashboard } from "@/components/salary/SalaryIntelligenceDashboard";
+
+if (!Astro.cookies.has("cr_session")) {
+  return Astro.redirect("/login");
+}
+---
+
+<BaseLayout title="Salary Intelligence | Colby" description="Data-driven salary intelligence and market compensation insights for career pivoting and negotiation.">
+  <div class="flex flex-1 relative w-full">
+    <Sidebar client:load />
+    <section class="min-w-0 flex-1 w-full">
+      <div class="mx-auto w-full gap-6 px-4 py-6 lg:px-8">
+        <SalaryIntelligenceDashboard client:only="react" />
+      </div>
+    </section>
+  </div>
+</BaseLayout>

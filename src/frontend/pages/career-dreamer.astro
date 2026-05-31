@@ -1,0 +1,17 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { CareerDreamerClient } from "../components/salary/CareerDreamerClient";
+---
+
+<BaseLayout title="Career Dreamer">
+  <div class="container py-8 max-w-6xl mx-auto space-y-8" id="career-dreamer-root">
+    <div class="flex items-center justify-between border-b pb-4">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">Career Dreamer</h1>
+        <p class="text-muted-foreground mt-1">Macro trends, role demand, and pivot trajectories.</p>
+      </div>
+    </div>
+
+    <CareerDreamerClient client:only="react" />
+  </div>
+</BaseLayout>

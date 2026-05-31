@@ -22,8 +22,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Literal, get_args, get_origin
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
-from fastapi.responses import JSONResponse
+from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Query, Request
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from notebooklm import (
@@ -112,10 +112,8 @@ sync_cookies.configure_logging()
 
 
 def storage_path(profile: str = DEFAULT_NOTEBOOKLM_PROFILE) -> Path:
-    """Return the explicit notebooklm-py storage path for a named profile."""
-    env_home = os.environ.get("NOTEBOOKLM_HOME", "").strip()
-    home = Path(env_home).expanduser() if env_home else Path.home() / ".notebooklm"
-    return home / "profiles" / profile / "storage_state.json"
+    """Return the explicit notebooklm-py storage path."""
+    return Path.home() / ".notebooklm" / "storage_state.json"
 
 
 class BridgeSettings(BaseModel):
@@ -191,6 +189,12 @@ class SourceFileRequest(BaseModel):
     mime_type: str | None = None
     wait: bool = False
     wait_timeout: float = 120.0
+
+
+class SourceFileBufferRequest(BaseModel):
+    content_base64: str
+    file_name: str
+    mime_type: str | None = None
 
 
 class RenameRequest(BaseModel):
@@ -372,7 +376,17 @@ async def refresh_storage(settings: BridgeSettings) -> dict[str, Any]:
         beekeeper=False,
     )
     cookie_header, path = await asyncio.to_thread(sync_cookies.refresh_from_chrome, args)
-    return {"storage_path": str(path), "cookieLength": len(cookie_header)}
+    
+    # Copy the cookies generated from sync-cookies.py to the targeted storage_state.json
+    target = Path.home() / ".notebooklm" / "storage_state.json"
+    if Path(path) != target:
+        import shutil
+        import stat
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, target)
+        target.chmod(stat.S_IRUSR | stat.S_IWUSR)
+        
+    return {"storage_path": str(target), "cookieLength": len(cookie_header)}
 
 
 async def ensure_storage(settings: BridgeSettings) -> None:
@@ -497,6 +511,10 @@ async def rpc_call(namespace: str, method: str, body: RpcRequest) -> dict[str, A
     async def operation(client: NotebookLMClient) -> Any:
         api = getattr(client, namespace)
         fn = getattr(api, method, None)
+        if fn is None:
+            # Fallback: convert camelCase method name to snake_case
+            snake_method = "".join(["_" + c.lower() if c.isupper() else c for c in method]).lstrip("_")
+            fn = getattr(api, snake_method, None)
         if fn is None or method.startswith("_"):
             raise HTTPException(status_code=404, detail=f"Unknown method: {namespace}.{method}")
         kwargs = coerce_method_kwargs(fn, body.kwargs)
@@ -504,6 +522,120 @@ async def rpc_call(namespace: str, method: str, body: RpcRequest) -> dict[str, A
 
     result = await with_client(operation)
     return {"ok": True, "result": jsonable(result)}
+
+
+@app.post("/notebooks/{notebook_id}/sources/file-buffer")
+async def add_file_buffer(
+    notebook_id: str,
+    body: SourceFileBufferRequest,
+    settings: BridgeSettings = BridgeSettings(),
+) -> dict[str, Any]:
+    """Upload a raw file buffer by decoding base64, writing it to a tempfile, and adding it as a source."""
+    await ensure_storage(settings)
+    
+    import base64
+    import tempfile
+    
+    try:
+        content = base64.b64decode(body.content_base64)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid base64 content: {exc}")
+
+    suffix = Path(body.file_name).suffix
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        tmp.write(content)
+        tmp_path = tmp.name
+
+    try:
+        async def operation(client: NotebookLMClient) -> Any:
+            return await client.sources.add_file(
+                notebook_id,
+                tmp_path,
+                mime_type=body.mime_type,
+            )
+        
+        result = await with_client(operation, settings)
+        return {"ok": True, "source": jsonable(result)}
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except Exception:
+            pass
+
+
+@app.get("/notebooks/{notebook_id}/artifacts/download-raw/{kind}/{artifact_id}")
+async def download_artifact_raw(
+    notebook_id: str,
+    kind: str,
+    artifact_id: str,
+    background_tasks: BackgroundTasks,
+    output_format: str | None = Query(default=None),
+    settings: BridgeSettings = BridgeSettings(),
+) -> FileResponse:
+    """Download a completed NotebookLM artifact as raw binary bytes streamed to the client."""
+    await ensure_storage(settings)
+
+    import tempfile
+    
+    suffix = ""
+    kind_norm = kind.replace("-", "_")
+    if kind_norm == "audio":
+        suffix = ".mp3"
+    elif kind_norm == "video":
+        suffix = ".mp4"
+    elif kind_norm == "slide_deck":
+        suffix = f".{output_format or 'pdf'}"
+    elif kind_norm == "infographic":
+        suffix = ".png"
+
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+    tmp.close()
+    tmp_path = tmp.name
+
+    def cleanup_file():
+        try:
+            os.unlink(tmp_path)
+        except Exception:
+            pass
+
+    background_tasks.add_task(cleanup_file)
+
+    async def operation(client: NotebookLMClient) -> Any:
+        method_name = f"download_{kind_norm}"
+        method = getattr(client.artifacts, method_name, None)
+        if method is None:
+            raise HTTPException(status_code=404, detail=f"Unknown download type: {kind}")
+        
+        kwargs: dict[str, Any] = {"artifact_id": artifact_id}
+        if kind_norm in {"quiz", "flashcards", "slide_deck"} and output_format:
+            kwargs["output_format"] = output_format
+
+        return await method(notebook_id, tmp_path, **kwargs)
+
+    try:
+        await with_client(operation, settings)
+        
+        media_type = "application/octet-stream"
+        if kind_norm == "audio":
+            media_type = "audio/mpeg"
+        elif kind_norm == "video":
+            media_type = "video/mp4"
+        elif kind_norm == "slide_deck":
+            if output_format == "pptx":
+                media_type = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            else:
+                media_type = "application/pdf"
+        elif kind_norm == "infographic":
+            media_type = "image/png"
+
+        return FileResponse(
+            path=tmp_path,
+            media_type=media_type,
+            filename=f"{artifact_id}{suffix}",
+        )
+    except Exception as exc:
+        cleanup_file()
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 @app.get("/notebooks")

@@ -35,23 +35,29 @@ const docGroups: DocGroup[] = [
     label: "Integrations",
     icon: Plug,
     links: [
+      { href: "/docs/mcp", label: "MCP Connector" },
       { href: "/docs/integrations/notebooklm", label: "NotebookLM" },
       { href: "/docs/integrations/google-drive", label: "Google Drive" },
       { href: "/docs/integrations/google-docs", label: "Google Docs" },
+      { href: "/docs/integrations/job-boards", label: "Job Boards" },
       { href: "/docs/integrations/openroute", label: "OpenRoute" },
+      { href: "/docs/integrations/vpc-tunnel", label: "VPC & Tunnel" },
     ],
   },
   {
     label: "Data",
     icon: Database,
-    links: [{ href: "/docs/database", label: "Database Schema" }],
+    links: [
+      { href: "/docs/database", label: "Database Schema" },
+      { href: "/docs/salary-percentiles", label: "Salary Percentiles" },
+    ],
   },
   {
     label: "Pipelines",
     icon: Workflow,
     links: [
-      { href: "/docs/greenhouse-aggregator", label: "Greenhouse Aggregator (A)" },
-      { href: "/docs/greenhouse-tracker", label: "Greenhouse Tracker (B)" },
+      { href: "/docs/discovery-board-aggregator", label: "Discovery Board Aggregator (A)" },
+      { href: "/docs/active-board-tracker", label: "Active Board Tracker (B)" },
       { href: "/docs/role-intake", label: "Role Intake" },
       { href: "/docs/role-viewport", label: "Role Viewport" },
       { href: "/docs/role-insights", label: "Role Insights" },
@@ -65,6 +71,7 @@ const docGroups: DocGroup[] = [
       { href: "/docs/agents/orchestrator", label: "OrchestratorAgent" },
       { href: "/docs/agents/notebooklm", label: "NotebookLMAgent" },
       { href: "/docs/agents/notebooklm-mcp", label: "NotebookLMMcpAgent" },
+      { href: "/docs/agents/core-resumes-mcp", label: "CoreResumesMcpAgent" },
     ],
   },
   {

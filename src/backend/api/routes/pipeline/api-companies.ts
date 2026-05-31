@@ -7,11 +7,11 @@ import { getAgentByName } from "agents";
 import { eq, inArray, sql } from "drizzle-orm";
 
 import { getDb } from "@/backend/db";
-import { apiCompanies, apiCompanySyncStats, jobsPostings } from "@/backend/db/schema";
+import { apiCompanies, apiCompanySyncStats, jobsPostings, syncRunEvents } from "@/backend/db/schema";
 import { getGithubToken } from "@/backend/utils/secrets";
 import { Logger } from "@/backend/lib/logger";
 
-import { syncApiCompaniesBody, syncProgressBody } from "./types";
+import { syncApiCompaniesBody, syncProgressBody, syncRunEventSchema, syncStatsWithMetaSchema } from "./types";
 
 /**
  * GitHub repository the worker dispatches sync runs to.
@@ -140,12 +140,13 @@ apiCompaniesRouter.openapi(
       }
 
       let insertedCount = 0;
-      for (let i = 0; i < newTokens.length; i += INSERT_CHUNK) {
-        const chunk = newTokens.slice(i, i + INSERT_CHUNK);
-        const insertedRows = await db
-          .insert(apiCompanies)
-          .values(
-            chunk.map((t) => ({
+      const INSERT_BATCH_SIZE = 50;
+      for (let i = 0; i < newTokens.length; i += INSERT_BATCH_SIZE) {
+        const chunk = newTokens.slice(i, i + INSERT_BATCH_SIZE);
+        const insertStmts = chunk.map((t) =>
+          db
+            .insert(apiCompanies)
+            .values({
               jobBoardToken: t.token,
               system: t.system,
               source: t.source,
@@ -153,11 +154,15 @@ apiCompaniesRouter.openapi(
               timestampAdded: now,
               isRecommended: t.isRecommended ?? false,
               recommendationReason: t.recommendationReason ?? null,
-            })),
-          )
-          .onConflictDoNothing()
-          .returning({ id: apiCompanies.id });
-        insertedCount += insertedRows.length;
+            })
+            .onConflictDoNothing()
+            .returning({ id: apiCompanies.id })
+        );
+
+        if (insertStmts.length > 0) {
+          const results = await db.batch(insertStmts as any);
+          insertedCount += results.filter((r) => Array.isArray(r) && r.length > 0).length;
+        }
       }
 
       // Update recommendation status for recommended companies in the sync payload
@@ -180,6 +185,7 @@ apiCompaniesRouter.openapi(
         jobSiteId: string;
         jobTitle: string;
         company: string;
+        location: string | null;
         triagePassed: boolean;
         triageReason: string;
       }[] = [];
@@ -190,7 +196,8 @@ apiCompaniesRouter.openapi(
             allRecommendedJobs.push({
               jobSiteId: job.id.toString(),
               jobTitle: job.title,
-              company: t.token, // Store company token as the company name
+              company: t.token,
+              location: job.location || null,
               triagePassed: true,
               triageReason: `Discovered and matched during aggregator sync: '${job.title}' in '${job.location}'`,
             });
@@ -200,15 +207,28 @@ apiCompaniesRouter.openapi(
 
       // Batch insert the recommended jobs into the database
       let jobsInserted = 0;
-      const JOB_INSERT_CHUNK = 10; // 5 fields * 10 = 50 parameters (well within 100 limit)
-      for (let i = 0; i < allRecommendedJobs.length; i += JOB_INSERT_CHUNK) {
-        const chunk = allRecommendedJobs.slice(i, i + JOB_INSERT_CHUNK);
-        const rows = await db
-          .insert(jobsPostings)
-          .values(chunk)
-          .onConflictDoNothing()
-          .returning({ id: jobsPostings.id });
-        jobsInserted += rows.length;
+      const JOB_BATCH_SIZE = 50;
+      for (let i = 0; i < allRecommendedJobs.length; i += JOB_BATCH_SIZE) {
+        const chunk = allRecommendedJobs.slice(i, i + JOB_BATCH_SIZE);
+        const insertStmts = chunk.map((job) =>
+          db
+            .insert(jobsPostings)
+            .values({
+              jobSiteId: job.jobSiteId,
+              jobTitle: job.jobTitle,
+              company: job.company,
+              location: job.location,
+              triagePassed: job.triagePassed,
+              triageReason: job.triageReason,
+            })
+            .onConflictDoNothing()
+            .returning({ id: jobsPostings.id })
+        );
+
+        if (insertStmts.length > 0) {
+          const results = await db.batch(insertStmts as any);
+          jobsInserted += results.filter((r) => Array.isArray(r) && r.length > 0).length;
+        }
       }
 
       if (jobsInserted > 0) {
@@ -278,22 +298,11 @@ apiCompaniesRouter.openapi(
     operationId: "getApiCompaniesSyncStats",
     responses: {
       200: {
-        description: "List of sync stats",
+        description: "List of sync stats with event metadata",
         content: {
           "application/json": {
             schema: z.object({
-              stats: z.array(
-                z.object({
-                  id: z.number(),
-                  runTimestamp: z.string(),
-                  filesProcessed: z.number(),
-                  companiesAdded: z.number(),
-                  companiesDeactivated: z.number(),
-                  companiesReactivated: z.number(),
-                  status: z.string(),
-                  error: z.string().nullable(),
-                }),
-              ),
+              stats: z.array(syncStatsWithMetaSchema),
             }),
           },
         },
@@ -311,20 +320,49 @@ apiCompaniesRouter.openapi(
     // reverse to get desc
     stats.reverse();
 
-    return c.json(
-      {
-        stats: stats.map((s) => ({
-          ...s,
-          // Drizzle's timestamp mode normally returns a Date, but some D1
-          // driver paths can return a string/number. Be defensive.
+    // Enrich each run with event metadata
+    const enriched = await Promise.all(
+      stats.map(async (s) => {
+        // Count events and compute duration from first to last event
+        const events = await db
+          .select({
+            id: syncRunEvents.id,
+            createdAt: syncRunEvents.createdAt,
+          })
+          .from(syncRunEvents)
+          .where(eq(syncRunEvents.syncStatsId, s.id))
+          .orderBy(syncRunEvents.createdAt);
+
+        let durationMs: number | null = null;
+        if (events.length >= 2) {
+          const first = events[0].createdAt instanceof Date
+            ? events[0].createdAt.getTime()
+            : new Date(events[0].createdAt as unknown as number).getTime();
+          const last = events[events.length - 1].createdAt instanceof Date
+            ? events[events.length - 1].createdAt.getTime()
+            : new Date(events[events.length - 1].createdAt as unknown as number).getTime();
+          durationMs = last - first;
+        }
+
+        return {
+          id: s.id,
           runTimestamp:
             s.runTimestamp instanceof Date
               ? s.runTimestamp.toISOString()
               : String(s.runTimestamp),
-        })),
-      },
-      200,
+          filesProcessed: s.filesProcessed,
+          companiesAdded: s.companiesAdded,
+          companiesDeactivated: s.companiesDeactivated,
+          companiesReactivated: s.companiesReactivated,
+          status: s.status,
+          error: s.error ?? null,
+          durationMs,
+          eventsCount: events.length,
+        };
+      })
     );
+
+    return c.json({ stats: enriched }, 200);
   },
 );
 
@@ -491,9 +529,56 @@ apiCompaniesRouter.openapi(
 );
 
 /**
- * POST /api-companies/sync-progress — Receive progress from GitHub action script
- * and fan it out to all connected Pipeline dashboard WebSocket clients via
- * SyncBroadcastAgent (dedicated Agent DO for broadcasting).
+ * Map sync-progress status values to workflow step numbers.
+ * Mirrors the frontend stepper logic in PipelineOperations.tsx.
+ */
+function statusToStepNumber(status: string): number | null {
+  switch (status) {
+    case "dispatching":
+    case "trigger-sync":
+      return 1;
+    case "initializing":
+    case "fetching_upstream":
+    case "fetching":
+    case "loading_sources":
+      return 2;
+    case "scraping":
+    case "parsing":
+    case "processing":
+    case "mapping":
+      return 3;
+    case "saving_db":
+    case "ingesting":
+    case "writing_d1":
+    case "updating_database":
+      return 4;
+    case "completed":
+    case "success":
+    case "failed":
+    case "error":
+    case "salary_sync":
+    case "salary_sync_complete":
+    case "salary_sync_failed":
+      return 5;
+    default:
+      return null;
+  }
+}
+
+/**
+ * Classify a sync-progress status into an event type.
+ */
+function statusToEventType(status: string): string {
+  if (status === "completed" || status === "success" || status === "salary_sync_complete") return "completed";
+  if (status === "failed" || status === "error" || status === "salary_sync_failed") return "failed";
+  if (status === "dispatching" || status === "trigger-sync" || status === "initializing") return "step_start";
+  return "progress";
+}
+
+/**
+ * POST /api-companies/sync-progress — Receive progress from GitHub action script,
+ * persist to D1, and fan out to all connected Pipeline dashboard WebSocket clients
+ * via SyncBroadcastAgent (dedicated Agent DO for broadcasting).
  */
 apiCompaniesRouter.openapi(
   createRoute({
@@ -510,6 +595,7 @@ apiCompaniesRouter.openapi(
   async (c) => {
     const body = c.req.valid("json");
     const logger = new Logger(c.env);
+    const db = getDb(c.env);
 
     const logMetadata = {
       status: body.status,
@@ -526,10 +612,45 @@ apiCompaniesRouter.openapi(
       await logger.info(logMessage, logMetadata);
     }
 
+    // Persist event to D1 for historical reconstruction.
+    // Find the most recent in-progress sync stats row to link the event.
+    let syncStatsId: number | null = null;
+    try {
+      const recentStats = await db
+        .select({ id: apiCompanySyncStats.id })
+        .from(apiCompanySyncStats)
+        .orderBy(sql`id DESC`)
+        .limit(1);
+
+      if (recentStats.length > 0) {
+        syncStatsId = recentStats[0].id;
+      }
+    } catch {
+      // Non-critical — event still gets persisted without the FK
+    }
+
+    try {
+      await db.insert(syncRunEvents).values({
+        syncStatsId,
+        eventType: statusToEventType(body.status),
+        stepNumber: statusToStepNumber(body.status),
+        status: body.status,
+        message: body.message ?? null,
+        current: body.current ?? null,
+        total: body.total ?? null,
+      });
+    } catch (e) {
+      await logger.warn(
+        `[Aggregator Sync Progress] Failed to persist event to D1: ${
+          e instanceof Error ? e.message : String(e)
+        }`,
+      );
+    }
+
     // Fan out to every open Pipeline dashboard WebSocket via SyncBroadcastAgent.
     // Failures here must not 500 the GitHub Action — log and swallow.
     try {
-      const agent = await getAgentByName(c.env.SYNC_BROADCAST_AGENT, "global");
+      const agent = (await getAgentByName(c.env.SYNC_BROADCAST_AGENT as any, "global")) as any;
       await agent.reportProgress(body);
     } catch (e) {
       await logger.warn(
@@ -540,6 +661,63 @@ apiCompaniesRouter.openapi(
     }
 
     return c.json({ success: true }, 200);
+  },
+);
+
+/**
+ * GET /api-companies/sync-stats/:id/events — Historical events for a specific sync run.
+ * Returns all sync_run_events rows linked to the given sync_stats_id.
+ */
+apiCompaniesRouter.openapi(
+  createRoute({
+    method: "get",
+    path: "/api-companies/sync-stats/{id}/events",
+    operationId: "getApiCompaniesSyncRunEvents",
+    request: {
+      params: z.object({
+        id: z.string().openapi({ description: "Sync stats ID" }),
+      }),
+    },
+    responses: {
+      200: {
+        description: "List of sync run events for the given run",
+        content: {
+          "application/json": {
+            schema: z.object({
+              events: z.array(syncRunEventSchema),
+            }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    const db = getDb(c.env);
+    const { id } = c.req.valid("param");
+    const numericId = parseInt(id, 10);
+
+    if (isNaN(numericId)) {
+      return c.json({ events: [] }, 200);
+    }
+
+    const events = await db
+      .select()
+      .from(syncRunEvents)
+      .where(eq(syncRunEvents.syncStatsId, numericId))
+      .orderBy(syncRunEvents.createdAt);
+
+    return c.json(
+      {
+        events: events.map((e) => ({
+          ...e,
+          createdAt:
+            e.createdAt instanceof Date
+              ? e.createdAt.toISOString()
+              : String(e.createdAt),
+        })),
+      },
+      200,
+    );
   },
 );
 
@@ -610,31 +788,53 @@ apiCompaniesRouter.openapi(
     },
   }),
   async (c) => {
+    const db = getDb(c.env);
+    const { globalConfig } = await import("@/backend/db/schema");
+    
+    let titles = [
+      "software engineer",
+      "software developer",
+      "frontend",
+      "backend",
+      "fullstack",
+      "full stack",
+      "engineer",
+      "developer",
+      "platform",
+      "infrastructure",
+      "devops",
+    ];
+    let locations = [
+      "remote",
+      "san francisco",
+      "sf",
+      "bay area",
+      "california",
+      "united states",
+      "us",
+      "usa",
+    ];
+
+    try {
+      const [row] = await db
+        .select({ value: globalConfig.value })
+        .from(globalConfig)
+        .where(eq(globalConfig.key, "applicant_profile"))
+        .limit(1);
+
+      if (row?.value) {
+        const parsed = typeof row.value === "string" ? JSON.parse(row.value) : row.value;
+        if (parsed.target_roles) titles = parsed.target_roles;
+        if (parsed.locations) locations = parsed.locations;
+      }
+    } catch {
+      // Fallback on error
+    }
+
     return c.json(
       {
-        titles: [
-          "software engineer",
-          "software developer",
-          "frontend",
-          "backend",
-          "fullstack",
-          "full stack",
-          "engineer",
-          "developer",
-          "platform",
-          "infrastructure",
-          "devops",
-        ],
-        locations: [
-          "remote",
-          "san francisco",
-          "sf",
-          "bay area",
-          "california",
-          "united states",
-          "us",
-          "usa",
-        ],
+        titles,
+        locations,
       },
       200,
     );
@@ -769,32 +969,60 @@ apiCompaniesRouter.openapi(
     const logger = new Logger(c.env);
 
     try {
-      // 1. Update the company to be recommended
-      await db
-        .update(apiCompanies)
-        .set({
-          isRecommended: true,
-          recommendationReason: body.recommendationReason,
-        })
-        .where(eq(apiCompanies.jobBoardToken, body.token));
+      // 1. Upsert/Update the company
+      const existing = await db
+        .select({ id: apiCompanies.id })
+        .from(apiCompanies)
+        .where(eq(apiCompanies.jobBoardToken, body.token))
+        .limit(1);
+
+      if (existing.length > 0) {
+        await db
+          .update(apiCompanies)
+          .set({
+            isRecommended: true,
+            recommendationReason: body.recommendationReason,
+            isActive: true,
+            timestampInactive: null,
+          })
+          .where(eq(apiCompanies.id, existing[0].id));
+      } else {
+        await db
+          .insert(apiCompanies)
+          .values({
+            jobBoardToken: body.token,
+            system: body.system,
+            source: body.source,
+            isActive: true,
+            isRecommended: true,
+            recommendationReason: body.recommendationReason,
+            timestampAdded: now,
+          });
+      }
 
       // 2. Ingest any recommended jobs directly
       let jobsInserted = 0;
       if (body.jobs && body.jobs.length > 0) {
-        const jobValues = body.jobs.map((job) => ({
-          jobSiteId: job.id.toString(),
-          jobTitle: job.title,
-          company: body.token,
-          triagePassed: true,
-          triageReason: `Discovered and matched during real-time REST API recommend push: '${job.title}' in '${job.location}'`,
-        }));
+        const insertPromises = body.jobs.map((job) =>
+          db
+            .insert(jobsPostings)
+            .values({
+              jobSiteId: job.id.toString(),
+              jobTitle: job.title,
+              company: body.token,
+              location: job.location,
+              triagePassed: true,
+              triageReason: `Discovered and matched during real-time REST API recommend push: '${job.title}' in '${job.location}'`,
+              isRecommended: true,
+              recommendationScore: 100,
+              recommendationReason: body.recommendationReason,
+            })
+            .onConflictDoNothing()
+            .returning({ id: jobsPostings.id })
+        );
 
-        const rows = await db
-          .insert(jobsPostings)
-          .values(jobValues)
-          .onConflictDoNothing()
-          .returning({ id: jobsPostings.id });
-        jobsInserted = rows.length;
+        const results = await db.batch(insertPromises as any);
+        jobsInserted = results.filter((r) => Array.isArray(r) && r.length > 0).length;
       }
 
       await logger.info(`[Aggregator Sync] Saved real-time matching recommendation for ${body.token} (${jobsInserted} jobs).`, {

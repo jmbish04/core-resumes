@@ -60,7 +60,7 @@ export class RoleAnalysisWorkflow extends WorkflowEntrypoint<Env, Params> {
 
     // Communicate progress back to the Orchestrator Agent via Agents SDK RPC
     const notifyAgent = async (status: string, percent: number) => {
-      const stub = await getAgentByName(this.env.ORCHESTRATOR_AGENT, orchestratorAgentName);
+      const stub = (await getAgentByName(this.env.ORCHESTRATOR_AGENT as any, orchestratorAgentName)) as any;
       await stub.handleWorkflowProgress({ roleId, status, percent });
     };
 

@@ -1,4 +1,4 @@
-import { ArrowUpDown, MoreHorizontal, Trash2 } from "lucide-react";
+import { ArrowUpDown, Loader2, MoreHorizontal, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -28,7 +28,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { apiDelete, apiGet, toast } from "@/lib/api-client";
+import { apiDelete, apiGet, apiPost, toast } from "@/lib/api-client";
+
+const GREENHOUSE_PATTERN =
+  /^https?:\/\/(?:job-boards|boards)\.greenhouse\.io\/(?:embed\/job_app\?.*?(?:token=([^&]+).*?id=([^&]+)|id=([^&]+).*?token=([^&]+))|([^/]+)\/jobs\/(\d+))/i;
+
+function parseGreenhouseToken(url: string | null): string | null {
+  if (!url) return null;
+  const match = url.match(GREENHOUSE_PATTERN);
+  if (!match) return null;
+  if (match[5]) return match[5];
+  return match[1] || match[4] || null;
+}
 
 import type { RoleRow } from "../dashboard/types";
 
@@ -43,6 +54,37 @@ const statuses = [
   "withdrawn",
   "archived",
 ];
+
+/** Maps status slug → human-readable label for filter buttons and badges. */
+const STATUS_LABELS: Record<string, string> = {
+  preparing: "Preparing",
+  processing_error: "Error",
+  posting_expired: "Expired",
+  applied: "Applied",
+  interviewing: "Interviewing",
+  offer: "Offer",
+  negotiating: "Negotiating",
+  accepted: "Accepted",
+  rejected: "Rejected",
+  withdrawn: "Withdrawn",
+  archived: "Archived",
+};
+
+/** Badge color classes per status — mirrors RoleHeader STATUS_META. */
+const STATUS_BADGE_CLASSES: Record<string, string> = {
+  preparing: "border-blue-500/40 bg-blue-500/10 text-blue-400",
+  processing_error: "border-orange-500/40 bg-orange-500/10 text-orange-400",
+  posting_expired: "border-zinc-500/40 bg-zinc-500/10 text-zinc-400",
+  applied: "border-cyan-500/40 bg-cyan-500/10 text-cyan-400",
+  interviewing: "border-amber-500/40 bg-amber-500/10 text-amber-400",
+  offer: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
+  negotiating: "border-violet-500/40 bg-violet-500/10 text-violet-400",
+  accepted: "border-emerald-500/40 bg-emerald-500/10 text-emerald-400",
+  rejected: "border-red-500/40 bg-red-500/10 text-red-400",
+  withdrawn: "border-slate-500/40 bg-slate-500/10 text-slate-400",
+  archived: "border-zinc-500/40 bg-zinc-500/10 text-zinc-500",
+};
+
 type SortKey = "companyName" | "jobTitle" | "status" | "createdAt";
 
 export function RolesTable() {
@@ -54,10 +96,20 @@ export function RolesTable() {
   const [deleteTarget, setDeleteTarget] = useState<RoleRow | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const [trackedTokens, setTrackedTokens] = useState<Set<string>>(new Set());
+  const [promotingToken, setPromotingToken] = useState<string | null>(null);
+
   useEffect(() => {
     apiGet<RoleRow[]>("/api/roles")
       .then(setRows)
       .finally(() => setLoading(false));
+
+    apiGet<{ tokens: { token: string }[] }>("/api/pipeline/board-tokens")
+      .then((res) => {
+        const tokens = new Set(res.tokens.map((t) => t.token));
+        setTrackedTokens(tokens);
+      })
+      .catch(() => {});
   }, []);
 
   const visibleRows = useMemo(() => {
@@ -113,7 +165,7 @@ export function RolesTable() {
               variant={status === item ? "secondary" : "outline"}
               onClick={() => setStatus(item)}
             >
-              {item}
+              {item === "all" ? "All" : (STATUS_LABELS[item] ?? item)}
             </Button>
           ))}
         </div>
@@ -160,15 +212,81 @@ export function RolesTable() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <a
-                      className="font-medium hover:underline text-foreground"
-                      href={`/roles/${role.id}`}
-                    >
-                      {role.jobTitle}
-                    </a>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <a
+                        className="font-medium hover:underline text-foreground"
+                        href={`/roles/${role.id}`}
+                      >
+                        {role.jobTitle}
+                      </a>
+                      {role.source === "pipeline_scan" && (
+                        <Badge
+                          variant="outline"
+                          className="border-blue-500/30 text-blue-400 bg-blue-500/10 text-[10px] h-5 px-1.5 flex items-center"
+                        >
+                          Pipeline Scan
+                        </Badge>
+                      )}
+                      {(() => {
+                        const token = parseGreenhouseToken(role.jobUrl);
+                        if (token && !trackedTokens.has(token)) {
+                          return (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="xs"
+                              className="border-amber-500/30 text-amber-500 hover:bg-amber-500/10 text-[9px] h-5 px-1.5 font-semibold transition-colors"
+                              disabled={promotingToken === token}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                setPromotingToken(token);
+                                try {
+                                  await apiPost("/api/pipeline/board-tokens", {
+                                    token,
+                                    companyName: role.companyName,
+                                    isActive: true,
+                                  });
+                                  setTrackedTokens((prev) => {
+                                    const next = new Set(prev);
+                                    next.add(token);
+                                    return next;
+                                  });
+                                  toast({
+                                    title: "Tracking Activated",
+                                    description: `Added '${role.companyName}' (${token}) to Pipeline B scraper.`,
+                                  });
+                                } catch (err) {
+                                  toast({
+                                    title: "Promotion Failed",
+                                    description: err instanceof Error ? err.message : "Unknown error",
+                                    variant: "destructive",
+                                  });
+                                } finally {
+                                  setPromotingToken(null);
+                                }
+                              }}
+                            >
+                              {promotingToken === token ? (
+                                <Loader2 className="size-2.5 animate-spin mr-1" />
+                              ) : (
+                                "+ "
+                              )}
+                              Track Company
+                            </Button>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{role.status}</Badge>
+                    <Badge
+                      variant="outline"
+                      className={STATUS_BADGE_CLASSES[role.status] ?? "border-border"}
+                    >
+                      {STATUS_LABELS[role.status] ?? role.status}
+                    </Badge>
                   </TableCell>
                   <TableCell>{formatSalary(role)}</TableCell>
                   <TableCell>{new Date(role.createdAt).toLocaleDateString()}</TableCell>

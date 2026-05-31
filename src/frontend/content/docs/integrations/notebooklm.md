@@ -213,12 +213,12 @@ Start it locally:
 scripts/.venv/bin/python3 scripts/notebooklm_fastapi_server.py
 ```
 
-By default it binds to `127.0.0.1:8789`. Configure with:
+By default it binds to `127.0.0.1:8770`. Configure with:
 
 | Variable                        | Purpose                                                          | Default     |
 | ------------------------------- | ---------------------------------------------------------------- | ----------- |
 | `NOTEBOOKLM_FASTAPI_HOST`       | Bind host                                                        | `127.0.0.1` |
-| `NOTEBOOKLM_FASTAPI_PORT`       | Bind port                                                        | `8789`      |
+| `NOTEBOOKLM_FASTAPI_PORT`       | Bind port                                                        | `8770`      |
 | `NOTEBOOKLM_FASTAPI_KEY`        | Optional API key for `x-api-key` or `Authorization: Bearer` auth | unset       |
 | `NOTEBOOKLM_PROFILE`            | `notebooklm-py` profile / storage path name                      | `jmbish04`  |
 | `NOTEBOOKLM_CHROME_PROFILE_DIR` | Chrome profile directory used for cookie refresh                 | `Profile 6` |
@@ -245,13 +245,13 @@ The generic RPC route maps directly to installed notebooklm-py namespaces: `note
 Example:
 
 ```bash
-curl -s http://127.0.0.1:8789/notebooks
+curl -s http://127.0.0.1:8770/notebooks
 
-curl -s http://127.0.0.1:8789/notebooks/NOTEBOOK_ID/chat/ask \
+curl -s http://127.0.0.1:8770/notebooks/NOTEBOOK_ID/chat/ask \
   -H 'content-type: application/json' \
   -d '{"question":"What is this notebook about?"}'
 
-curl -s http://127.0.0.1:8789/rpc/artifacts/suggest_reports \
+curl -s http://127.0.0.1:8770/rpc/artifacts/suggest_reports \
   -H 'content-type: application/json' \
   -d '{"args":["NOTEBOOK_ID"]}'
 ```

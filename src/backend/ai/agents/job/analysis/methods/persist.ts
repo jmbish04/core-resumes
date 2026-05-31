@@ -27,7 +27,7 @@ export async function handlePersist(
     await db
       .update(jobSnapshots)
       .set({
-        rawAssessmentJson: JSON.stringify(analysisResult),
+        rawAssessmentJson: analysisResult,
         matchScore: analysisResult.matchScore,
         matchRationale: analysisResult.matchRationale,
         verdict: analysisResult.verdict,

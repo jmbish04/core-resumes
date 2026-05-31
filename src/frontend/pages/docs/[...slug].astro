@@ -6,7 +6,7 @@ import { SchemaViewer } from "@/components/docs/SchemaViewer";
 import { AgentCard } from "@/components/docs/AgentCard";
 import { GoogleDocPreview } from "@/components/docs/GoogleDocPreview";
 import { NotebookInfoCard } from "@/components/docs/NotebookInfo";
-import { Sidebar } from "@/components/Sidebar";
+import { VPCTunnelStatus } from "@/components/docs/VPCTunnelStatus";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { ChevronRight } from "lucide-react";
 
@@ -29,8 +29,9 @@ const agentClassName = showAgentCard ? getAgentClassName(slug) : null;
 const showNotebookInfo = slug === "integrations/notebooklm";
 const showResumePreview = slug === "resume-template";
 const showCoverLetterPreview = slug === "cover-letter-template";
-const showPipelineAAggregator = slug === "greenhouse-aggregator";
-const showPipelineBTracker = slug === "greenhouse-tracker";
+const showPipelineAAggregator = slug === "discovery-board-aggregator";
+const showPipelineBTracker = slug === "active-board-tracker";
+const showVPCTunnelStatus = slug === "integrations/vpc-tunnel";
 
 function getAgentClassName(s: string): string | null {
   const map: Record<string, string> = {
@@ -52,8 +53,7 @@ const breadcrumbs = pathParts.map((part, index) => {
 ---
 
 <BaseLayout title={`Docs | Career Orchestrator`} description="Technical documentation for the Career Orchestrator application.">
-  <div class="flex flex-1 relative">
-    <Sidebar client:load />
+  <div class="flex flex-1 relative font-sans">
     <DocsSidebar client:load />
     
     <main class="min-w-0 flex-1 relative flex">
@@ -106,6 +106,7 @@ const breadcrumbs = pathParts.map((part, index) => {
           {showCoverLetterPreview && <GoogleDocPreview client:load docType="coverLetter" title="Cover Letter Template" />}
           {showPipelineAAggregator && <PipelineAAggregatorDocs client:load />}
           {showPipelineBTracker && <PipelineBTrackerDocs client:load />}
+          {showVPCTunnelStatus && <VPCTunnelStatus client:load />}
         </div>
       </div>
 
@@ -199,11 +200,86 @@ const breadcrumbs = pathParts.map((part, index) => {
     headings.forEach((h) => observer.observe(h));
   }
 
-  // Support for both standard load and Astro view transitions
-  document.addEventListener('astro:page-load', setupScrollSpy);
-  if (document.readyState === 'complete') {
+  async function setupMermaid() {
+    const preBlocks = Array.from(document.querySelectorAll('pre'));
+    const mermaidBlocks: HTMLPreElement[] = [];
+
+    preBlocks.forEach((pre) => {
+      const code = pre.querySelector('code');
+      const text = (code?.textContent || pre.textContent || '').trim();
+      
+      const isMermaidClass = pre.classList.contains('language-mermaid') || 
+                             code?.classList.contains('language-mermaid') ||
+                             pre.classList.contains('mermaid') ||
+                             code?.classList.contains('mermaid');
+                             
+      const startsWithMermaidKeyword = text.startsWith('flowchart') || 
+                                       text.startsWith('sequenceDiagram') || 
+                                       text.startsWith('graph ') || 
+                                       text.startsWith('gantt') ||
+                                       text.startsWith('classDiagram') ||
+                                       text.startsWith('stateDiagram') ||
+                                       text.startsWith('erDiagram') ||
+                                       text.startsWith('journey') ||
+                                       text.startsWith('mindmap') ||
+                                       text.startsWith('timeline') ||
+                                       text.startsWith('gitGraph');
+
+      if (isMermaidClass || startsWithMermaidKeyword) {
+        mermaidBlocks.push(pre);
+      }
+    });
+
+    if (mermaidBlocks.length === 0) return;
+
+    try {
+      // @ts-ignore
+      const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs');
+      
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'dark',
+        themeVariables: {
+          background: '#0c0a09', // Match shadcn dark background
+          primaryColor: '#f97316', // Orange-500 primary accent
+          primaryTextColor: '#fafaf9',
+          lineColor: '#44403c',
+        },
+        securityLevel: 'loose',
+      });
+
+      for (const pre of mermaidBlocks) {
+        const code = pre.querySelector('code');
+        const text = (code?.textContent || pre.textContent || '').trim();
+        
+        const div = document.createElement('div');
+        div.className = 'mermaid flex justify-center py-6 overflow-x-auto w-full';
+        div.textContent = text;
+        
+        pre.parentNode?.replaceChild(div, pre);
+        
+        try {
+          await mermaid.run({ nodes: [div] });
+        } catch (renderErr) {
+          console.error('[Mermaid] Failed to render block:', renderErr);
+          div.innerHTML = `<div class="text-destructive text-sm font-mono p-4 border border-destructive/20 rounded bg-destructive/10">Failed to render Mermaid chart. Raw:<pre class="mt-2 text-xs text-muted-foreground">${text}</pre></div>`;
+        }
+      }
+    } catch (err) {
+      console.error('[Mermaid] Failed to load/run mermaid:', err);
+    }
+  }
+
+  function initialize() {
     setupScrollSpy();
+    setupMermaid();
+  }
+
+  // Support for both standard load and Astro view transitions
+  document.addEventListener('astro:page-load', initialize);
+  if (document.readyState === 'complete') {
+    initialize();
   } else {
-    window.addEventListener('DOMContentLoaded', setupScrollSpy);
+    window.addEventListener('DOMContentLoaded', initialize);
   }
 </script>

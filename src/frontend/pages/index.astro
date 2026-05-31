@@ -5,6 +5,7 @@ import { PendingTasks } from "@/components/dashboard/PendingTasks";
 import { PreparingList } from "@/components/dashboard/PreparingList";
 import { RecentEmails } from "@/components/dashboard/RecentEmails";
 import { SalaryRangeChart } from "@/components/dashboard/SalaryRangeChart";
+import { MarketSalaryStatsCard } from "@/components/dashboard/MarketSalaryStatsCard";
 import { StatCards } from "@/components/dashboard/StatCards";
 import { IntakeModal } from "@/components/intake/IntakeModal";
 import { Sidebar } from "@/components/Sidebar";
@@ -32,10 +33,12 @@ if (!Astro.cookies.has("cr_session")) {
 
         <StatCards client:load />
 
-        <div class="grid gap-5 xl:grid-cols-2">
+        <div class="grid gap-5 lg:grid-cols-3">
           <JobsByCompanyChart client:load />
           <SalaryRangeChart client:load />
+          <MarketSalaryStatsCard client:load />
         </div>
+
 
         <div class="grid gap-5 xl:grid-cols-3">
           <PreparingList client:load />

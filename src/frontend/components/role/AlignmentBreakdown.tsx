@@ -8,6 +8,7 @@ import {
   Loader2Icon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 import {
   Accordion,
@@ -88,6 +89,17 @@ const TIER_CONFIG = {
   },
 } as const;
 
+/**
+ * Normalize AI-generated text that contains inline numbered lists
+ * (e.g. "...text. 2. Next item 3. Another") into proper markdown
+ * with line breaks before each numbered item.
+ */
+function normalizeMarkdownList(text: string): string {
+  // Insert a double newline before numbered list items that follow prose text
+  // Match patterns like: "sentence end. 2." or "sentence end: 2." or "sentence end; 2."
+  return text.replace(/([.!?:;])(\s+)(\d+\.\s)/g, "$1\n\n$3");
+}
+
 // ---------------------------------------------------------------------------
 // AlignmentItem — single item within a tier
 // ---------------------------------------------------------------------------
@@ -112,9 +124,9 @@ function AlignmentItem({ item }: { item: AlignmentScore }) {
         />
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="pl-14 pr-3 pb-2">
-          <p className="text-sm text-muted-foreground leading-relaxed">{item.rationale}</p>
-        </div>
+          <div className="prose prose-sm dark:prose-invert max-w-none text-left pl-14 pr-3 pb-2">
+            <ReactMarkdown>{normalizeMarkdownList(item.rationale)}</ReactMarkdown>
+          </div>
       </CollapsibleContent>
     </Collapsible>
   );
@@ -170,9 +182,9 @@ function HolisticRationale({ items }: { items: AlignmentScore[] }) {
       <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Holistic Assessment
       </span>
-      <p className="text-sm text-muted-foreground leading-relaxed mt-1">
-        {holistic.holisticRationale}
-      </p>
+      <div className="prose prose-sm dark:prose-invert max-w-none text-left mt-1">
+        <ReactMarkdown>{normalizeMarkdownList(holistic.holisticRationale)}</ReactMarkdown>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,245 @@
+{
+  "companies": [
+    {
+      "company_name": "Anthropic",
+      "company_url": "https://job-boards.greenhouse.io/anthropic/jobs/5142374008",
+      "location": "San Francisco, CA / Remote",
+      "description": "AI safety public benefit corporation building reliable, steerable systems. The Legal Operations role involves managing internal tooling roadmaps, triaging custom tech requests, and building low-code/automated solutions to scale the legal team's capacity.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": "anthropic",
+        "ashby_token": null,
+        "lever_token": null
+      }
+    },
+    {
+      "company_name": "Harvey",
+      "company_url": "https://jobs.ashbyhq.com/harvey/046686ee-0ee4-42d9-875e-51af984b1122",
+      "location": "San Francisco, CA / Hybrid / Remote",
+      "description": "Generational AI startup focusing on automating and transforming legal and professional services end-to-end through frontier agentic architectures.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": "harvey",
+        "lever_token": null
+      }
+    },
+    {
+      "company_name": "Headway",
+      "company_url": "https://job-boards.greenhouse.io/headway/jobs/5532517004",
+      "location": "San Francisco, CA / New York, NY / Seattle, WA / Remote US",
+      "description": "Tech-enabled mental healthcare network building software to facilitate insurance tracking, billing automation, and provider scaling workflows.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": "headway",
+        "ashby_token": null,
+        "lever_token": null
+      }
+    },
+    {
+      "company_name": "Airtable",
+      "company_url": "https://airtable.com/careers",
+      "location": "San Francisco, CA / Mountain View, CA / Remote",
+      "description": "No-code and low-code relational database and app-building platform. Interview involves a practical problem project matching real platform constraints, architectural tradeoff discussions, and debugging loops.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": null,
+        "lever_token": null
+      }
+    },
+    {
+      "company_name": "BRYTER",
+      "company_url": "https://www.bryter.com/careers",
+      "location": "Remote",
+      "description": "No-code enterprise automation platform engineered specifically for corporate legal, compliance, and regulatory departments to automate administrative workflows.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": null,
+        "lever_token": null
+      }
+    },
+    {
+      "company_name": "Checkr",
+      "company_url": "https://checkr.com/company/careers",
+      "location": "San Francisco, CA / Remote",
+      "description": "API-driven background check and automated compliance workflow platform. Process screens via CoderPad followed by architectural design and refactoring components.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": null,
+        "lever_token": null
+      }
+    },
+    {
+      "company_name": "Aalyria",
+      "company_url": "https://ats.rippling.com/aalyria-careers/jobs",
+      "location": "Remote",
+      "description": "Spun out of advanced network orchestration protocols. The hiring pipeline uses timeboxed design architecture and coding assessments followed by programmatic systems roundtables.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": null,
+        "lever_token": null,
+        "rippling_token": "aalyria-careers"
+      }
+    },
+    {
+      "company_name": "Brooklyn Data Co",
+      "company_url": "https://www.brooklyndata.co",
+      "location": "Remote",
+      "description": "Data analytics and data engineering consulting firm focusing on building modern data pipelines, ETL infrastructure, and automated dashboards.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": null,
+        "lever_token": null
+      }
+    },
+    {
+      "company_name": "Abstract",
+      "company_url": "https://www.abstract.com",
+      "location": "San Francisco, CA",
+      "description": "Collaboration and version control platform for product design and engineering workflows.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": null,
+        "lever_token": null
+      }
+    },
+    {
+      "company_name": "Accenture",
+      "company_url": "https://www.accenture.com/us-en/careers",
+      "location": "San Francisco, CA / Remote",
+      "description": "Global enterprise solutions, digital transformation, and professional systems consulting. Involves conversational technical screenings with architecture leads focused on large-scale infrastructure deployments.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": null,
+        "lever_token": null
+      }
+    },
+    {
+      "company_name": "Accredible",
+      "company_url": "https://www.accredible.com/careers",
+      "location": "San Francisco, CA / Remote",
+      "description": "Digital credentialing infrastructure platform. Process features a practical take-home project followed by live pair programming and architectural reviews.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": null,
+        "lever_token": null
+      }
+    },
+    {
+      "company_name": "AgileMD",
+      "company_url": "https://www.agilemd.com",
+      "location": "San Francisco, CA",
+      "description": "Clinical decision support pipelines and data-driven healthcare workflow platforms requiring robust internal pipeline engineering.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": null,
+        "lever_token": null
+      }
+    },
+    {
+      "company_name": "Airbase",
+      "company_url": "https://www.airbase.com/careers",
+      "location": "San Francisco, CA / Remote",
+      "description": "Fintech spend management platform incorporating enterprise policy compliance, finance rules engines, and automated data entry integrations.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": null,
+        "lever_token": null
+      }
+    },
+    {
+      "company_name": "Angaza",
+      "company_url": "https://www.angaza.com/careers/",
+      "location": "San Francisco, CA",
+      "description": "B2B platform infrastructure scaling utility grid networks and financial tools. Interview processes prioritize worksamples mirroring day-to-day product operations.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": null,
+        "lever_token": null
+      }
+    },
+    {
+      "company_name": "Bustle",
+      "company_url": "https://jobs.lever.co/BDG?department=Product&team=Engineering",
+      "location": "Remote",
+      "description": "Digital media platform infrastructure. Process includes a half-day pairing session targeting actual backlog tickets or open-source infrastructure modifications.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": null,
+        "lever_token": "BDG"
+      }
+    },
+    {
+      "company_name": "CircleCI",
+      "company_url": "https://circleci.com",
+      "location": "San Francisco, CA / Remote",
+      "description": "Continuous integration and delivery automation platform. Process involves an initial take-home assignment followed by collaborative pairing to resolve live system bugs and user escalations.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": null,
+        "lever_token": null
+      }
+    },
+    {
+      "company_name": "DroneDeploy",
+      "company_url": "https://www.dronedeploy.com/careers.html",
+      "location": "San Francisco, CA",
+      "description": "Cloud-based visual data and reality capture platform that optimizes spatial analysis. Process utilizes collaborative product modeling and live systems testing.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": null,
+        "lever_token": null
+      }
+    },
+    {
+      "company_name": "Goalbook",
+      "company_url": "https://goalbookapp.com/careers/",
+      "location": "Remote",
+      "description": "EdTech platform that empowers educators to scale student learning objectives and track performance metrics via custom curriculum planning dashboards.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": null,
+        "lever_token": null
+      }
+    },
+    {
+      "company_name": "Graphistry",
+      "company_url": "https://www.graphistry.com",
+      "location": "San Francisco, CA / Remote",
+      "description": "Visual analytics and data engineering pipeline platform optimized for complex technical investigations and large-scale graph visualizations.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": null,
+        "lever_token": null
+      }
+    },
+    {
+      "company_name": "Upwave",
+      "company_url": "https://www.upwave.com/careers",
+      "location": "San Francisco, CA / Remote",
+      "description": "Analytics platform providing automated data attribution engines. Process includes take-home solution architectures and systems design review boards.",
+      "good_fit_for_background": true,
+      "job_board_tokens": {
+        "greenhouse_token": null,
+        "ashby_token": null,
+        "lever_token": null
+      }
+    }
+  ]
+}

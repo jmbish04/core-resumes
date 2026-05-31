@@ -46,7 +46,7 @@ const MODEL_MAP: Record<string, ModelDescriptor<any, any>> = {
 
 export const modelRegistry = {
   chat: kimi_k2_5,
-  extract: kimi_k2_6,
+  extract: kimi_k2_5,
   analyze: kimi_k2_5,
   draft: kimi_k2_5,
   embed: bge_large_en_v1_5,
@@ -63,7 +63,7 @@ export function getModelRegistry(env: Env) {
   return {
     ...modelRegistry,
     chat: resolveModel(env.MODEL_CHAT, kimi_k2_5),
-    extract: resolveModel(env.MODEL_EXTRACT, kimi_k2_6),
+    extract: resolveModel(env.MODEL_EXTRACT, kimi_k2_5),
     analyze: resolveModel(env.MODEL_ANALYZE ?? kimi_k2_5.id, kimi_k2_5),
     draft: resolveModel(env.MODEL_DRAFT, kimi_k2_5),
     embed: withModelId(modelRegistry.embed, env.DEFAULT_MODEL_EMBEDDING),

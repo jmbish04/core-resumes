@@ -1,0 +1,43 @@
+[
+  {
+    "id": "T1",
+    "title": "Create RoleChatAgent class and type definitions",
+    "description": "Scaffold `src/backend/ai/agents/chat/index.ts` containing the `RoleChatAgent` class that extends `AIChatAgent`. Ensure it has access to DB, roles, and AI bindings.",
+    "status": "pending"
+  },
+  {
+    "id": "T2",
+    "title": "Migrate streamText and Tools",
+    "description": "Copy the `streamText` configuration from `chat.ts` into the `onChatMessage` method of `RoleChatAgent`. Translate the 5 `tool()` definitions directly into the new agent's `tools` object. Use `options.body` or `this.env` where appropriate for role context.",
+    "status": "pending",
+    "dependencies": ["T1"]
+  },
+  {
+    "id": "T3",
+    "title": "Register DO in wrangler.jsonc and worker entrypoint",
+    "description": "Add `ROLE_CHAT_AGENT` to `durable_objects.bindings` and `new_sqlite_classes` in a new migration v6 inside `wrangler.jsonc`. Export it in `src/_worker.ts`.",
+    "status": "pending",
+    "dependencies": ["T1"]
+  },
+  {
+    "id": "T4",
+    "title": "Regenerate TypeScript Types",
+    "description": "Run `pnpm run types` to generate `worker-configuration.d.ts`.",
+    "status": "pending",
+    "dependencies": ["T3"]
+  },
+  {
+    "id": "T5",
+    "title": "Update Frontend Chat Provider",
+    "description": "Update `src/frontend/components/assistant-ui/RoleChatProvider.tsx` to use `useAgentChat({ agent: \"RoleChatAgent\", name: roleId })` from `agents/react`, replacing `useChatRuntime`.",
+    "status": "pending",
+    "dependencies": ["T4"]
+  },
+  {
+    "id": "T6",
+    "title": "Remove Legacy REST Chat Route",
+    "description": "Delete `src/backend/api/routes/chat.ts` and remove its reference from `src/backend/api/index.ts`. Ensure no build errors remain.",
+    "status": "pending",
+    "dependencies": ["T5"]
+  }
+]

@@ -7,6 +7,7 @@ import {
   ActionBarPrimitive,
   ErrorPrimitive,
   AuiIf,
+  AssistantModalPrimitive,
 } from "@assistant-ui/react";
 import {
   SendIcon,
@@ -19,8 +20,10 @@ import {
   RefreshCcwIcon,
   XCircleIcon,
   AlertTriangleIcon,
+  BotIcon,
+  XIcon,
 } from "lucide-react";
-import { useState, type ComponentPropsWithoutRef } from "react";
+import { useEffect, useState, type ComponentPropsWithoutRef } from "react";
 
 import { MarkdownText } from "./markdown-text";
 import { Reasoning } from "./reasoning";
@@ -33,6 +36,28 @@ import { ToolFallback } from "./tool-fallback";
 export function Thread() {
   return (
     <ThreadPrimitive.Root className="flex flex-col h-full">
+      {/* Header with Close Button */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
+        <div className="flex items-center gap-2">
+          <div className="rounded-lg bg-emerald-500/10 p-1.5 text-emerald-400">
+            <BotIcon className="size-4.5" />
+          </div>
+          <div>
+            <h3 className="text-xs font-semibold text-foreground">Career & Salary Assistant</h3>
+            <p className="text-[10px] text-muted-foreground">Active and context-aware</p>
+          </div>
+        </div>
+        <AssistantModalPrimitive.Trigger asChild>
+          <button
+            type="button"
+            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+            aria-label="Close assistant"
+          >
+            <XIcon className="size-4" />
+          </button>
+        </AssistantModalPrimitive.Trigger>
+      </div>
+
       <ThreadPrimitive.Viewport className="flex-1 overflow-y-auto">
         <ThreadWelcome />
         <ThreadPrimitive.Messages
@@ -52,6 +77,62 @@ export function Thread() {
 // ---------------------------------------------------------------------------
 
 function ThreadWelcome() {
+  const [isSalary, setIsSalary] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsSalary(window.location.pathname.includes("salary"));
+    }
+  }, []);
+
+  if (isSalary) {
+    return (
+      <ThreadPrimitive.Empty>
+        <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+          <h3 className="text-lg font-semibold mb-2">Salary Intelligence Assistant</h3>
+          <p className="text-sm text-muted-foreground mb-6 max-w-sm">
+            I can help you analyze market compensation data, identify high-paying hubs, understand remote discounts, and prepare salary negotiation leverage.
+          </p>
+          <ThreadPrimitive.Suggestion
+            prompt="Analyze current salary trends for Software Engineers"
+            method="replace"
+            autoSend
+          >
+            <SuggestionButton text="Analyze Software Engineer trends" />
+          </ThreadPrimitive.Suggestion>
+          <ThreadPrimitive.Suggestion
+            prompt="What is the local market premium in San Francisco vs National?"
+            method="replace"
+            autoSend
+          >
+            <SuggestionButton text="Check SF premium" />
+          </ThreadPrimitive.Suggestion>
+          <ThreadPrimitive.Suggestion
+            prompt="Compare remote salary discount patterns across roles"
+            method="replace"
+            autoSend
+          >
+            <SuggestionButton text="Analyze remote discount" />
+          </ThreadPrimitive.Suggestion>
+          <ThreadPrimitive.Suggestion
+            prompt="Which companies pay the highest median compensation for Frontend?"
+            method="replace"
+            autoSend
+          >
+            <SuggestionButton text="Find top paying companies" />
+          </ThreadPrimitive.Suggestion>
+          <ThreadPrimitive.Suggestion
+            prompt="What career pivot advice do you have based on this market data?"
+            method="replace"
+            autoSend
+          >
+            <SuggestionButton text="Get career pivot advice" />
+          </ThreadPrimitive.Suggestion>
+        </div>
+      </ThreadPrimitive.Empty>
+    );
+  }
+
   return (
     <ThreadPrimitive.Empty>
       <div className="flex flex-col items-center justify-center h-full p-6 text-center">

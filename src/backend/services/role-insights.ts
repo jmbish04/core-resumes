@@ -21,7 +21,12 @@ import {
   roles,
   roleBullets,
   scoringRubrics,
+  marketSalarySnapshots,
+  marketSalaryStats,
+  marketCompanySalaries,
+  marketSalaryInsights,
 } from "@/backend/db/schema";
+import { sql } from "drizzle-orm";
 import { OpenRouteService } from "@/backend/services/openroute";
 
 // ---------------------------------------------------------------------------
@@ -61,6 +66,14 @@ export type CompensationAnalysisPayload = {
   deltaVsGoogle: number | null;
   /** Future promotion path */
   futurePromotionPath: number | null;
+  /** Geographic positioning analysis (SF vs NYC vs Seattle vs Austin) */
+  geographicPositioning: string | null;
+  /** Remote vs local salary discount assessment */
+  remoteDiscountAnalysis: string | null;
+  /** Comparison to peer company H1B filings */
+  industryPeerComparison: string | null;
+  /** Context from the latest broad market trend analysis */
+  marketTrendContext: string | null;
 };
 
 // ---------------------------------------------------------------------------
@@ -328,6 +341,151 @@ export class RoleInsightsService {
 
     const compensationBaseline = configRow?.value as Record<string, unknown> | null;
 
+    // Get applicant profile config for locations and target roles
+    const [profileRow] = await db
+      .select()
+      .from(globalConfig)
+      .where(eq(globalConfig.key, "applicant_profile"))
+      .limit(1);
+
+    const profile = (profileRow?.value as any) || {
+      location: "San Francisco Bay Area",
+      locations: ["san francisco", "bay area", "sf"],
+      hubs: ["San Francisco", "New York", "Seattle", "Austin"],
+      target_roles: ["software engineer", "frontend", "backend", "fullstack", "devops"],
+    };
+
+    // Find the closest matching target role keyword
+    const jobTitleLower = role.jobTitle.toLowerCase();
+    let matchingRoleType = profile.target_roles[0] || "software engineer";
+    for (const type of profile.target_roles) {
+      if (jobTitleLower.includes(type.toLowerCase())) {
+        matchingRoleType = type;
+        break;
+      }
+    }
+
+    // Fetch the latest successful snapshot ID and matching stats
+    const [latestSnapshot] = await db
+      .select({ id: marketSalarySnapshots.id })
+      .from(marketSalarySnapshots)
+      .where(eq(marketSalarySnapshots.status, "success"))
+      .orderBy(desc(marketSalarySnapshots.runTimestamp))
+      .limit(1);
+
+    // ─── Build comprehensive market context ──────────────────────────────
+    let marketStatsText = "No live market salary statistics found in local database.";
+    let geographicBreakdownText = "";
+    let peerCompaniesText = "";
+    let remoteDiscountText = "";
+    let trendInsightText = "";
+
+    if (latestSnapshot) {
+      // 1. Stats for the matching role type (primary context)
+      const matchingStats = await db
+        .select()
+        .from(marketSalaryStats)
+        .where(
+          sql`${marketSalaryStats.snapshotId} = ${latestSnapshot.id} AND LOWER(${marketSalaryStats.roleType}) = ${matchingRoleType.toLowerCase()}`
+        );
+
+      if (matchingStats.length > 0) {
+        marketStatsText = matchingStats
+          .map(
+            (s) =>
+              `- ${s.metricLabel} (${s.metricKey}): 25th=$${s.p25.toLocaleString()}, median=$${s.median.toLocaleString()}, 75th=$${s.p75.toLocaleString()} (based on ${s.sampleSize.toLocaleString()} listings)`
+          )
+          .join("\n");
+      }
+
+      // 2. Geographic hub breakdown — ALL role types at the snapshot for cross-role context
+      const allHubStats = await db
+        .select()
+        .from(marketSalaryStats)
+        .where(eq(marketSalaryStats.snapshotId, latestSnapshot.id));
+
+      if (allHubStats.length > 0) {
+        // Group by metricKey (local_market, remote, top_hubs, national)
+        const byMetric: Record<string, typeof allHubStats> = {};
+        for (const s of allHubStats) {
+          (byMetric[s.metricKey] ??= []).push(s);
+        }
+
+        const sections: string[] = [];
+        for (const [metricKey, entries] of Object.entries(byMetric)) {
+          const rows = entries
+            .map(
+              (s) =>
+                `    * ${s.roleType}: 25th=$${s.p25.toLocaleString()}, median=$${s.median.toLocaleString()}, 75th=$${s.p75.toLocaleString()} (${s.sampleSize.toLocaleString()} listings)`
+            )
+            .join("\n");
+          const label = entries[0]?.metricLabel || metricKey;
+          sections.push(`  ${label} (${metricKey}):\n${rows}`);
+        }
+        geographicBreakdownText = sections.join("\n\n");
+
+        // 3. Compute remote discount vs local market
+        const localStats = matchingStats.find((s) => s.metricKey === "local_market");
+        const remoteStats = matchingStats.find((s) => s.metricKey === "remote");
+        if (localStats && remoteStats && localStats.median > 0) {
+          const discount = ((localStats.median - remoteStats.median) / localStats.median) * 100;
+          remoteDiscountText = `Remote roles for '${matchingRoleType}' carry a ${discount.toFixed(1)}% discount compared to ${profile.location} local market equivalents. Local median: $${localStats.median.toLocaleString()}, Remote median: $${remoteStats.median.toLocaleString()}.`;
+        }
+      }
+
+      // 4. Company H1B data for the target company
+      if (role.companyName) {
+        const cleanCompany = role.companyName.toLowerCase().replace(/, inc\.?| inc\.?| l\.?l\.?c\.?/g, "").trim();
+        const companySalaries = await db
+          .select()
+          .from(marketCompanySalaries)
+          .where(
+            sql`${marketCompanySalaries.snapshotId} = ${latestSnapshot.id} AND LOWER(${marketCompanySalaries.companyName}) LIKE ${"%" + cleanCompany + "%"}`
+          );
+
+        if (companySalaries.length > 0) {
+          const compText = companySalaries
+            .map(
+              (c) =>
+                `  * Title: ${c.jobTitle} (${c.seniority} seniority) — 25th=$${c.p25.toLocaleString()}, median=$${c.median.toLocaleString()}, 75th=$${c.p75.toLocaleString()} (${c.sampleSize.toLocaleString()} certified H1B applications)`
+            )
+            .join("\n");
+          marketStatsText += `\n\nCompany H1B Certified Salaries for ${role.companyName}:\n${compText}`;
+        }
+      }
+
+      // 5. Top 10 peer companies by H1B sample size for industry benchmarking
+      const peerCompanies = await db
+        .select()
+        .from(marketCompanySalaries)
+        .where(eq(marketCompanySalaries.snapshotId, latestSnapshot.id))
+        .orderBy(desc(marketCompanySalaries.sampleSize))
+        .limit(10);
+
+      if (peerCompanies.length > 0) {
+        peerCompaniesText = peerCompanies
+          .map(
+            (c) =>
+              `- ${c.companyName} — ${c.jobTitle} (${c.seniority}): median=$${c.median.toLocaleString()}, 75th=$${c.p75.toLocaleString()} (${c.sampleSize.toLocaleString()} filings)`
+          )
+          .join("\n");
+      }
+
+      // 6. Latest broad market trend insight from market_salary_insights
+      const [latestTrend] = await db
+        .select()
+        .from(marketSalaryInsights)
+        .orderBy(desc(marketSalaryInsights.createdAt))
+        .limit(1);
+
+      if (latestTrend) {
+        // Truncate to ~2000 chars to stay within prompt budget
+        trendInsightText = latestTrend.insightText.length > 2000
+          ? latestTrend.insightText.slice(0, 2000) + "\n[... truncated for prompt budget]"
+          : latestTrend.insightText;
+      }
+    }
+
     const rubricText = rubrics
       .map((r) => `- ${r.criteria}: ${r.scoreRangeMin}–${r.scoreRangeMax}`)
       .join("\n");
@@ -348,16 +506,47 @@ export class RoleInsightsService {
         .describe(
           "Estimated compensation for the next promotion level, computed as roughly 15-20% above the advertised max. Output as raw number (e.g., 280000).",
         ),
+      geographic_positioning: z
+        .string()
+        .nullable()
+        .describe(
+          "How this role's compensation compares geographically across SF, NYC, Seattle, Austin, and national benchmarks. Reference specific percentile data.",
+        ),
+      remote_discount_analysis: z
+        .string()
+        .nullable()
+        .describe(
+          "Assessment of the remote vs local salary discount for this role type, with specific percentages and implications for negotiation.",
+        ),
+      industry_peer_comparison: z
+        .string()
+        .nullable()
+        .describe(
+          "How this role's compensation compares to peer companies' H1B certified filings. Reference specific companies and salary ranges.",
+        ),
+      market_trend_context: z
+        .string()
+        .nullable()
+        .describe(
+          "Relevant insights from the latest broad market salary trends analysis that apply to this role's compensation assessment.",
+        ),
     });
 
     const baselineText = compensationBaseline
       ? JSON.stringify(compensationBaseline, null, 2)
       : "No compensation baseline configured.";
 
-    const systemPrompt = `You are an expert career compensation analyst for Justin, evaluating a role's compensation against his historical Google compensation.
+    const systemPrompt = `You are an expert career compensation analyst for Justin, evaluating a role's compensation against his historical Google compensation, live market statistics, geographic benchmarks, and industry H1B filing data.
 
 Justin's Google Compensation Baseline:
 ${baselineText}
+
+Live Aggregated Market Statistics (for matching role type '${matchingRoleType}'):
+${marketStatsText}
+${geographicBreakdownText ? `\n<GEOGRAPHIC_HUB_BREAKDOWN>\nComplete market salary percentiles across ALL geographic segments and role types:\n${geographicBreakdownText}\n</GEOGRAPHIC_HUB_BREAKDOWN>` : ""}
+${remoteDiscountText ? `\n<REMOTE_DISCOUNT_DATA>\n${remoteDiscountText}\n</REMOTE_DISCOUNT_DATA>` : ""}
+${peerCompaniesText ? `\n<INDUSTRY_PEER_COMPANIES_H1B>\nTop peer companies by H1B certified filings (sorted by sample size):\n${peerCompaniesText}\n</INDUSTRY_PEER_COMPANIES_H1B>` : ""}
+${trendInsightText ? `\n<LATEST_MARKET_TRENDS>\n${trendInsightText}\n</LATEST_MARKET_TRENDS>` : ""}
 
 Scoring rubrics:
 ${rubricText}
@@ -365,8 +554,12 @@ ${rubricText}
 Analyze the role's compensation and provide:
 1. A score (0–100) based on the rubrics
 2. Where Justin could negotiate within the advertised range
-3. How the compensation compares to his Google TC (~$260,672)
+3. How the compensation compares to his Google TC (~$260,672) and live market percentiles for his local job market (${profile.location}) and remote roles.
 4. Net delta vs Google (positive means role pays more)
+5. Geographic positioning: how this role's comp stacks up against SF, NYC, Seattle, Austin, and national medians. Factor in cost-of-living differentials.
+6. Remote discount assessment: quantify the remote-vs-local premium/discount and its implications for this specific role.
+7. Industry peer comparison: how does this company's pay compare to the top H1B filing companies for similar roles?
+8. Market trend context: what relevant macro trends from the latest market analysis apply to this role?
 
 You must respond with a valid JSON object matching the requested schema. DO NOT wrap your response in markdown fences.`;
 
@@ -396,6 +589,10 @@ Currency: ${role.salaryCurrency ?? "USD"}`;
     if (result.delta_vs_google == null) missingFields.push("delta_vs_google");
     if (!result.advertised_assessment) missingFields.push("advertised_assessment");
     if (result.future_promotion_path == null) missingFields.push("future_promotion_path");
+    if (!result.geographic_positioning) missingFields.push("geographic_positioning");
+    if (!result.remote_discount_analysis) missingFields.push("remote_discount_analysis");
+    if (!result.industry_peer_comparison) missingFields.push("industry_peer_comparison");
+    if (!result.market_trend_context) missingFields.push("market_trend_context");
 
     if (missingFields.length > 0) {
       console.warn(
@@ -420,6 +617,10 @@ You MUST provide non-null values for ALL of these fields:
 - delta_vs_google: numeric difference between this role's midpoint TC and Google TC ($260,672). Positive = role pays more.
 - advertised_assessment: text assessment of the advertised salary range
 - future_promotion_path: numeric estimated TC at the next promotion level (typically 15-20% above advertised max)
+- geographic_positioning: text comparing this role's comp across SF, NYC, Seattle, Austin, and national benchmarks
+- remote_discount_analysis: text assessing the remote vs local salary discount for this role type
+- industry_peer_comparison: text comparing this company's pay to top H1B filing companies
+- market_trend_context: text noting relevant macro trends from the latest market analysis
 
 If salary data is "Not disclosed", estimate based on market data for the role title and company, and note the estimate in your rationale.
 </STRICT_COMPLETENESS_REQUIREMENT>`;
@@ -446,6 +647,10 @@ If salary data is "Not disclosed", estimate based on market data for the role ti
           delta_vs_google: retryResult.delta_vs_google ?? result.delta_vs_google,
           advertised_assessment: retryResult.advertised_assessment || result.advertised_assessment,
           future_promotion_path: retryResult.future_promotion_path ?? result.future_promotion_path,
+          geographic_positioning: retryResult.geographic_positioning || result.geographic_positioning,
+          remote_discount_analysis: retryResult.remote_discount_analysis || result.remote_discount_analysis,
+          industry_peer_comparison: retryResult.industry_peer_comparison || result.industry_peer_comparison,
+          market_trend_context: retryResult.market_trend_context || result.market_trend_context,
         };
 
         const stillMissing = missingFields.filter(
@@ -475,6 +680,10 @@ If salary data is "Not disclosed", estimate based on market data for the role ti
       negotiationRationale: result.negotiation_rationale ?? null,
       deltaVsGoogle: result.delta_vs_google ?? null,
       futurePromotionPath: result.future_promotion_path ?? null,
+      geographicPositioning: result.geographic_positioning ?? null,
+      remoteDiscountAnalysis: result.remote_discount_analysis ?? null,
+      industryPeerComparison: result.industry_peer_comparison ?? null,
+      marketTrendContext: result.market_trend_context ?? null,
     };
 
     const id = crypto.randomUUID();

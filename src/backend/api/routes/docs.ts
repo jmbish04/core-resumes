@@ -8,9 +8,10 @@
 
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 
-import { NotebookLMAgent } from "../../ai/agents/notebooklm";
-import { NotebookLMMcpAgent } from "../../ai/agents/notebooklm-mcp";
-import { OrchestratorAgent } from "../../ai/agents/orchestrator";
+import { NotebookLMAgent as NotebookLMAgentClass } from "../../ai/agents/notebooklm";
+import { NotebookLMMcpAgent as NotebookLMMcpAgentClass } from "../../ai/agents/notebooklm-mcp";
+import { OrchestratorAgent as OrchestratorAgentClass } from "../../ai/agents/orchestrator";
+import { SalaryAgent as SalaryAgentClass } from "../../ai/agents/salary";
 import {
   DOCUMENTS_TABLE_DESCRIPTION,
   DOCUMENTS_COLUMN_DESCRIPTIONS,
@@ -48,6 +49,20 @@ import {
   SCORING_RUBRICS_TABLE_DESCRIPTION,
   SCORING_RUBRICS_COLUMN_DESCRIPTIONS,
 } from "../../db/schemas/applications/scoring-rubrics";
+import {
+  MARKET_SALARY_SNAPSHOTS_TABLE_DESCRIPTION,
+  MARKET_SALARY_SNAPSHOTS_COLUMN_DESCRIPTIONS,
+  MARKET_SALARY_STATS_TABLE_DESCRIPTION,
+  MARKET_SALARY_STATS_COLUMN_DESCRIPTIONS,
+  MARKET_COMPANY_SALARIES_TABLE_DESCRIPTION,
+  MARKET_COMPANY_SALARIES_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/applications/salary-stats";
+import {
+  MARKET_SALARY_INSIGHTS_TABLE_DESCRIPTION,
+  MARKET_SALARY_INSIGHTS_COLUMN_DESCRIPTIONS,
+  MARKET_SANDBOX_RUNS_TABLE_DESCRIPTION,
+  MARKET_SANDBOX_RUNS_COLUMN_DESCRIPTIONS,
+} from "../../db/schemas/applications/market-insights";
 import {
   RESUME_BULLETS_TABLE_DESCRIPTION,
   RESUME_BULLETS_COLUMN_DESCRIPTIONS,
@@ -219,6 +234,26 @@ const TABLE_DOCS: Record<string, TableDocEntry> = {
     tableDescription: ROLE_LOGS_TABLE_DESCRIPTION,
     columnDescriptions: ROLE_LOGS_COLUMN_DESCRIPTIONS,
   },
+  market_salary_snapshots: {
+    tableDescription: MARKET_SALARY_SNAPSHOTS_TABLE_DESCRIPTION,
+    columnDescriptions: MARKET_SALARY_SNAPSHOTS_COLUMN_DESCRIPTIONS,
+  },
+  market_salary_stats: {
+    tableDescription: MARKET_SALARY_STATS_TABLE_DESCRIPTION,
+    columnDescriptions: MARKET_SALARY_STATS_COLUMN_DESCRIPTIONS,
+  },
+  market_company_salaries: {
+    tableDescription: MARKET_COMPANY_SALARIES_TABLE_DESCRIPTION,
+    columnDescriptions: MARKET_COMPANY_SALARIES_COLUMN_DESCRIPTIONS,
+  },
+  market_salary_insights: {
+    tableDescription: MARKET_SALARY_INSIGHTS_TABLE_DESCRIPTION,
+    columnDescriptions: MARKET_SALARY_INSIGHTS_COLUMN_DESCRIPTIONS,
+  },
+  market_sandbox_runs: {
+    tableDescription: MARKET_SANDBOX_RUNS_TABLE_DESCRIPTION,
+    columnDescriptions: MARKET_SANDBOX_RUNS_COLUMN_DESCRIPTIONS,
+  },
 };
 
 const TABLE_NAMES = Object.keys(TABLE_DOCS);
@@ -359,9 +394,10 @@ docsRouter.openapi(
   }),
   (async (c: any) => {
     const agents = [
-      OrchestratorAgent.docsMetadata(),
-      NotebookLMAgent.docsMetadata(),
-      NotebookLMMcpAgent.docsMetadata(),
+      OrchestratorAgentClass.docsMetadata(),
+      NotebookLMAgentClass.docsMetadata(),
+      NotebookLMMcpAgentClass.docsMetadata(),
+      SalaryAgentClass.docsMetadata(),
     ];
 
     return c.json({ agents });

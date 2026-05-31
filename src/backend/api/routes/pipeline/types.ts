@@ -98,6 +98,36 @@ export const pipelineStatsSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
+// Sync Run Events
+// ---------------------------------------------------------------------------
+
+export const syncRunEventSchema = z.object({
+  id: z.number(),
+  syncStatsId: z.number().nullable(),
+  eventType: z.string(),
+  stepNumber: z.number().nullable(),
+  status: z.string(),
+  message: z.string().nullable(),
+  current: z.number().nullable(),
+  total: z.number().nullable(),
+  metadata: z.string().nullable(),
+  createdAt: z.string(),
+});
+
+export const syncStatsWithMetaSchema = z.object({
+  id: z.number(),
+  runTimestamp: z.string(),
+  filesProcessed: z.number(),
+  companiesAdded: z.number(),
+  companiesDeactivated: z.number(),
+  companiesReactivated: z.number(),
+  status: z.string(),
+  error: z.string().nullable(),
+  durationMs: z.number().nullable(),
+  eventsCount: z.number(),
+});
+
+// ---------------------------------------------------------------------------
 // Snapshot Insights
 // ---------------------------------------------------------------------------
 

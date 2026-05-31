@@ -1,531 +1,378 @@
 import { useAgent } from "agents/react";
-import {
-  Activity,
-  AlertCircle,
-  CheckCircle2,
-  Github,
-  Loader2,
-  RefreshCw,
-  Terminal,
-  Wifi,
-  WifiOff,
-} from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { apiGet, apiPost, toast } from "@/lib/api-client";
-import { PipelineStepper, type WorkflowStep } from "./PipelineStepper";
+import { PipelineRunList, type SyncRunSummary } from "./PipelineRunList";
+import { PipelineRunViewport, type SyncRunEvent } from "./PipelineRunViewport";
+import type { WorkflowStep } from "./PipelineStepper";
+
+// ---------------------------------------------------------------------------
+// Fallback step definitions for live sync
+// ---------------------------------------------------------------------------
+
+const FALLBACK_STEPS: WorkflowStep[] = [
+  { step: 1, title: "Dispatch Sync Workflow", status: "idle", logs: [] },
+  { step: 2, title: "Load Upstream Repositories", status: "idle", logs: [] },
+  { step: 3, title: "Scrape and Extract Metadata", status: "idle", logs: [] },
+  { step: 4, title: "Update Local Databases", status: "idle", logs: [] },
+  { step: 5, title: "Finalize & Broadcast Stats", status: "idle", logs: [] },
+];
+
+// ---------------------------------------------------------------------------
+// Status → Step mapping (mirrors backend statusToStepNumber)
+// ---------------------------------------------------------------------------
+
+function statusToStep(status: string): number | null {
+  switch (status) {
+    case "dispatching":
+    case "trigger-sync":
+      return 1;
+    case "initializing":
+    case "fetching_upstream":
+    case "fetching":
+    case "loading_sources":
+      return 2;
+    case "scraping":
+    case "parsing":
+    case "processing":
+    case "mapping":
+      return 3;
+    case "saving_db":
+    case "ingesting":
+    case "writing_d1":
+    case "updating_database":
+      return 4;
+    case "completed":
+    case "success":
+    case "failed":
+    case "error":
+    case "salary_sync":
+    case "salary_sync_complete":
+    case "salary_sync_failed":
+      return 5;
+    default:
+      return null;
+  }
+}
+
+/** Statuses that signal the sync run is terminally done. */
+function isTerminalStatus(status: string): boolean {
+  return status === "completed" || status === "success" || status === "failed" || status === "error";
+}
+
+// ---------------------------------------------------------------------------
+// Live sync state: idle → active → completed | failed
+// ---------------------------------------------------------------------------
+
+type LiveSyncPhase = "idle" | "active" | "completed" | "failed";
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export function PipelineOperations() {
-  const [stats, setStats] = useState<any[]>([]);
+  // State: run list
+  const [historyRuns, setHistoryRuns] = useState<SyncRunSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [syncing, setSyncing] = useState(false);
-  const [syncError, setSyncError] = useState<string | null>(null);
+  // State: live sync lifecycle
+  const [livePhase, setLivePhase] = useState<LiveSyncPhase>("idle");
 
+  // State: view mode
+  const [viewMode, setViewMode] = useState<"list" | "viewport">("list");
+  const [selectedRun, setSelectedRun] = useState<SyncRunSummary | null>(null);
+
+  // State: live sync stepper + events
+  const [liveSteps, setLiveSteps] = useState<WorkflowStep[]>([]);
+  const [liveEvents, setLiveEvents] = useState<SyncRunEvent[]>([]);
+
+  // -----------------------------------------------------------------------
+  // Refs that mirror state — the `useAgent` onMessage callback is captured
+  // once at hook initialization. Without refs, `viewMode` and `livePhase`
+  // inside the callback would be permanently stale (always "list" / "idle"),
+  // causing every WS message to wipe events and force-switch to viewport.
+  // -----------------------------------------------------------------------
+  const viewModeRef = useRef(viewMode);
+  viewModeRef.current = viewMode;
+
+  const livePhaseRef = useRef(livePhase);
+  livePhaseRef.current = livePhase;
+
+  // Refs for deduplication — prevents multiple toasts and state thrash
+  const completionHandledRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
   const timeoutSecs = 90000;
 
-  // Clear timeout on unmount
   useEffect(() => {
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, []);
 
-  const startSyncTimeout = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
+  // Derived booleans for child components
+  const isSyncing = livePhase === "active";
+  const isLiveViewport = (livePhase === "active" || livePhase === "completed" || livePhase === "failed") && !selectedRun;
 
-    timeoutRef.current = setTimeout(() => {
-      setSteps((prevSteps) => {
-        if (prevSteps.length === 0 || prevSteps[0].status !== "active") {
-          return prevSteps;
-        }
+  // -------------------------------------------------------------------------
+  // Data fetching
+  // -------------------------------------------------------------------------
 
-        const nextSteps = [...prevSteps].map((s) => ({ ...s, logs: [...s.logs] }));
-        
-        nextSteps[0].status = "failed";
-        nextSteps[0].logs.push(
-          `CRITICAL ERROR: Remote Action connection timeout after ${timeoutSecs / 1000} seconds.`
-        );
-        nextSteps[0].logs.push(
-          "Please verify that your GitHub Repository has secrets.WORKER_API_KEY set correctly, matches the Worker's active secret, and that the runner is not queued or blocked."
-        );
-
-        setSyncing(false);
-        setSyncError(`Remote Action connection timeout after ${timeoutSecs / 1000} seconds. Verify GitHub workflow runner is online and authenticated.`);
-        toast({ title: "Sync Connection Timeout", variant: "destructive" });
-        return nextSteps;
-      });
-    }, timeoutSecs);
-  };
-
-  // Safely formats timestamps without throwing RangeErrors
-  const formatTimestamp = (ts: string | number | Date | null | undefined) => {
-    if (!ts) return "Unknown Date";
+  const fetchRuns = useCallback(async () => {
     try {
-      const date = new Date(ts);
-      if (isNaN(date.getTime())) {
-        return "Unknown Date";
-      }
-      return new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-      }).format(date);
-    } catch {
-      return "Unknown Date";
+      const res = await apiGet<{ stats: SyncRunSummary[] }>(
+        "/api/pipeline/api-companies/sync-stats"
+      );
+      if (res?.stats) setHistoryRuns(res.stats);
+    } catch (e) {
+      console.error("Failed to load sync stats:", e);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  // Canonical fallback workflow steps matching the backend steps structure
-  const fallbackSteps: WorkflowStep[] = [
-    { step: 1, title: "Dispatch Sync Workflow", status: "idle", logs: [] },
-    { step: 2, title: "Load Upstream Repositories", status: "idle", logs: [] },
-    { step: 3, title: "Scrape and Extract Metadata", status: "idle", logs: [] },
-    { step: 4, title: "Update Local Databases", status: "idle", logs: [] },
-    { step: 5, title: "Finalize & Broadcast Stats", status: "idle", logs: [] },
-  ];
+  useEffect(() => {
+    fetchRuns();
+  }, [fetchRuns]);
 
-  // Initialize the vertical Progress Stepper steps dynamically from the backend (single source of truth)
-  const [steps, setSteps] = useState<WorkflowStep[]>([]);
+  // -------------------------------------------------------------------------
+  // WebSocket: real-time progress from SyncBroadcastAgent
+  //
+  // CRITICAL: All state reads inside onMessage MUST use refs (viewModeRef,
+  // livePhaseRef) because useAgent captures the callback at initialization.
+  // State setters (setX) are stable and safe to call directly.
+  // -------------------------------------------------------------------------
 
-  // Connect to the dedicated SyncBroadcastAgent WebSocket.
-  // routeAgentRequest in _worker.ts handles the upgrade at
-  // /agents/SyncBroadcastAgent/global automatically.
   const agent = useAgent({
     agent: "SyncBroadcastAgent",
     name: "global",
     onMessage: (event: any) => {
       try {
         const message = JSON.parse(event.data) as any;
-        if (message?.type === "sync_progress") {
-          const payload = message.payload;
-          const status = payload.status;
-          const msgText = payload.message || status;
+        if (message?.type !== "sync_progress") return;
 
-          // Clear the self-healing timeout on any progress message from the active runner (non-dispatching statuses)
-          if (status && status !== "dispatching" && status !== "trigger-sync") {
-            if (timeoutRef.current) {
-              clearTimeout(timeoutRef.current);
-              timeoutRef.current = null;
-            }
+        const payload = message.payload;
+        const status: string = payload.status;
+        const msgText: string = payload.message || status;
+
+        // Guard 1: Discard duplicate terminal messages
+        if (completionHandledRef.current && isTerminalStatus(status)) {
+          return;
+        }
+
+        // Guard 2: Auto-switch to viewport ONLY from the list view.
+        // Read from ref to get the CURRENT value, not the stale closure.
+        if (viewModeRef.current === "list") {
+          setLivePhase("active");
+          setViewMode("viewport");
+          setSelectedRun(null);
+          setLiveEvents([]);
+          completionHandledRef.current = false;
+        }
+
+        // If on viewport but in idle phase, activate
+        if (livePhaseRef.current === "idle" && !isTerminalStatus(status)) {
+          setLivePhase("active");
+          completionHandledRef.current = false;
+        }
+
+        // Clear stall timeout on meaningful progress
+        if (status !== "dispatching" && status !== "trigger-sync") {
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
           }
+        }
 
-          setSteps((prevSteps) => {
-            const nextSteps = [...prevSteps].map((s) => ({ ...s, logs: [...s.logs] }));
+        // Accumulate live event
+        const newEvent: SyncRunEvent = {
+          id: Date.now(),
+          syncStatsId: null,
+          eventType: "progress",
+          stepNumber: statusToStep(status),
+          status,
+          message: msgText,
+          current: payload.current ?? null,
+          total: payload.total ?? null,
+          metadata: null,
+          createdAt: new Date().toISOString(),
+        };
+        setLiveEvents((prev) => [...prev, newEvent]);
 
-            // Helper to mark steps as completed up to a specific step
-            const completeUpTo = (stepNum: number) => {
-              for (let i = 0; i < stepNum - 1; i++) {
-                if (nextSteps[i].status !== "completed") {
-                  nextSteps[i].status = "completed";
-                  if (nextSteps[i].logs.length === 0) {
-                    nextSteps[i].logs.push("Phase finished successfully.");
-                  }
-                }
-              }
-            };
+        // Update stepper
+        setLiveSteps((prevSteps) => {
+          const nextSteps = prevSteps.length > 0
+            ? [...prevSteps].map((s) => ({ ...s, logs: [...s.logs] }))
+            : FALLBACK_STEPS.map((s) => ({ ...s, logs: [...s.logs] }));
 
-            // Deduplicating log appender helper
-            const appendLog = (stepIdx: number, text: string) => {
-              if (text && !nextSteps[stepIdx].logs.includes(text)) {
-                nextSteps[stepIdx].logs.push(text);
-              }
-            };
-
-            if (status === "dispatching" || status === "trigger-sync") {
-              nextSteps[0].status = "active";
-              if (msgText) appendLog(0, msgText);
-            } else if (
-              status === "initializing" ||
-              status === "fetching_upstream" ||
-              status === "loading_sources"
-            ) {
-              completeUpTo(2);
-              nextSteps[1].status = "active";
-              if (msgText) appendLog(1, msgText);
-            } else if (
-              status === "scraping" ||
-              status === "parsing" ||
-              status === "processing" ||
-              status === "mapping"
-            ) {
-              completeUpTo(3);
-              nextSteps[2].status = "active";
-              if (msgText) appendLog(2, msgText);
-            } else if (
-              status === "saving_db" ||
-              status === "ingesting" ||
-              status === "writing_d1" ||
-              status === "updating_database"
-            ) {
-              completeUpTo(4);
-              nextSteps[3].status = "active";
-              if (msgText) appendLog(3, msgText);
-            } else if (status === "completed" || status === "success") {
-              // Complete all steps
-              for (let i = 0; i < 4; i++) {
+          const completeUpTo = (stepNum: number) => {
+            for (let i = 0; i < stepNum - 1; i++) {
+              if (nextSteps[i].status !== "completed") {
                 nextSteps[i].status = "completed";
                 if (nextSteps[i].logs.length === 0) {
                   nextSteps[i].logs.push("Phase finished successfully.");
                 }
               }
-              nextSteps[4].status = "completed";
-              appendLog(4, "Upstream repository synchronization completed successfully.");
-              appendLog(4, "Added, deactivated, and reactivated companies matching D1.");
-              setSyncing(false);
-              setSyncError(null);
-              toast({ title: "GitHub Sync Completed", variant: "default" });
-              fetchStats(); // Refresh table
-            } else if (status === "failed" || status === "error") {
-              // Mark currently active step as failed, or default to Step 3
-              let activeIdx = nextSteps.findIndex((s) => s.status === "active");
-              if (activeIdx === -1) activeIdx = 2; // fallback to Step 3
-
-              nextSteps[activeIdx].status = "failed";
-              const errMsg = msgText || "An unexpected execution failure occurred.";
-              appendLog(activeIdx, `CRITICAL ERROR: ${errMsg}`);
-              
-              // Set all subsequent steps to idle
-              for (let i = activeIdx + 1; i < nextSteps.length; i++) {
-                nextSteps[i].status = "idle";
-              }
-
-              setSyncing(false);
-              setSyncError(errMsg);
-              toast({ title: "GitHub Sync Failed", variant: "destructive" });
-              fetchStats(); // Refresh table
             }
+          };
 
-            return nextSteps;
-          });
-        }
+          const appendLog = (stepIdx: number, text: string) => {
+            if (text && !nextSteps[stepIdx].logs.includes(text)) {
+              nextSteps[stepIdx].logs.push(text);
+            }
+          };
+
+          const stepNum = statusToStep(status);
+
+          if (status === "dispatching" || status === "trigger-sync") {
+            nextSteps[0].status = "active";
+            if (msgText) appendLog(0, msgText);
+          } else if (status === "completed" || status === "success") {
+            for (let i = 0; i < 5; i++) {
+              nextSteps[i].status = "completed";
+              if (nextSteps[i].logs.length === 0) nextSteps[i].logs.push("Phase finished successfully.");
+            }
+            appendLog(4, "Upstream repository synchronization completed successfully.");
+
+            completionHandledRef.current = true;
+            setLivePhase("completed");
+            toast({ title: "GitHub Sync Completed" });
+            fetchRuns();
+          } else if (status === "failed" || status === "error") {
+            let activeIdx = nextSteps.findIndex((s) => s.status === "active");
+            if (activeIdx === -1) activeIdx = 2;
+            nextSteps[activeIdx].status = "failed";
+            appendLog(activeIdx, `CRITICAL ERROR: ${msgText || "Sync execution failure."}`);
+            for (let i = activeIdx + 1; i < nextSteps.length; i++) nextSteps[i].status = "idle";
+
+            completionHandledRef.current = true;
+            setLivePhase("failed");
+            toast({ title: "GitHub Sync Failed", variant: "destructive" });
+            fetchRuns();
+          } else if (stepNum !== null && stepNum >= 1 && stepNum <= 5) {
+            completeUpTo(stepNum);
+            nextSteps[stepNum - 1].status = "active";
+            if (msgText) appendLog(stepNum - 1, msgText);
+          }
+
+          return nextSteps;
+        });
       } catch (err) {
-        console.warn("[PipelineOperations] Failed to parse WebSocket message:", err);
+        console.warn("[PipelineOperations] WS error:", err);
       }
     },
   });
 
-  const fetchStats = async () => {
-    try {
-      const res: any = await apiGet("/api/pipeline/api-companies/sync-stats");
-      if (res.stats) {
-        setStats(res.stats);
-      }
-    } catch (e: any) {
-      setSyncError("Failed to fetch historical run metrics. The D1 database may be busy.");
-      toast({ title: "Failed to load pipeline stats", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const wsReadyState = typeof WebSocket !== "undefined" ? agent.readyState : 3;
 
-  const fetchSteps = async () => {
-    try {
-      const res: any = await apiGet("/api/pipeline/api-companies/steps");
-      if (res.steps) {
-        setSteps(res.steps);
-      } else {
-        setSteps(fallbackSteps);
-        setSyncError("Failed to load custom workflow configuration from the server. Using local layout fallback.");
-      }
-    } catch (e: any) {
-      setSteps(fallbackSteps);
-      setSyncError(`Failed to load sync steps from server: ${e.message || "Server unresponsive"}. Using local layout fallback.`);
-    }
-  };
-
-  useEffect(() => {
-    fetchSteps();
-    fetchStats();
-  }, []);
+  // -------------------------------------------------------------------------
+  // Trigger sync
+  // -------------------------------------------------------------------------
 
   const triggerSync = async () => {
     try {
-      setSyncing(true);
-      setSyncError(null);
+      completionHandledRef.current = false;
+      setLivePhase("active");
+      setViewMode("viewport");
+      setSelectedRun(null);
+      setLiveEvents([]);
 
-      // Fetch fresh steps from backend (Single Source of Truth)
-      let initialSteps = steps.length > 0 ? steps : fallbackSteps;
-      try {
-        const res: any = await apiGet("/api/pipeline/api-companies/steps");
-        if (res.steps) {
-          initialSteps = res.steps;
-        } else {
-          throw new Error("Invalid steps payload returned by the server.");
-        }
-      } catch (e: any) {
-        const fetchError = `Failed to retrieve sync workflow configuration: ${e.message || "Server unresponsive"}.`;
-        setSyncError(fetchError);
-        throw new Error(fetchError);
-      }
-
-      // Reset progress steps to default active/idle state before starting sync
-      const initialized = initialSteps.map((s, idx) => {
-        if (idx === 0) {
-          return {
-            ...s,
-            status: "active" as const,
-            logs: ["Dispatching repository sync workflow to GitHub Action..."],
-          };
-        }
-        return { ...s, status: "idle" as const, logs: [] };
-      });
-      setSteps(initialized);
+      const initialSteps = FALLBACK_STEPS.map((s, i) =>
+        i === 0
+          ? { ...s, status: "active" as const, logs: ["Dispatching repository sync workflow to GitHub Action..."] }
+          : { ...s, logs: [] }
+      );
+      setLiveSteps(initialSteps);
 
       const res: any = await apiPost("/api/pipeline/api-companies/trigger-sync", {});
-      if (!res.success) {
-        throw new Error(res.error || "Failed to trigger sync workflow.");
-      }
-      
-      setSteps((prev) => {
+      if (!res.success) throw new Error(res.error || "Trigger failed.");
+
+      setLiveSteps((prev) => {
         const next = [...prev].map((s) => ({ ...s, logs: [...s.logs] }));
-        if (next[0]) {
-          next[0].logs.push("GitHub repository dispatch successfully triggered.");
-          next[0].logs.push("Waiting for remote GitHub Action runner to establish socket callback...");
-        }
+        next[0].logs.push("GitHub dispatch successfully triggered.");
+        next[0].logs.push("Waiting for remote action runner callback...");
         return next;
       });
 
-      // Start the self-healing timeout listener
-      startSyncTimeout();
+      // Start stall timeout
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        setLiveSteps((prevSteps) => {
+          if (prevSteps.length === 0 || prevSteps[0].status !== "active") return prevSteps;
+          const nextSteps = [...prevSteps].map((s) => ({ ...s, logs: [...s.logs] }));
+          nextSteps[0].status = "failed";
+          nextSteps[0].logs.push(`CRITICAL ERROR: Remote Action connection timeout after ${timeoutSecs / 1000} seconds.`);
+          completionHandledRef.current = true;
+          setLivePhase("failed");
+          toast({ title: "Sync Connection Timeout", variant: "destructive" });
+          return nextSteps;
+        });
+      }, timeoutSecs);
 
-      toast({ title: "GitHub Action triggered!", description: "Connecting to live logs..." });
+      toast({ title: "Sync triggered!", description: "Viewing live logs..." });
     } catch (e: any) {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
-      setSyncing(false);
-      setSyncError(e.message || "An error occurred while dispatching the repository sync run.");
-      
-      setSteps((prev) => {
-        const source = prev.length > 0 ? prev : fallbackSteps;
-        const next = source.map((s) => ({ ...s, logs: [...s.logs] }));
+      completionHandledRef.current = true;
+      setLivePhase("failed");
+      setLiveSteps((prev) => {
+        const next = [...prev].map((s) => ({ ...s, logs: [...s.logs] }));
         if (next[0]) {
           next[0].status = "failed";
-          next[0].logs.push(`CRITICAL ERROR: ${e.message || "Failed to dispatch sync workflow."}`);
+          next[0].logs.push(`CRITICAL ERROR: ${e.message || "Trigger error"}`);
         }
         return next;
       });
-
       toast({ title: "Failed to trigger sync", variant: "destructive" });
     }
   };
 
+  // -------------------------------------------------------------------------
+  // Navigation
+  // -------------------------------------------------------------------------
 
-  const handleCopyWorkflowReport = () => {
-    const reportJson = JSON.stringify(steps, null, 2);
-    const reportText = `I am experiencing an execution failure in my agentic pipeline. Here is the structural state and log dump from the UI stepper component:
-
-\`\`\`json
-${reportJson}
-\`\`\`
-
-Please review the logs above, isolate the failure in the system execution layer, and provide a self-healing patch strategy.`;
-
-    navigator.clipboard.writeText(reportText)
-      .then(() => {
-        toast({ title: "Report Copied!", description: "Markdown workflow log state copied to clipboard." });
-      })
-      .catch(() => {
-        toast({ title: "Copy Failed", description: "Failed to copy report to clipboard.", variant: "destructive" });
-      });
+  const handleSelectRun = (run: SyncRunSummary) => {
+    setSelectedRun(run);
+    setViewMode("viewport");
   };
 
-  // Compute WebSocket ready state display metadata
-  const wsReadyState = typeof WebSocket !== "undefined" ? agent.readyState : 3;
-
-  const getWsStatusBadge = () => {
-    switch (wsReadyState) {
-      case 0: // CONNECTING
-        return (
-          <Badge variant="outline" className="border-amber-500/30 text-amber-500 bg-amber-500/10 flex items-center gap-1 h-6">
-            <Loader2 className="size-3 animate-spin" />
-            <span>Connecting...</span>
-          </Badge>
-        );
-      case 1: // OPEN
-        return (
-          <Badge variant="outline" className="border-emerald-500/30 text-emerald-500 bg-emerald-500/10 flex items-center gap-1 h-6">
-            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <Wifi className="size-3" />
-            <span>Connected</span>
-          </Badge>
-        );
-      default: // CLOSED / CLOSING
-        return (
-          <Badge variant="outline" className="border-destructive/30 text-destructive bg-destructive/10 flex items-center gap-1 h-6">
-            <WifiOff className="size-3" />
-            <span>Offline</span>
-          </Badge>
-        );
+  const handleBack = () => {
+    setViewMode("list");
+    setSelectedRun(null);
+    // Reset live state when user explicitly navigates back
+    if (livePhaseRef.current === "completed" || livePhaseRef.current === "failed") {
+      setLivePhase("idle");
+      completionHandledRef.current = false;
     }
   };
 
+  // -------------------------------------------------------------------------
+  // Render
+  // -------------------------------------------------------------------------
+
+  if (viewMode === "viewport") {
+    return (
+      <PipelineRunViewport
+        selectedRun={selectedRun}
+        isLive={livePhase === "active" && !selectedRun}
+        showLiveData={isLiveViewport}
+        liveSteps={liveSteps}
+        liveEvents={liveEvents}
+        onBack={handleBack}
+      />
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Real-time Error Display Section */}
-      {syncError && (
-        <Alert variant="destructive" className="border-destructive/40 bg-destructive/10">
-          <AlertCircle className="size-4" />
-          <AlertTitle className="font-semibold text-sm">Pipeline Error Detected</AlertTitle>
-          <AlertDescription className="text-xs mt-1 flex flex-col gap-2">
-            <p>{syncError}</p>
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-fit h-7 px-2 border-destructive/30 hover:bg-destructive/20 text-destructive-foreground"
-              onClick={() => setSyncError(null)}
-            >
-              Dismiss
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Main Control Panel */}
-      <Card className="border-border/60 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <CardTitle className="text-xl">Pipeline A (Aggregator Sync)</CardTitle>
-              {getWsStatusBadge()}
-            </div>
-            <CardDescription>
-              Sync upstream jobs data from GitHub to populate API companies list in D1
-            </CardDescription>
-          </div>
-          <Button
-            variant="secondary"
-            onClick={triggerSync}
-            disabled={syncing}
-            className="w-full sm:w-auto"
-          >
-            {syncing ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : (
-              <Github className="mr-2 size-4" />
-            )}
-            Trigger Sync
-          </Button>
-        </CardHeader>
-
-        {/* Real-time WebSocket connection state warnings */}
-        {wsReadyState !== 1 && (
-          <CardContent className="pb-2">
-            <Alert variant="info" className="border-amber-500/20 bg-amber-500/5 text-amber-400 py-3">
-              <Terminal className="size-4 text-amber-400" />
-              <AlertDescription className="text-xs">
-                Real-time connection is currently establishing or offline. You can still trigger the synchronization; progress updates will refresh dynamically when the connection restores, or you can check status in the Run History below.
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        )}
-
-        {/* Dynamic vertical Workflow Stepper replacement */}
-        {syncing && (
-          <CardContent className="pt-2">
-            <PipelineStepper steps={steps} onCopyReport={handleCopyWorkflowReport} />
-          </CardContent>
-        )}
-      </Card>
-
-      {/* History panel */}
-      <Card className="border-border/60 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Run History</CardTitle>
-            <CardDescription>Recent pipeline executions and D1 ingestion results</CardDescription>
-          </div>
-          <Button variant="ghost" size="icon" onClick={fetchStats} disabled={loading}>
-            <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border border-border/50 overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">Timestamp</TableHead>
-                  <TableHead className="text-xs">Status</TableHead>
-                  <TableHead className="text-xs text-right">Added</TableHead>
-                  <TableHead className="text-xs text-right">Deactivated</TableHead>
-                  <TableHead className="text-xs text-right">Reactivated</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading && stats.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
-                      <Loader2 className="mx-auto size-6 animate-spin text-muted-foreground" />
-                    </TableCell>
-                  </TableRow>
-                ) : stats.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center text-muted-foreground text-xs">
-                      No run history found. Trigger a sync above to create one.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  stats.map((run) => (
-                    <TableRow key={run?.id} className="hover:bg-muted/40 transition-colors">
-                      <TableCell className="font-medium text-xs">
-                        {formatTimestamp(run?.runTimestamp)}
-                      </TableCell>
-                      <TableCell>
-                        {run?.status === "success" ? (
-                          <Badge
-                            variant="outline"
-                            className="border-green-500/30 text-green-500 bg-green-500/10 text-[10px]"
-                          >
-                            <CheckCircle2 className="mr-1 size-3" />
-                            Success
-                          </Badge>
-                        ) : run?.status === "failed" ? (
-                          <Badge variant="destructive" className="text-[10px]">
-                            <AlertCircle className="mr-1 size-3" />
-                            Failed
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="text-[10px]">
-                            <Activity className="mr-1 size-3" />
-                            {run?.status}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right text-xs font-mono">{run?.companiesAdded ?? 0}</TableCell>
-                      <TableCell className="text-right text-xs font-mono">{run?.companiesDeactivated ?? 0}</TableCell>
-                      <TableCell className="text-right text-xs font-mono">{run?.companiesReactivated ?? 0}</TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <PipelineRunList
+      runs={historyRuns}
+      loading={loading}
+      syncing={isSyncing}
+      wsReadyState={wsReadyState}
+      onSelectRun={handleSelectRun}
+      onTriggerSync={triggerSync}
+      onRefresh={fetchRuns}
+    />
   );
 }

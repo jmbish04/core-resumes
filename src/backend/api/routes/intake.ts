@@ -312,6 +312,8 @@ const confirmBody = z.object({
   otherContent: z.string().optional(),
   companyLogoUrl: z.string().url().optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
+  source: z.enum(["manual", "greenhouse_scan", "email"]).optional(),
+  sourceSnapshotId: z.number().nullable().optional(),
   // Structured bullet items from the intake section tables
   roleBullets: z
     .array(

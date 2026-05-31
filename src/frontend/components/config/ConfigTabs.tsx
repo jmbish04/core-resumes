@@ -1,6 +1,7 @@
 import { AgentRulesEditor } from "@/components/config/AgentRulesEditor";
 import { CareerStoriesEditor } from "@/components/config/CareerStoriesEditor";
 import { CompensationEditor } from "@/components/config/CompensationEditor";
+import { ApplicantProfileEditor } from "@/components/config/ApplicantProfileEditor";
 import { NotebookLMPromptEditor } from "@/components/config/NotebookLMPromptEditor";
 import { NotebookSessionManager } from "@/components/config/NotebookSessionManager";
 import { PipelineConfigEditor } from "@/components/config/PipelineConfigEditor";
@@ -9,7 +10,9 @@ import { PromoteCompaniesEditor } from "@/components/config/PromoteCompaniesEdit
 import { PromptEditor } from "@/components/config/PromptEditor";
 import { ResumeBulletsEditor } from "@/components/config/ResumeBulletsEditor";
 import { ScoringRubricsEditor } from "@/components/config/ScoringRubricsEditor";
+import { FreelanceConfigEditor } from "@/components/config/FreelanceConfigEditor";
 import { TemplateIdsEditor } from "@/components/config/TemplateIdsEditor";
+import { HealthConfigEditor } from "@/components/config/HealthConfigEditor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryParam } from "@/hooks/use-query-param";
 
@@ -34,6 +37,7 @@ export function ConfigTabs() {
         <TabsTrigger value="doc-templates">Doc Templates</TabsTrigger>
         <TabsTrigger value="notebooklm">NotebookLM</TabsTrigger>
         <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+        <TabsTrigger value="freelance">Freelance</TabsTrigger>
       </TabsList>
 
       <TabsContent value="prompts" className="space-y-5">
@@ -41,10 +45,12 @@ export function ConfigTabs() {
           <PromptEditor />
           <div className="space-y-5">
             <CompensationEditor />
+            <ApplicantProfileEditor />
             <CareerStoriesEditor />
           </div>
         </div>
       </TabsContent>
+
 
       <TabsContent value="resume-data" className="space-y-5">
         <ResumeBulletsEditor />
@@ -73,6 +79,11 @@ export function ConfigTabs() {
         <PipelineRulesEditor />
         <PromoteCompaniesEditor />
         <PipelineConfigEditor />
+        <HealthConfigEditor />
+      </TabsContent>
+
+      <TabsContent value="freelance" className="space-y-5">
+        <FreelanceConfigEditor />
       </TabsContent>
     </Tabs>
   );

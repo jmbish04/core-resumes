@@ -43,6 +43,15 @@ export type SiteConfig = {
     /** If true, opens in a new tab with `rel="noreferrer"`. */
     external?: boolean;
   }[];
+  /** Sidebar navigation items rendered in the Sidebar. */
+  sidebarItems: {
+    /** Route path (relative). */
+    href: string;
+    /** Display label. */
+    label: string;
+    /** Lucide icon string identifier. */
+    icon: string;
+  }[];
 };
 
 // ---------------------------------------------------------------------------
@@ -63,17 +72,28 @@ export const siteConfig: SiteConfig = {
   },
   navItems: [
     { href: "/", label: "Dashboard", icon: "LayoutDashboard" },
+    { href: "/config", label: "Config", icon: "Settings" },
+    { href: "/health", label: "Health", icon: "Activity" },
+    { href: "/docs", label: "Docs", icon: "ScrollText", external: true },
+    { href: "/openapi.json", label: "OpenAPI", icon: "FileJson" },
+    { href: "/scalar", label: "Scalar", icon: "BarChart3" },
+    { href: "/swagger", label: "Swagger", icon: "Sparkles" },
+  ],
+  sidebarItems: [
+    { href: "/", label: "Dashboard", icon: "LayoutDashboard" },
     { href: "/companies", label: "Companies", icon: "Building2" },
     { href: "/roles", label: "Roles", icon: "BriefcaseBusiness" },
     { href: "/emails", label: "Emails", icon: "Mail" },
     { href: "/pipeline", label: "Pipeline", icon: "RefreshCw" },
+    { href: "/discovery", label: "Discovery", icon: "Sparkles" },
+    { href: "/salary-intelligence", label: "Salary Intel", icon: "TrendingUp" },
+    { href: "/freelance", label: "Freelance", icon: "Briefcase" },
+    { href: "/transcriptions", label: "Transcriptions", icon: "Mic" },
     { href: "/notebook", label: "Notebook", icon: "BookOpen" },
     { href: "/memory", label: "Memory", icon: "Brain" },
     { href: "/config", label: "Config", icon: "Settings" },
     { href: "/health", label: "Health", icon: "Activity" },
+    { href: "/docs/mcp", label: "MCP", icon: "Plug" },
     { href: "/docs", label: "Docs", icon: "ScrollText" },
-    { href: "/openapi.json", label: "OpenAPI", icon: "FileJson" },
-    { href: "/scalar", label: "Scalar", icon: "BarChart3" },
-    { href: "/swagger", label: "Swagger", icon: "Sparkles" },
   ],
 };

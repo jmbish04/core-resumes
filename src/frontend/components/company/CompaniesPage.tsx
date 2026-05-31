@@ -67,6 +67,7 @@ type CompanyRow = {
 
 const STATUS_COLORS: Record<string, string> = {
   preparing: "#3b82f6",
+  processing_error: "#f97316",
   applied: "#f59e0b",
   interviewing: "#8b5cf6",
   offer: "#10b981",
