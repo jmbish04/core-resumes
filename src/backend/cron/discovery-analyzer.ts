@@ -27,7 +27,7 @@ import {
 } from "@/backend/db/schema";
 import { scrapeGreenhouseJob } from "@/backend/ai/tools/greenhouse";
 import { AiProvider } from "@/backend/ai/providers";
-import { kimi_k2_5 } from "@/backend/ai/models/kimi-k2.5";
+import { modelRegistry } from "@/backend/ai/models";
 
 // ---------------------------------------------------------------------------
 // Schemas
@@ -237,7 +237,7 @@ export async function runDiscoveryAnalyzer(env: Env): Promise<{ analyzed: number
         schema: PrioritizationSchema,
         schemaName: "JobPrioritization",
         temperature: 0.1,
-        model: kimi_k2_5,
+        model: modelRegistry.analyze,
       });
 
       const rankedIds = ranking.rankedJobSiteIds;
@@ -300,7 +300,7 @@ export async function runDiscoveryAnalyzer(env: Env): Promise<{ analyzed: number
         schemaName: "BatchJobAnalysis",
         temperature: 0.1,
         max_tokens: 8096,
-        model: kimi_k2_5,
+        model: modelRegistry.analyze,
       })) as BatchAnalysis;
 
       // 4. Persist to downstream tables

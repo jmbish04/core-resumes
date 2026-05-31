@@ -22,7 +22,7 @@ import {
 } from "@/backend/db/schema";
 import { getProviderByName, scrapeJobFromBoard } from "@/backend/pipeline/job-board-providers";
 import { AiProvider } from "@/backend/ai/providers";
-import { kimi_k2_5 } from "@/backend/ai/models/kimi-k2.5";
+import { modelRegistry } from "@/backend/ai/models";
 
 export const promoteRouter = new OpenAPIHono<{ Bindings: Env }>();
 
@@ -379,7 +379,7 @@ ${scrapedText}
         schemaName: "SingleJobAnalysis",
         temperature: 0.1,
         max_tokens: 8096,
-        model: kimi_k2_5,
+        model: modelRegistry.analyze,
       });
 
       const analysis = batchResult.analysis;
