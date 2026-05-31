@@ -4,7 +4,7 @@ import { extractRolePostingHybrid } from "@/ai/tasks/extract/role-hybrid";
 import { HYBRID_SCRAPE_SELECTORS } from "@/ai/tools/role/html-bullet-parser";
 import { BrowserRendering } from "@/backend/ai/tools/browser-rendering";
 
-import { findSFAreaJob } from "./greenhouse-boards";
+import { findSFAreaJob } from "../job-board-apis/greenhouse-boards";
 
 /**
  * End-to-end intake pipeline health check.
@@ -73,13 +73,17 @@ export async function checkIntakePipeline(env: Env): Promise<HealthStepResult> {
       );
     }
   } else {
-    issues.push(`Browser Rendering /markdown failed: ${String(mdResult.reason).slice(0, 200)}`);
+    issues.push(
+      `Browser Rendering /markdown failed: ${String(mdResult.reason).slice(0, 200)}`,
+    );
     details.scrapeStatus = "fail";
     details.scrapeMethod = "markdown";
   }
 
   if (scrapeResult.status !== "fulfilled") {
-    issues.push(`Browser Rendering /scrape failed: ${String(scrapeResult.reason).slice(0, 200)}`);
+    issues.push(
+      `Browser Rendering /scrape failed: ${String(scrapeResult.reason).slice(0, 200)}`,
+    );
     details.domScrapeStatus = "fail";
   } else {
     details.domScrapeStatus = "ok";
@@ -98,8 +102,10 @@ export async function checkIntakePipeline(env: Env): Promise<HealthStepResult> {
       details.extractedTitle = extracted.jobTitle ?? "(missing)";
       details.hybridMeta = extracted._hybridMeta?.stats;
 
-      if (!extracted.companyName) issues.push("Hybrid extraction returned empty companyName");
-      if (!extracted.jobTitle) issues.push("Hybrid extraction returned empty jobTitle");
+      if (!extracted.companyName)
+        issues.push("Hybrid extraction returned empty companyName");
+      if (!extracted.jobTitle)
+        issues.push("Hybrid extraction returned empty jobTitle");
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       issues.push(`Hybrid extraction failed: ${msg}`);

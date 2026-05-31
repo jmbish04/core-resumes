@@ -1,3 +1,8 @@
+---
+title: "NotebookLMMcpAgent"
+date_last_updated: "2026-05-31"
+---
+
 # NotebookLMMcpAgent
 
 **NotebookLMMcpAgent** exposes the career knowledge base as a **remote MCP (Model Context Protocol) server**, enabling external AI tools to query your career knowledge through a standardized interface.

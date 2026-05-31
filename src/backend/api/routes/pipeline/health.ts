@@ -37,8 +37,8 @@ healthRouter.openapi(
     const coordinator = new HealthCoordinator(c.env);
     const { results } = await coordinator.runAllChecks("manual");
 
-    // Filter to greenhouse category only
-    const ghResults = results.filter((r) => r.category === "greenhouse");
+    // Filter to job board API scanner pipeline checks
+    const ghResults = results.filter((r) => r.category === "job_board_api");
 
     const failCount = ghResults.filter((r) => r.status === "fail" || r.status === "timeout").length;
     const overall = (failCount === 0 ? "healthy" : failCount <= 2 ? "degraded" : "unhealthy") as

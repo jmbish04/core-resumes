@@ -23,6 +23,8 @@ import { salaryStatsRouter } from "./salary-stats";
 import { salaryIntelligenceRouter } from "./salary-intelligence";
 import { seedSalaryRefactorRouter } from "./seed-salary-refactor";
 import { promoteRouter } from "./promote";
+import { externalAgentsRouter } from "./external-agents";
+import { rssRouter } from "./rss";
 import { analyzeRoleRouter, analyzeAggregateRouter, chatRouter, findingsRouter, dataExplorerRouter } from "./salary";
 
 // ---------------------------------------------------------------------------
@@ -47,5 +49,7 @@ pipelineRouter.route("/", chatRouter);
 pipelineRouter.route("/", findingsRouter);
 pipelineRouter.route("/", dataExplorerRouter);
 pipelineRouter.route("/", salaryStatsRouter);
+pipelineRouter.route("/", externalAgentsRouter);
+pipelineRouter.route("/", rssRouter);
 
 

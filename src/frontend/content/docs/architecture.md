@@ -1,3 +1,8 @@
+---
+title: "Architecture"
+date_last_updated: "2026-05-31"
+---
+
 # Architecture
 
 The Career Orchestrator runs as a **single Cloudflare Worker** that handles API requests, serves the frontend, processes inbound email, and runs AI agents — all from one deployment.

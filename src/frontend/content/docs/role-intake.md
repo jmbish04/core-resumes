@@ -1,3 +1,8 @@
+---
+title: "Role Intake Pipeline"
+date_last_updated: "2026-05-31"
+---
+
 # Role Intake Pipeline
 
 Last updated: May 4, 2026

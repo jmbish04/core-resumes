@@ -25,7 +25,7 @@ export type HealthCategory =
   | "binding"
   | "auth"
   | "api"
-  | "greenhouse"
+  | "job_board_api"
   | "freelance"
   | "custom";
 
@@ -132,4 +132,16 @@ export interface AshbyJob {
   location: string;
   publishedAt: string;
   organizationName?: string;
+}
+
+/**
+ * Job posted on Gem (public job board API response shape)
+ */
+export interface GemJob {
+  id: string;
+  title: string;
+  is_remote: boolean;
+  published_at: string;
+  location?: { name: string };
+  department?: { name: string };
 }

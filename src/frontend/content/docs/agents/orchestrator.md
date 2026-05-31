@@ -1,3 +1,8 @@
+---
+title: "OrchestratorAgent"
+date_last_updated: "2026-05-31"
+---
+
 # OrchestratorAgent
 
 **OrchestratorAgent** is the primary orchestrator of the Career Orchestrator. It is a Cloudflare Durable Object that manages the full job-application lifecycle with persistent state, scheduled task processing, and access to all external tools.

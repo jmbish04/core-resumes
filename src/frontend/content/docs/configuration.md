@@ -1,3 +1,8 @@
+---
+title: "Configuration"
+date_last_updated: "2026-05-31"
+---
+
 # Configuration
 
 The Career Orchestrator is configured through three layers: the Wrangler config file, the Cloudflare secrets system, and the runtime `global_config` D1 table.

@@ -2,7 +2,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { eq } from "drizzle-orm";
 
 import { getDb } from "../../db";
-import { globalConfig, selectGlobalConfigSchema } from "../../db/schema";
+import { globalConfig, selectGlobalConfigSchema, companyJobBoardDefs } from "../../db/schema";
 
 const configParam = z.object({ key: z.string() });
 const configValueBody = z.object({ value: z.unknown() });
@@ -100,9 +100,22 @@ const defaultConfig = [
     key: "health_check_config",
     value: {
       greenhouse_tokens: ["anthropic", "cloudflare"],
-      ashby_tokens: ["replicate", "lattice"]
+      ashby_tokens: ["replicate", "lattice"],
+      gem_tokens: ["gc-ai"],
+      lever_tokens: [],
+      rss_industry_feeds: ["weworkremotely_programming", "weworkremotely_devops", "remotive"],
     },
   },
+];
+
+/**
+ * Standard job board definitions to seed into `company_job_board_defs`.
+ * Maps 1:1 to the registered providers in the provider registry.
+ */
+const JOB_BOARD_DEF_SEEDS = [
+  { name: "Greenhouse", description: "Greenhouse Job Board API (boards-api.greenhouse.io)", isApi: true, isRss: false, isActive: true },
+  { name: "AshbyHQ", description: "Ashby Posting API (api.ashbyhq.com)", isApi: true, isRss: false, isActive: true },
+  { name: "Gem", description: "Gem Job Board API (api.gem.com)", isApi: true, isRss: false, isActive: true },
 ];
 
 
@@ -235,10 +248,28 @@ adminRouter.openapi(
     },
   }),
   async (c) => {
+    const db = getDb(c.env);
     const rows = [];
 
+    // Seed globalConfig defaults
     for (const item of defaultConfig) {
       rows.push(await upsertConfig(c.env, item.key, item.value));
+    }
+
+    // Seed job board definitions
+    for (const def of JOB_BOARD_DEF_SEEDS) {
+      const [existing] = await db
+        .select()
+        .from(companyJobBoardDefs)
+        .where(eq(companyJobBoardDefs.name, def.name))
+        .limit(1);
+
+      if (!existing) {
+        await db.insert(companyJobBoardDefs).values({
+          id: crypto.randomUUID(),
+          ...def,
+        });
+      }
     }
 
     return c.json(rows);

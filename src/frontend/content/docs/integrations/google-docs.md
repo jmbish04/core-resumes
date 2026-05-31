@@ -1,3 +1,8 @@
+---
+title: "Google Docs"
+date_last_updated: "2026-05-31"
+---
+
 # Google Docs
 
 The Worker integrates with the **Google Docs API** alongside Drive, using the same **service account** and **domain-wide delegation** model. Docs operations focus on **content**: templates, reads, appends, and **comments** (including `@colby` reply flows).

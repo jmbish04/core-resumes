@@ -33,6 +33,7 @@ export const JOBS_POSTINGS_COLUMN_DESCRIPTIONS: Record<string, string> = {
     "Whether deep analysis has been completed for at least one snapshot. 1 = yes, 0 = pending.",
   is_favorite: "Whether the user has starred this job for quick access. 1 = starred.",
   location: "Location string extracted from the job posting or ATS API (e.g. 'San Francisco, CA', 'Remote').",
+  job_url: "Canonical URL of the original job posting, when known. Lets a HITL reviewer open the source listing. Null for sources that don't supply a URL (e.g. github_dataset).",
   is_recommended:
     "Whether this job passed the keyword + location heuristic scoring. 1 = recommended for review, 0 = unscored/rejected.",
   recommendation_score:
@@ -45,7 +46,7 @@ export const JOBS_POSTINGS_COLUMN_DESCRIPTIONS: Record<string, string> = {
   reject_reason: "Reason provided by the human reviewer for rejecting this job.",
   is_watching: "Whether the human reviewer is watching this job for changes. 1 = watching.",
   is_detected_change: "Whether the system detected a change on a watched job. 1 = changed.",
-  pipeline_source: "Source pipeline for this job: 'github_dataset', 'promoted_company', or 'freelance'.",
+  pipeline_source: "Source pipeline for this job: 'github_dataset', 'promoted_company', 'freelance', 'external_agent', or 'rss_feed'.",
   company_id: "Foreign key to companies.id for jobs sourced from promoted companies.",
 };
 
@@ -68,6 +69,7 @@ export const jobsPostings = sqliteTable(
     analysisExecuted: integer("analysis_executed", { mode: "boolean" }).default(false),
     isFavorite: integer("is_favorite", { mode: "boolean" }).default(false),
     location: text("location"),
+    jobUrl: text("job_url"),
     isRecommended: integer("is_recommended", { mode: "boolean" }).default(false),
     recommendationScore: integer("recommendation_score"),
     recommendationReason: text("recommendation_reason"),
@@ -76,7 +78,7 @@ export const jobsPostings = sqliteTable(
     rejectReason: text("reject_reason"),
     isWatching: integer("is_watching", { mode: "boolean" }).default(false),
     isDetectedChange: integer("is_detected_change", { mode: "boolean" }).default(false),
-    pipelineSource: text("pipeline_source", { enum: ["github_dataset", "promoted_company", "freelance"] }),
+    pipelineSource: text("pipeline_source", { enum: ["github_dataset", "promoted_company", "freelance", "external_agent", "rss_feed"] }),
     companyId: text("company_id").references(() => companies.id, { onDelete: "set null" }),
   },
   (table) => ({

@@ -1,3 +1,8 @@
+---
+title: "NotebookLMAgent"
+date_last_updated: "2026-05-31"
+---
+
 # NotebookLMAgent
 
 **NotebookLMAgent** is a specialized knowledge-retrieval agent that provides access to the career knowledge base powered by Google NotebookLM.

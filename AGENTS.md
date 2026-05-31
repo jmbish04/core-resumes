@@ -138,9 +138,31 @@ NotebookLM uses the [notebooklm-sdk](https://github.com/agmmnn/notebooklm-sdk) w
 
 ## Health Service
 
-- Health check modules: d1, kv, secrets, envVars, notebookLm, workersAi, aiGateway, googleDrive, **tts**, **stt** (10 total).
+- Health check modules: d1, kv, secrets, envVars, notebookLm, workersAi, aiGateway, googleDrive, **tts**, **stt**, **job_board_api_connectivity** (11 total).
+- The `job_board_api_connectivity` check aggregates all registered job board API providers (Greenhouse, AshbyHQ, Gem, **RSS feeds**) into a single result with per-provider breakdown.
 - Service: `src/backend/services/health-service.ts`.
 - Screenings persisted to `health_screenings` table.
+
+## RSS Feed Aggregator Pipeline (Pipeline C)
+
+- **Cron:** Runs on the 12-hour cron (`0 */12 * * *`) alongside the freelance scanner.
+- **Service:** `src/backend/services/rss/aggregator.ts` — `runRssAggregator()`.
+- **XML Parser:** `src/backend/services/rss/xml-parser.ts` — V8-native regex parser, no npm dependencies. Handles RSS 2.0 and Atom feeds.
+- **Feed Providers:** Modular registry at `src/backend/services/rss/feeds/`. Each provider implements `RssFeedProvider`.
+  - ATS providers (per-company token): `greenhouse-rss.ts`, `lever-rss.ts`
+  - Industry feeds (static URLs): `weworkremotely.ts`, `remotive.ts`
+  - Registry barrel: `src/backend/services/rss/feeds/index.ts`
+- **To add a new feed:** Create `{name}.ts` implementing `RssFeedProvider`, import and add to `RSS_FEED_PROVIDERS` array in `index.ts`.
+- **Dedup:** R2-backed catalog at `src/backend/services/rss/dedup-catalog.ts`. Key: `rss-dedup/{provider}.json` on `R2_JOBS_BUCKET`. Persists seen job IDs indefinitely.
+- **Config:** ATS tokens loaded from `health_check_config.greenhouse_tokens` / `.lever_tokens`. Industry feeds from `health_check_config.rss_industry_feeds`.
+- **API:** `POST /api/pipeline/rss/scan` (manual trigger), `GET /api/pipeline/rss/feeds` (list feeds + catalog stats), `POST /api/pipeline/rss/migrate-ids` (one-time ID normalization).
+- **HITL Flow:** RSS jobs enter the same `jobs_postings` table and Discovery Dashboard pipeline as Pipelines A/B. The `isRelevantJob()` utility scores jobs at insertion time, setting `isRecommended` for the HITL queue.
+
+## Shared Job Pipeline Utilities
+
+- **`isRelevantJob()`** — `src/backend/services/jobs/relevance.ts`. Pure keyword + location matching against `applicant_profile` config. Used by all pipelines and the discovery scorer cron. No AI.
+- **`normalizeJobSiteId()`** — `src/backend/services/jobs/normalize-id.ts`. Strips pipeline prefixes (`gh-{token}-`, `lv-{token}-`, `as-{token}-`) to produce the raw ATS job ID for cross-pipeline dedup.
+- **`migrateJobSiteIds()`** — `src/backend/services/jobs/migrate-ids.ts`. One-time migration to normalize existing prefixed `job_site_id` values in D1. Run via `POST /api/pipeline/rss/migrate-ids`.
 
 ## Career Memory System
 
@@ -232,7 +254,16 @@ Do the thing.`;
 ## Frontend Documentation Rules
 
 - **On every agentic turn**, agents MUST ensure that any code modified, fixed, or created is comprehensively covered in the frontend documentation (`src/frontend/content/docs/**/*.md`).
-- **Metadata**: Update the `date_last_updated` (or similar metadata) visible on the page whenever a doc page is modified.
+- **Frontmatter Template**: Every doc page MUST include YAML frontmatter with at minimum `title` and `date_last_updated` fields. The layout template renders a timestamp badge from `date_last_updated` — green if within 30 days, amber with "Xd ago" if stale. Example:
+  ```yaml
+  ---
+  title: "Page Title"
+  description: "Brief description of the page content."
+  date_last_updated: "2026-05-31"
+  ---
+  ```
+- **Metadata**: Update the `date_last_updated` field whenever a doc page's content is modified.
+- **Stale Check**: Agents MUST scan for stale documentation (> 30 days since `date_last_updated`) in areas related to their current work. If stale docs are found and the agent has context to update them, update both the content and the `date_last_updated` field. This is a **mandatory quality gate** — do not leave stale docs in areas you are actively modifying.
 - **Organization**: Ensure the doc pages and sidebar navbar are organized logically. If a doc page becomes too large, split it into standalone pages. Create new categories if existing ones do not fit.
 - **Standalone Docs**: All standalone docs must have dedicated page URLs.
 - **Hyperlinkable Sections**: Document sections must be hyperlinkable. As the user scrolls, the URL parameter must update to reflect the active section, and loading a URL with a section parameter must scroll to that exact spot.
@@ -343,7 +374,17 @@ const agent = useAgent({
 
 ---
 
-## Maintenance Instructions for Greenhouse Agents
+## Job Board Provider Registry
+
+- **Registry:** `src/backend/pipeline/job-board-providers/` — single source of truth for all ATS providers.
+- **Providers:** Greenhouse, AshbyHQ, Gem (3 registered). Each implements `JobBoardProvider` interface from `types.ts`.
+- **Tool Clients:** `src/backend/ai/tools/{greenhouse,ashby,gem}.ts` — low-level API clients.
+- **Unified Scraper:** `scrapeJobFromBoard()` in `index.ts` auto-detects the provider by explicit system name or ID-format heuristic.
+- **Board Def Seeding:** On company promote, the provider registry determines the `company_job_board_defs` entry. No fallback assumptions — only confirmed providers get board mappings.
+- **Health Checks:** `src/backend/health/checks/job-board-apis/index.ts` runs all provider checks in parallel.
+- **Onboarding:** See `.agent/rules/job-board-providers.md` for the 8-step checklist.
+
+## Maintenance Instructions for Job Board Pipeline Agents
 
 The `JobScannerAgent`, `JobAnalysisAgent`, and `SyncBroadcastAgent` manage the automated job discovery, analysis, and real-time pipeline observability. All are Cloudflare Durable Objects mapped to the `Agent<Env, State>` class from the Cloudflare Agents SDK.
 

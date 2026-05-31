@@ -1,3 +1,8 @@
+---
+title: "Database Schema"
+date_last_updated: "2026-05-31"
+---
+
 # Database Schema
 
 The Career Orchestrator uses **Cloudflare D1** (SQLite) with **Drizzle ORM**. Each table is defined in its own file under `src/backend/db/schemas/` and re-exported from `src/backend/db/schema.ts`.

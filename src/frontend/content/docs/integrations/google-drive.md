@@ -1,3 +1,8 @@
+---
+title: "Google Drive"
+date_last_updated: "2026-05-31"
+---
+
 # Google Drive
 
 The Worker integrates with **Google Drive v3** using a **Google Cloud service account** and **domain-wide delegation** (impersonation). Drive is used for folder layout, file lifecycle, and native Google Doc creation from HTML — not for end-user OAuth flows.

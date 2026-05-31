@@ -11,7 +11,10 @@ import { OpenRouteService } from "@/backend/services/openroute";
 import { RoleInsightsService } from "@/backend/services/role-insights";
 import { getOpenRouteApiKey } from "@/backend/utils/secrets";
 
-import { findSFAreaJob, isSFBayArea } from "./greenhouse-boards";
+import {
+  findSFAreaJob,
+  isSFBayArea,
+} from "../job-board-apis/greenhouse-boards";
 
 /**
  * Location extraction schema — accepts both a single string and an array
@@ -37,37 +40,41 @@ const LocationExtractionInputSchema = z.object({
   californiaLocations: z
     .array(z.string())
     .optional()
-    .describe("Only locations in California / SF Bay Area from the job posting"),
+    .describe(
+      "Only locations in California / SF Bay Area from the job posting",
+    ),
   workplaceType: z.string().optional().describe("remote, hybrid, or onsite"),
   rtoPolicy: z.string().optional().describe("Any RTO policy details"),
 });
 
-const LocationExtractionSchema = LocationExtractionInputSchema.transform((data) => {
-  const location = (() => {
-    const val = data.location;
-    if (Array.isArray(val)) {
-      const bayAreaLoc = val.find((loc) => isSFBayArea(loc));
-      return bayAreaLoc ?? val[0] ?? "Unknown";
-    }
-    return val ?? "Unknown";
-  })();
+const LocationExtractionSchema = LocationExtractionInputSchema.transform(
+  (data) => {
+    const location = (() => {
+      const val = data.location;
+      if (Array.isArray(val)) {
+        const bayAreaLoc = val.find((loc) => isSFBayArea(loc));
+        return bayAreaLoc ?? val[0] ?? "Unknown";
+      }
+      return val ?? "Unknown";
+    })();
 
-  const allLocations = (() => {
-    const val = data.allLocations;
-    if (!val) return undefined;
-    if (Array.isArray(val)) return val;
-    return [val];
-  })();
+    const allLocations = (() => {
+      const val = data.allLocations;
+      if (!val) return undefined;
+      if (Array.isArray(val)) return val;
+      return [val];
+    })();
 
-  return {
-    ...data,
-    location,
-    allLocations,
-    californiaLocations: data.californiaLocations ?? [],
-    workplaceType: data.workplaceType ?? "Unknown",
-    rtoPolicy: data.rtoPolicy ?? "Unknown",
-  };
-});
+    return {
+      ...data,
+      location,
+      allLocations,
+      californiaLocations: data.californiaLocations ?? [],
+      workplaceType: data.workplaceType ?? "Unknown",
+      rtoPolicy: data.rtoPolicy ?? "Unknown",
+    };
+  },
+);
 
 export async function checkOpenRoute(env: Env): Promise<HealthStepResult> {
   const start = Date.now();
@@ -82,7 +89,9 @@ export async function checkOpenRoute(env: Env): Promise<HealthStepResult> {
     }
     details.apiKeyStatus = "ok";
   } catch (e) {
-    issues.push(`API Key missing or invalid: ${e instanceof Error ? e.message : String(e)}`);
+    issues.push(
+      `API Key missing or invalid: ${e instanceof Error ? e.message : String(e)}`,
+    );
     return {
       status: "fail",
       latencyMs: Date.now() - start,
@@ -113,35 +122,40 @@ export async function checkOpenRoute(env: Env): Promise<HealthStepResult> {
 
     /**
      * 3-TIER RESILIENT SCRAPING STRATEGY
-     * 
-     * Rationale: Health checks must run quickly and reliably without depending on 
+     *
+     * Rationale: Health checks must run quickly and reliably without depending on
      * external rendering sandbox availability or Greenhouse bot-blockers.
      * We employ a defensive 3-tier cascade:
-     * 
+     *
      * Tier 1: Cloudflare Browser Rendering API (extract rendered JavaScript Markdown).
      * Tier 2: Direct node-fetch HTTP fallback with a strict 5s timeout (strips HTML manually).
      * Tier 3: Ultimate Static Mock Fallback. If both Tiers 1 and 2 fail or return truncated content,
-     *         we inject a valid, geocodable San Francisco hybrid job template to ensure 
+     *         we inject a valid, geocodable San Francisco hybrid job template to ensure
      *         commute calculation and AI rubrics can still be diagnosed without raising false alarms.
      */
     try {
       const browser = new BrowserRendering(env);
       markdownContent = await browser.extractMarkdown(jobUrl);
     } catch (browserErr) {
-      details.browserRenderingError = browserErr instanceof Error ? browserErr.message : String(browserErr);
-      
+      details.browserRenderingError =
+        browserErr instanceof Error ? browserErr.message : String(browserErr);
+
       // Tier 2: Direct HTTP fetch with strict 5s timeout
       try {
         const res = await fetch(jobUrl, { signal: AbortSignal.timeout(5000) });
         if (res.ok) {
           const html = await res.text();
           // Minimal regex-based strip of HTML tags
-          markdownContent = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+          markdownContent = html
+            .replace(/<[^>]+>/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
         } else {
           throw new Error(`HTTP ${res.status}`);
         }
       } catch (fetchErr) {
-        details.directFetchError = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+        details.directFetchError =
+          fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
       }
     }
 
@@ -159,7 +173,9 @@ We are looking for a People Legal Specialist to join our legal team in San Franc
 `;
     }
   } catch (e) {
-    issues.push(`Failed to fetch/extract job: ${e instanceof Error ? e.message : String(e)}`);
+    issues.push(
+      `Failed to fetch/extract job: ${e instanceof Error ? e.message : String(e)}`,
+    );
     return {
       status: "fail",
       latencyMs: Date.now() - start,
@@ -201,7 +217,9 @@ DO NOT wrap your response in markdown fences.`,
     });
     details.extractedLocation = locationData;
   } catch (e) {
-    issues.push(`AI Location Extraction failed: ${e instanceof Error ? e.message : String(e)}`);
+    issues.push(
+      `AI Location Extraction failed: ${e instanceof Error ? e.message : String(e)}`,
+    );
     return {
       status: "fail",
       latencyMs: Date.now() - start,
@@ -215,18 +233,19 @@ DO NOT wrap your response in markdown fences.`,
   const openRoute = new OpenRouteService(env);
   const db = getDb(env);
   let commuteSummaryStr = "";
-  
+
   // Prefer California locations for commute targeting (user will never relocate)
   const caLocations = locationData.californiaLocations ?? [];
-  const rawSelectedLocation = caLocations.length > 0 ? caLocations[0] : locationData.location;
+  const rawSelectedLocation =
+    caLocations.length > 0 ? caLocations[0] : locationData.location;
 
   /**
    * MULTI-CITY LOCATION SANITIZATION
-   * 
+   *
    * Rationale: Large enterprises post jobs covering multiple hubs (e.g. "San Francisco, CA | New York, NY").
    * Passing this composite string directly to Pelias/OpenRoute or Google geocoding APIs yields geocoding
-   * failures or impossible driving paths. 
-   * 
+   * failures or impossible driving paths.
+   *
    * Solution: Split by the standard separator "|", search for the segment matching our SF Bay Area
    * parameters to perform the local commute check, and fall back to the first available city if not.
    */
@@ -248,14 +267,22 @@ DO NOT wrap your response in markdown fences.`,
 
     try {
       const gmService = new GoogleMapsService(env);
-      const gmResult = await gmService.computeCommute(homeAddress, searchQuery, details);
+      const gmResult = await gmService.computeCommute(
+        homeAddress,
+        searchQuery,
+        details,
+      );
       commuteSummaryStr = gmResult.commuteSummary;
       details.openRouteStatus = "ok"; // Successfully obtained commute data (via Google Maps)
     } catch (e) {
       // Google Maps failed — fall back to OpenRoute geocoding
-      details.googleMapsFallbackReason = e instanceof Error ? e.message : String(e);
+      details.googleMapsFallbackReason =
+        e instanceof Error ? e.message : String(e);
       try {
-        const summary = await openRoute.getCommuteSummary(homeAddress, selectedLocation);
+        const summary = await openRoute.getCommuteSummary(
+          homeAddress,
+          selectedLocation,
+        );
         if (summary.success) {
           commuteSummaryStr = `OpenRoute API Driving Data: ${summary.distanceMiles.toFixed(1)} miles, ${summary.durationMinutes} minutes each way.`;
           details.openRouteResponse = summary;
@@ -268,17 +295,23 @@ DO NOT wrap your response in markdown fences.`,
           `Commute calculation error: Google Maps failed (${e instanceof Error ? e.message : String(e)}), OpenRoute also failed (${orErr instanceof Error ? orErr.message : String(orErr)})`,
         );
         details.openRouteStatus = "fail";
-        commuteSummaryStr = "Not available. Estimate using your geographic knowledge.";
+        commuteSummaryStr =
+          "Not available. Estimate using your geographic knowledge.";
       }
     }
   } else {
     // Non-Bay Area location → getCommuteSummary handles OpenRoute → Google Maps fallback internally
     details.commuteStrategy = "openroute_primary";
     try {
-      const summary = await openRoute.getCommuteSummary(homeAddress, selectedLocation);
+      const summary = await openRoute.getCommuteSummary(
+        homeAddress,
+        selectedLocation,
+      );
       if (summary.success) {
         const sourceLabel =
-          summary.source === "google_maps" ? "Google Maps API (fallback)" : "OpenRoute API";
+          summary.source === "google_maps"
+            ? "Google Maps API (fallback)"
+            : "OpenRoute API";
         commuteSummaryStr = `${sourceLabel} Driving Data: ${summary.distanceMiles.toFixed(1)} miles, ${summary.durationMinutes} minutes each way.`;
         details.openRouteResponse = summary;
         details.commuteSource = summary.source;
@@ -288,12 +321,16 @@ DO NOT wrap your response in markdown fences.`,
         details.openRouteResponse = summary;
         issues.push(`Commute calculation error: ${summary.error}`);
         details.openRouteStatus = "fail";
-        commuteSummaryStr = "Not available. Estimate using your geographic knowledge.";
+        commuteSummaryStr =
+          "Not available. Estimate using your geographic knowledge.";
       }
     } catch (e) {
-      issues.push(`Commute calculation error: ${e instanceof Error ? e.message : String(e)}`);
+      issues.push(
+        `Commute calculation error: ${e instanceof Error ? e.message : String(e)}`,
+      );
       details.openRouteStatus = "fail";
-      commuteSummaryStr = "Not available. Estimate using your geographic knowledge.";
+      commuteSummaryStr =
+        "Not available. Estimate using your geographic knowledge.";
     }
   }
 
@@ -304,7 +341,12 @@ DO NOT wrap your response in markdown fences.`,
     rubrics = await db
       .select()
       .from(scoringRubrics)
-      .where(and(eq(scoringRubrics.type, "location"), eq(scoringRubrics.isActive, true)));
+      .where(
+        and(
+          eq(scoringRubrics.type, "location"),
+          eq(scoringRubrics.isActive, true),
+        ),
+      );
   } catch (e) {
     issues.push(
       `Failed to fetch location scoring rubrics: ${e instanceof Error ? e.message : String(e)}`,
@@ -334,7 +376,9 @@ DO NOT wrap your response in markdown fences.`,
         );
         details.aiInsightScore = insight.score;
       } catch (e) {
-        issues.push(`AI Insight generation failed: ${e instanceof Error ? e.message : String(e)}`);
+        issues.push(
+          `AI Insight generation failed: ${e instanceof Error ? e.message : String(e)}`,
+        );
       }
 
       // 6. Test AI Location Insight explicitly simulating an API failure
@@ -357,7 +401,12 @@ DO NOT wrap your response in markdown fences.`,
     }
   }
 
-  const status = issues.length > 0 ? (details.openRouteStatus === "fail" ? "fail" : "warn") : "ok";
+  const status =
+    issues.length > 0
+      ? details.openRouteStatus === "fail"
+        ? "fail"
+        : "warn"
+      : "ok";
 
   return {
     status,

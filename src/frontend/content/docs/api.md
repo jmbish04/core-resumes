@@ -1,3 +1,8 @@
+---
+title: "API Reference"
+date_last_updated: "2026-05-31"
+---
+
 # API Reference
 
 The Career Orchestrator backend is built with **Hono** and **@hono/zod-openapi**, providing type-safe API routes with automatic OpenAPI specification generation.

@@ -1,3 +1,8 @@
+---
+title: "Document Generation"
+date_last_updated: "2026-05-31"
+---
+
 # Document Generation
 
 Last updated: May 6, 2026

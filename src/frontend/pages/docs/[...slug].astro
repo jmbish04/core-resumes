@@ -9,6 +9,8 @@ import { NotebookInfoCard } from "@/components/docs/NotebookInfo";
 import { VPCTunnelStatus } from "@/components/docs/VPCTunnelStatus";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { ChevronRight } from "lucide-react";
+import { DocsAuthModal } from "@/components/docs/DocsAuthModal";
+import { getWorkerApiKey } from "@/backend/utils/secrets";
 
 const modules = import.meta.glob("../../content/docs/**/*.md", {
   eager: true,
@@ -21,6 +23,23 @@ const doc = modules[docPath] ?? modules[fallbackPath];
 
 const Content = doc?.default || doc?.Content;
 const headings = doc?.getHeadings?.() || [];
+const frontmatter = doc?.frontmatter ?? {};
+const dateLastUpdated = frontmatter.date_last_updated ?? null;
+
+// Calculate stale check (> 30 days)
+const isStale = (() => {
+  if (!dateLastUpdated) return true;
+  const updated = new Date(dateLastUpdated);
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24));
+  return diffDays > 30;
+})();
+const daysSinceUpdate = (() => {
+  if (!dateLastUpdated) return null;
+  const updated = new Date(dateLastUpdated);
+  const now = new Date();
+  return Math.floor((now.getTime() - updated.getTime()) / (1000 * 60 * 60 * 24));
+})();
 
 // Detect which dynamic components to embed based on slug
 const showSchemaViewer = slug === "database";
@@ -50,9 +69,21 @@ const breadcrumbs = pathParts.map((part, index) => {
   const label = part.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase());
   return { label, href, isLast };
 });
+
+
+// Docs Authentication Check
+const env = (Astro.locals as any).runtime?.env;
+const expectedKey = env ? await getWorkerApiKey(env) : null;
+const providedKey = Astro.cookies.get("worker_api_key")?.value;
+const isAuthenticated = expectedKey && providedKey === expectedKey;
 ---
 
 <BaseLayout title={`Docs | Career Orchestrator`} description="Technical documentation for the Career Orchestrator application.">
+  {!isAuthenticated ? (
+    <div class="flex flex-1 items-center justify-center">
+      <DocsAuthModal client:load />
+    </div>
+  ) : (
   <div class="flex flex-1 relative font-sans">
     <DocsSidebar client:load />
     
@@ -74,6 +105,30 @@ const breadcrumbs = pathParts.map((part, index) => {
               </>
             ))}
           </nav>
+
+          {/* Last Updated Timestamp */}
+          <div class="mb-6 flex items-center gap-2 text-xs">
+            {dateLastUpdated ? (
+              <span class={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 font-medium ring-1 ring-inset ${
+                isStale 
+                  ? 'bg-amber-500/10 text-amber-400 ring-amber-500/20' 
+                  : 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20'
+              }`}>
+                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
+                </svg>
+                Updated {dateLastUpdated}
+                {isStale && daysSinceUpdate !== null && ` · ${daysSinceUpdate}d ago`}
+              </span>
+            ) : (
+              <span class="inline-flex items-center gap-1.5 rounded-md bg-zinc-500/10 px-2 py-1 font-medium text-zinc-400 ring-1 ring-inset ring-zinc-500/20">
+                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
+                </svg>
+                No update date
+              </span>
+            )}
+          </div>
 
           <div class="prose prose-slate dark:prose-invert max-w-none 
             [&_h1]:scroll-mt-24 [&_h2]:scroll-mt-24 [&_h3]:scroll-mt-24 [&_h4]:scroll-mt-24
@@ -129,6 +184,7 @@ const breadcrumbs = pathParts.map((part, index) => {
       )}
     </main>
   </div>
+  )}
 </BaseLayout>
 
 <script>

@@ -7,7 +7,8 @@
     // Workflow templates in the sync orchestration layer → YAML
     "**/orchestration/sync/.github/workflows/*.yml": "yaml",
     "**/orchestration/sync/.github/workflows/*.yaml": "yaml",
-    "wrangler.jsonc": "jsonc"
+    "wrangler.jsonc": "jsonc",
+    "*.gs": "javascript"
   },
   "yaml.schemas": {
     "https://json.schemastore.org/github-workflow.json": [
@@ -47,5 +48,4 @@
   "less.validate": false,
   "scss.validate": false,
   "python.defaultInterpreterPath": "${workspaceFolder}/scripts/.venv/bin/python3",
-  "python.pyrefly.displayTypeErrors": "force-off"
 }

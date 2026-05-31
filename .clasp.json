@@ -1,0 +1,17 @@
+{
+  "scriptId": "1Fe7Tms7QEVmXi7ZPNwVu77urVnioJYCy98WJuJK9Nm_TRh3Ap52PuCri",
+  "rootDir": "src/appscript-dropbox",
+  "parentId": "1yMIUz56iOgj-l7Nhd_R0q8TGybIYkRjB2uC6rIQtW4s",
+  "scriptExtensions": [
+    ".js",
+    ".gs"
+  ],
+  "htmlExtensions": [
+    ".html"
+  ],
+  "jsonExtensions": [
+    ".json"
+  ],
+  "filePushOrder": [],
+  "skipSubdirectories": false
+}

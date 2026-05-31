@@ -1,3 +1,8 @@
+---
+title: "Cover Letter Template"
+date_last_updated: "2026-05-31"
+---
+
 # Cover Letter Template
 
 This page displays an embedded preview of your **Google Docs cover letter template**. The template is used by OrchestratorAgent when generating tailored cover letters for job applications via the `create_doc_from_template()` method.

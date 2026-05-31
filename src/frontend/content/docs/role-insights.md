@@ -1,3 +1,8 @@
+---
+title: "Role Insights Engine"
+date_last_updated: "2026-05-31"
+---
+
 # Role Insights Engine
 
 The Role Insights Engine provides AI-powered analysis across three dimensions — **Location**, **Compensation**, and **Combined Value** — to help evaluate job opportunities against Justin's preferences and historical compensation at Google.
